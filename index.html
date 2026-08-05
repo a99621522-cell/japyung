@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#12141A">
+<title>간명 — 자평진전으로 사주 보기</title>
+<meta name="description" content="자평진전 원문의 조문으로 사주를 봅니다. 맞히는 것이 아니라 왜 그런지 답할 수 있게.">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ── 단청(丹靑) ─────────────────────────────────
+   조선 목조건축 채색의 다섯 빛. 오방색이 곧 오행이므로
+   색이 장식이 아니라 데이터가 된다.                        */
+:root{
+  --먹:#12141A; --먹연:#1B1E27; --먹진:#0C0E13; --먹판:#171A22;
+  --호분:#EDE7DA; --흐림:#8E8A80; --선:#2A2E3A;
+  --목:#5E9C63; --화:#C4483E; --토:#C89644; --금:#CFCBC2; --수:#33567F;
+  --살:#7FA8C9; --눌:#8A6A78; --섞:#8A8578;
+  --안전상:env(safe-area-inset-top); --안전하:env(safe-area-inset-bottom);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--먹);color:var(--호분);
+  font-family:'Noto Sans KR',-apple-system,sans-serif;font-weight:300;
+  line-height:1.75;letter-spacing:-.01em;
+  padding-bottom:calc(5rem + var(--안전하));
+  overscroll-behavior-y:none;
+}
+.wrap{max-width:44rem;margin:0 auto;padding:0 1.25rem}
+
+/* ── 상단 ── */
+.바{
+  position:sticky;top:0;z-index:20;background:rgba(18,20,26,.94);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--선);
+  padding:calc(.7rem + var(--안전상)) 0 .7rem;
+}
+.바 .속{max-width:44rem;margin:0 auto;padding:0 1.25rem;
+  display:flex;align-items:center;justify-content:space-between;gap:.8rem}
+.바 .제{font-family:'Noto Serif KR',serif;font-weight:900;
+  font-size:1.05rem;letter-spacing:.3em;text-indent:.3em}
+.바 button{
+  background:none;border:1px solid var(--선);color:var(--흐림);
+  font-family:inherit;font-size:.72rem;letter-spacing:.14em;
+  padding:.34rem .7rem;border-radius:2px;cursor:pointer;white-space:nowrap;
+}
+.바 button:active{background:var(--먹연)}
+.바 button.주{background:var(--호분);color:var(--먹);border-color:var(--호분);font-weight:500}
+
+/* ── 첫 화면 ── */
+.여는{padding:3.2rem 0 1rem;text-align:center}
+.여는 .큰{font-family:'Noto Serif KR',serif;font-weight:900;
+  font-size:clamp(2.6rem,13vw,3.4rem);letter-spacing:.24em;text-indent:.24em;line-height:1}
+.여는 .부{margin-top:1rem;font-size:.74rem;letter-spacing:.38em;
+  text-indent:.38em;color:var(--흐림)}
+.여는 .글{margin-top:1.7rem;font-size:.88rem;color:var(--흐림);line-height:1.95}
+.여는 .글 b{color:#BDB8AC;font-weight:400}
+
+/* ── 입력 ── */
+.입력{border-top:1px solid var(--선);border-bottom:1px solid var(--선);
+  padding:1.5rem 0;margin:2rem 0}
+.줄{display:flex;flex-wrap:wrap;gap:.6rem;align-items:flex-end}
+.칸{display:flex;flex-direction:column;gap:.3rem;flex:0 0 auto}
+.칸 label{font-size:.64rem;letter-spacing:.16em;color:var(--흐림)}
+.칸 input,.칸 select{
+  background:var(--먹진);border:1px solid var(--선);color:var(--호분);
+  font-family:inherit;font-size:1rem;font-weight:400;
+  padding:.55rem .6rem;border-radius:2px;width:4.6rem;
+}
+.칸.넓 input{width:6.2rem}
+.칸 input:focus,.칸 select:focus{outline:2px solid var(--수);outline-offset:1px}
+.칸.전{flex:1 1 100%}
+.칸.전 input{width:100%}
+button.본다{
+  background:var(--호분);color:var(--먹);border:0;
+  font-family:'Noto Serif KR',serif;font-weight:600;
+  font-size:.94rem;letter-spacing:.28em;text-indent:.28em;
+  padding:.66rem 1.5rem;border-radius:2px;cursor:pointer;flex:0 0 auto;
+}
+button.본다:active{opacity:.75}
+.모름{margin-top:.9rem;font-size:.74rem;color:var(--흐림)}
+.모름 label{cursor:pointer;display:inline-flex;align-items:center;gap:.4rem}
+.모름 input{accent-color:var(--수)}
+
+/* ── 명식 ── */
+.명식 table{width:100%;border-collapse:collapse;table-layout:fixed}
+.명식 th{font-size:.62rem;font-weight:400;letter-spacing:.28em;
+  color:var(--흐림);padding-bottom:.6rem}
+.명식 th.나{color:var(--호분)}
+.명식 td{text-align:center;padding:.1rem}
+.글자{font-family:'Noto Serif KR',serif;font-weight:600;
+  font-size:clamp(2rem,11vw,2.9rem);line-height:1.14;display:block}
+.소리{font-size:.56rem;letter-spacing:.12em;color:var(--흐림);display:block;margin-top:.08rem}
+.십{font-size:.64rem;color:var(--흐림);display:block;margin-top:.38rem}
+.일간칸{position:relative}
+.일간칸::after{content:'';position:absolute;left:14%;right:14%;bottom:-.3rem;height:2px;background:var(--호분)}
+td.m木 .글자{color:var(--목)} td.m火 .글자{color:var(--화)}
+td.m土 .글자{color:var(--토)} td.m金 .글자{color:var(--금)}
+td.m水 .글자{color:var(--수)}
+
+/* ── 오행 고리 ── */
+.고리감{margin:2.4rem 0 .8rem;display:flex;justify-content:center}
+svg.고리{width:100%;max-width:20rem;height:auto;overflow:visible}
+svg.고리 .생{stroke:var(--선);stroke-width:1.2;fill:none}
+svg.고리 .극{stroke:var(--선);stroke-width:.8;fill:none;stroke-dasharray:3 4}
+svg.고리 .원{stroke-width:1.5}
+svg.고리 text{font-family:'Noto Sans KR',sans-serif;text-anchor:middle;dominant-baseline:central}
+svg.고리 .이름{font-size:11px;font-weight:500}
+svg.고리 .수{font-size:8.5px;fill:var(--흐림);font-weight:300}
+svg.고리 .나표{font-size:7.5px;fill:var(--호분);letter-spacing:.2em}
+
+/* ── 이야기 ── */
+.이야기{border-left:2px solid var(--선);padding:.15rem 0 .15rem 1.2rem;
+  margin:1.6rem 0 2rem;font-size:1rem;line-height:2}
+.이야기 p{margin:.45rem 0}
+.이야기 b{font-weight:500}
+b.木{color:var(--목)} b.火{color:var(--화)} b.土{color:var(--토)}
+b.金{color:var(--금)} b.水{color:var(--수)}
+
+/* ── 절 ── */
+section{margin:2.6rem 0 0}
+h2{font-family:'Noto Serif KR',serif;font-weight:600;
+  font-size:.78rem;letter-spacing:.4em;text-indent:.4em;color:var(--흐림);
+  padding-bottom:.65rem;border-bottom:1px solid var(--선);margin-bottom:1.2rem}
+.격줄{font-family:'Noto Serif KR',serif;font-size:1.4rem;font-weight:600;line-height:1.5}
+.판정딱지{display:inline-block;font-family:'Noto Sans KR',sans-serif;
+  font-size:.68rem;letter-spacing:.12em;padding:.16rem .5rem;border-radius:2px;
+  border:1px solid var(--선);color:var(--흐림);margin-left:.5rem;vertical-align:.18em}
+.설명{margin-top:.65rem;font-size:.93rem;color:#C4BFB3;line-height:1.9}
+.조문{margin-top:1.1rem;font-family:'Noto Serif KR',serif;
+  font-size:.86rem;color:var(--흐림);line-height:1.85}
+.조문 span{display:block;margin:.28rem 0}
+.조문 em{font-style:normal;color:var(--호분);font-size:.72rem;
+  font-family:'Noto Sans KR',sans-serif;margin-right:.5rem;letter-spacing:.1em}
+
+table.다섯{width:100%;border-collapse:collapse;font-size:.86rem}
+table.다섯 td{padding:.5rem .25rem;border-bottom:1px solid var(--선)}
+table.다섯 td:first-child{width:3.2rem;font-weight:500}
+table.다섯 td:last-child{text-align:right;color:var(--흐림);font-size:.72rem;width:3.2rem}
+
+/* ── 운 ── */
+.운줄{display:grid;grid-template-columns:3.2rem 3.2rem 1fr auto;gap:.7rem;
+  align-items:baseline;padding:.66rem 0;border-bottom:1px solid var(--선)}
+.운줄 .나이{font-size:.72rem;color:var(--흐림)}
+.운줄 .간지{font-family:'Noto Serif KR',serif;font-size:1.08rem;font-weight:600}
+.운줄 .오{font-size:.8rem;color:#B0ABA0}
+.운줄 .오 small{color:var(--흐림);font-size:.7rem}
+.운줄 .판{font-size:.7rem;letter-spacing:.06em;white-space:nowrap}
+.p살{color:var(--살)} .p눌{color:var(--눌)} .p섞{color:var(--섞)}
+.운줄.지금{background:linear-gradient(90deg,rgba(127,168,201,.1),transparent 72%)}
+@media (max-width:480px){
+  .운줄{grid-template-columns:2.8rem 2.8rem 1fr;gap:.45rem}
+  .운줄 .판{grid-column:1/-1;padding-left:6.1rem;margin-top:-.28rem}
+}
+
+/* ── 알림 ── */
+.알림{margin-top:1.3rem;font-size:.79rem;color:var(--흐림);
+  border-left:2px solid var(--토);padding-left:.85rem;line-height:1.85}
+.알림.조용{border-color:var(--선)}
+.알림 b{color:#B5B0A5;font-weight:500}
+
+/* ── 저장 목록 ── */
+.목록{margin-top:1.4rem}
+.목록 .항{display:flex;align-items:center;gap:.7rem;padding:.7rem 0;
+  border-bottom:1px solid var(--선)}
+.목록 .항 .이{flex:1;font-size:.92rem}
+.목록 .항 .이 small{display:block;color:var(--흐림);font-size:.74rem;margin-top:.1rem}
+.목록 .항 button{background:none;border:1px solid var(--선);color:var(--흐림);
+  font-family:inherit;font-size:.7rem;padding:.28rem .6rem;border-radius:2px;cursor:pointer}
+.목록 .빔{color:var(--흐림);font-size:.85rem;padding:1.4rem 0;text-align:center}
+
+/* ── 꼬리 ── */
+footer{margin-top:3.4rem;padding-top:1.5rem;border-top:1px solid var(--선);
+  font-size:.75rem;color:var(--흐림);line-height:1.95}
+footer b{font-weight:500;color:#B5B0A5}
+footer a{color:var(--살);text-decoration:none;border-bottom:1px solid var(--선)}
+.숨김{display:none!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<nav class="바">
+  <div class="속">
+    <div class="제">看命</div>
+    <div style="display:flex;gap:.45rem">
+      <button id="저장단추" class="숨김" onclick="저장()">저장</button>
+      <button onclick="화면('목록')">불러오기</button>
+      <button class="주" onclick="화면('입력')">새로 보기</button>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<!-- 입력 화면 -->
+<div id="화면입력">
+  <div class="여는">
+    <div class="큰">看命</div>
+    <div class="부">자평진전 격국 간명</div>
+    <div class="글">
+      태어난 달에서 격을 잡고, 그것을 떠받치는 글자를 찾습니다.<br>
+      <b>맞히는 것이 아니라 왜 그런지 답할 수 있게</b> 보는 방법입니다.
+    </div>
+  </div>
+
+  <div class="입력">
+    <div class="줄">
+      <div class="칸 전"><label>이름 (안 적으셔도 됩니다)</label><input id="이름" type="text" placeholder="무명" autocomplete="off"></div>
+    </div>
+    <div class="줄" style="margin-top:.9rem">
+      <div class="칸 넓"><label>태어난 해</label><input id="년" type="number" value="1974" min="1900" max="2100" inputmode="numeric"></div>
+      <div class="칸"><label>달</label><input id="월" type="number" value="8" min="1" max="12" inputmode="numeric"></div>
+      <div class="칸"><label>날</label><input id="일" type="number" value="20" min="1" max="31" inputmode="numeric"></div>
+      <div class="칸"><label>시</label><input id="시" type="number" value="8" min="0" max="23" inputmode="numeric"></div>
+      <div class="칸"><label>분</label><input id="분" type="number" value="20" min="0" max="59" inputmode="numeric"></div>
+      <div class="칸"><label>성별</label><select id="성"><option value="여">여</option><option value="남">남</option></select></div>
+      <button class="본다" onclick="간명()">본다</button>
+    </div>
+    <div class="모름">
+      <label><input type="checkbox" id="시모름"> 태어난 시각을 모릅니다</label>
+      <span style="margin-left:.5rem">— 시주 없이 보되, 그만큼 볼 수 있는 것이 줄어듭니다.</span>
+    </div>
+  </div>
+
+  <div class="알림 조용">
+    <b>날짜는 양력으로 넣어 주세요.</b><br>
+    시각은 태어난 지역의 시계 시각 그대로 넣으시면 됩니다. 진태양시 보정은 안에서 합니다.
+  </div>
+</div>
+
+<!-- 결과 화면 -->
+<div id="화면결과" class="숨김"></div>
+
+<!-- 목록 화면 -->
+<div id="화면목록" class="숨김">
+  <section style="margin-top:2rem">
+    <h2>저장한 명식</h2>
+    <div id="목록칸" class="목록"></div>
+  </section>
+</div>
+
+<footer>
+  <b>이 앱이 답하지 않는 것</b><br>
+  몇 년에 무슨 일이 있을지, 얼마를 벌지, 어느 자리에 오를지는 보지 않습니다.
+  몸에 관한 것은 의사의 일이고, 마음이 힘드실 때는 사람에게 이야기하시는 편이 낫습니다.<br><br>
+  <b>답하는 것</b><br>
+  무엇을 다루며 사는가, 그 짜임이 온전한가, 지금이 어떤 결의 때인가 — 여기까지입니다.
+  모든 판정에는 원문의 근거가 붙으니, 안 맞는 대목이 있으면 어디서 어긋났는지 짚어보실 수 있습니다.<br><br>
+  <b>근거로 삼은 책</b><br>
+  『자평진전(子平真詮)』 심효첨, 청 건륭 연간. 판정에 쓰는 조문 114개는 모두 원문에서 왔습니다.<br><br>
+  <b>개인정보</b><br>
+  넣으신 생년월일시는 <b>이 기기에만</b> 저장되며 어디로도 보내지 않습니다.
+  서버가 없고, 계정도 없습니다. 지우시려면 저장 목록에서 지우시면 됩니다.
+</footer>
+
+</div>
+
+<script src="engine.bundle.js"></script>
+<script>
+const E = window.간명엔진;
+const 우리말 = {木:'나무',火:'불',土:'흙',金:'쇠',水:'물'};
+const 색이름 = {木:'목',火:'화',土:'토',金:'금',水:'수'};
+const 소리 = {甲:'갑',乙:'을',丙:'병',丁:'정',戊:'무',己:'기',庚:'경',辛:'신',壬:'임',癸:'계',
+ 子:'자',丑:'축',寅:'인',卯:'묘',辰:'진',巳:'사',午:'오',未:'미',申:'신',酉:'유',戌:'술',亥:'해'};
+const {GAN, JIJANGGAN, sipseong} = E.지장간;
+let 현재 = null;
+
+/* ── 화면 전환 ── */
+function 화면(어디){
+  for (const k of ['입력','결과','목록'])
+    document.getElementById('화면'+k).classList.toggle('숨김', k !== 어디);
+  document.getElementById('저장단추').classList.toggle('숨김', 어디 !== '결과');
+  if (어디 === '목록') 목록그리기();
+  window.scrollTo({top:0,behavior:'instant'});
+}
+
+/* ── 저장 ── */
+const KEY = 'ganmyeong.saved.v1';
+const 읽기 = () => { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch(e){ return []; } };
+const 쓰기 = a => { try { localStorage.setItem(KEY, JSON.stringify(a)); } catch(e){} };
+
+function 저장(){
+  if (!현재) return;
+  const a = 읽기();
+  const 새 = {...현재.입력, 때: Date.now()};
+  const i = a.findIndex(x => x.년===새.년 && x.월===새.월 && x.일===새.일 && x.시===새.시 && x.분===새.분);
+  if (i >= 0) a[i] = 새; else a.unshift(새);
+  쓰기(a.slice(0, 60));
+  const b = document.getElementById('저장단추');
+  b.textContent = '저장됨'; setTimeout(() => b.textContent = '저장', 1400);
+}
+function 목록그리기(){
+  const a = 읽기(), box = document.getElementById('목록칸');
+  if (!a.length){ box.innerHTML = '<div class="빔">아직 저장한 명식이 없습니다.</div>'; return; }
+  box.innerHTML = a.map((x,i) => `<div class="항">
+    <div class="이">${x.이름 || '무명'}
+      <small>${x.년}. ${x.월}. ${x.일}. ${x.시모름 ? '시각 모름' : x.시+'시 '+x.분+'분'} · ${x.성별}</small></div>
+    <button onclick="불러(${i})">보기</button>
+    <button onclick="지우(${i})">지움</button>
+  </div>`).join('');
+}
+function 불러(i){
+  const x = 읽기()[i]; if (!x) return;
+  for (const [k,id] of [['이름','이름'],['년','년'],['월','월'],['일','일'],['시','시'],['분','분']])
+    document.getElementById(id).value = x[k] ?? '';
+  document.getElementById('성').value = x.성별;
+  document.getElementById('시모름').checked = !!x.시모름;
+  간명();
+}
+function 지우(i){ const a = 읽기(); a.splice(i,1); 쓰기(a); 목록그리기(); }
+
+/* ── 오행 고리 ── */
+function 고리(m, s){
+  const 차례 = ['木','火','土','金','水'];
+  const R = 84, cx = 116, cy = 114;
+  const 점 = 차례.map((o,i) => {
+    const a = (-90 + i*72) * Math.PI/180;
+    return {o, x: cx + R*Math.cos(a), y: cy + R*Math.sin(a)};
+  });
+  const 세 = {}; 차례.forEach(o => 세[o] = 0);
+  [m.yeonGan,m.wolGan,m.ilGan,m.siGan].filter(Boolean).forEach(g => 세[GAN[g].ohaeng] += 1);
+  [m.yeonJi,m.wolJi,m.ilJi,m.siJi].filter(Boolean).forEach(j =>
+    JIJANGGAN[j].forEach((x,i) => 세[GAN[x.gan].ohaeng] += i ? 0.3 : 0.7));
+
+  let v = `<svg class="고리" viewBox="0 0 232 228" role="img" aria-label="다섯 기운의 고리">`;
+  v += `<circle class="생" cx="${cx}" cy="${cy}" r="${R}"/>`;
+  for (let i=0;i<5;i++){
+    const a = 점[i], b = 점[(i+2)%5];
+    v += `<line class="극" x1="${a.x.toFixed(1)}" y1="${a.y.toFixed(1)}" x2="${b.x.toFixed(1)}" y2="${b.y.toFixed(1)}"/>`;
+  }
+  점.forEach(p => {
+    const 나임 = p.o === s.나.오행;
+    const r = 12.5 + Math.min(11, 세[p.o]*2.4);
+    const c = `var(--${색이름[p.o]})`;
+    v += `<circle class="원" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r.toFixed(1)}"
+          fill="${나임?c:'var(--먹진)'}" stroke="${c}" ${나임?'':'stroke-opacity=".62"'}/>`;
+    v += `<text class="이름" x="${p.x.toFixed(1)}" y="${(p.y-2).toFixed(1)}"
+          fill="${나임?'var(--먹)':c}">${우리말[p.o]}</text>`;
+    v += `<text class="수" x="${p.x.toFixed(1)}" y="${(p.y+9).toFixed(1)}"
+          ${나임?'fill="var(--먹연)"':''}>${세[p.o].toFixed(1)}</text>`;
+    if (나임) v += `<text class="나표" x="${p.x.toFixed(1)}" y="${(p.y+r+11).toFixed(1)}">나</text>`;
+  });
+  v += `<text class="수" x="${cx}" y="${cy-7}">바깥 고리는 낳음</text>`;
+  v += `<text class="수" x="${cx}" y="${cy+7}">안쪽 선은 극함</text></svg>`;
+  return v;
+}
+
+/* ── 간명 ── */
+function 간명(){
+  const v = id => document.getElementById(id).value;
+  const n = id => +v(id);
+  const 시모름 = document.getElementById('시모름').checked;
+  const 입력 = {이름:v('이름').trim(), 년:n('년'), 월:n('월'), 일:n('일'),
+                시:시모름?12:n('시'), 분:시모름?0:n('분'), 성별:v('성'), 시모름};
+
+  let r;
+  try {
+    r = E.interpret.생년월일시로({...입력, 성별:입력.성별});
+  } catch(e) {
+    alert('날짜를 다시 확인해 주세요. ' + (e.message||''));
+    return;
+  }
+  현재 = {입력, r};
+
+  const m = r.명식;
+  const s = E.서사.analyze(r);
+  const c = r.결론;
+
+  const 칸 = (간, 나임) => `<td class="m${GAN[간].ohaeng}${나임?' 일간칸':''}">
+      <span class="글자">${간}</span><span class="소리">${소리[간]}</span>
+      <span class="십">${나임?'나':sipseong(m.ilGan,간)}</span></td>`;
+  const 지칸 = 지 => `<td class="m${GAN[JIJANGGAN[지][0].gan].ohaeng}">
+      <span class="글자">${지}</span><span class="소리">${소리[지]}</span>
+      <span class="십">${sipseong(m.ilGan, JIJANGGAN[지][0].gan)}</span></td>`;
+
+  let h = '';
+  h += `<div class="명식" style="margin-top:1.8rem"><table>
+    <tr><th>시</th><th>일</th><th class="나">월</th><th>년</th></tr>
+    <tr>${시모름?'<td></td>':칸(m.siGan)}${칸(m.ilGan,true)}${칸(m.wolGan)}${칸(m.yeonGan)}</tr>
+    <tr>${시모름?'<td></td>':지칸(m.siJi)}${지칸(m.ilJi)}${지칸(m.wolJi)}${지칸(m.yeonJi)}</tr>
+  </table></div>`;
+
+  h += `<div class="고리감">${고리(m, s)}</div>`;
+  h += `<div class="이야기">${s.이야기.map(x => `<p>${꾸밈(x)}</p>`).join('')}</div>`;
+
+  h += `<section><h2>다섯 기운</h2><table class="다섯">`;
+  for (const k of ['나','낳아주는','내가낳는','내가극하는','나를극하는']){
+    const d = s.다섯[k];
+    h += `<tr><td><b class="${d.오행}">${d.우리말}</b></td><td>${d.뜻}</td><td>${d.십성}</td></tr>`;
+  }
+  h += `</table></section>`;
+
+  /* 격 */
+  const 딱지 = {성격:'온전히 섰다', 성중유패:'섰는데 흠이 하나', 패중유성:'무너졌다 살아남',
+                패격:'무너졌다', 상신미현:'떠받칠 것이 아직 안 나옴'}[c.성패] || c.성패;
+  h += `<section><h2>무엇을 다루며 사는가</h2>
+    <div class="격줄">${c.격}격${c.상신?` 用${c.상신}`:''}<span class="판정딱지">${c.성패} · ${딱지}</span></div>`;
+  const 국 = r.국명 || null;
+  h += `<div class="설명">${격설명(c.격)}${c.상신?` 그것을 <b>${c.상신}</b>이 떠받칩니다.`:''}</div>`;
+  h += `<div class="조문"><span><em>취용</em>${c.근거||''}</span>`;
+  for (const 종 of ['성격','패격','구응']){
+    for (const x of (c.조문?.[종] || []))
+      h += `<span><em>${종}</em>${x.원문}</span>`;
+  }
+  h += `</div>`;
+  if (r.단계상신미현 && !r.단계상신미현.해당없음){
+    const x = r.단계상신미현;
+    h += `<div class="알림"><b>떠받칠 글자가 아직 안 나왔습니다</b><br>${x.상담문구}<br>
+      ${x.열쇠?.length ? '기다리는 글자 — ' + x.열쇠.map(z=>z.글자+'('+z.십성+')').join(' · ') : ''}</div>`;
+  }
+  h += `</section>`;
+
+  /* 운 */
+  const hu = r.단계11_행운;
+  const 올해 = new Date().getFullYear(), 나이 = 올해 - 입력.년;
+  h += `<section><h2>운 — ${hu.방향} · ${hu.대운수}세부터</h2>`;
+  const 뜻 = x => ({비겁:'같은 편', 인:'밑천', 식상:'내보내는 힘', 재:'실물', 관살:'틀',
+                    정관:'틀', 편관:'틀'})[x] || x;
+  const 규 = hu.취운조문;
+  if (규) h += `<div class="설명" style="margin-bottom:1rem">
+      반기는 것은 <b>${(규.희||[]).map(뜻).join(' · ')||'조문에 따로 없음'}</b>,
+      꺼리는 것은 <b>${(규.기||[]).map(뜻).join(' · ')||'없음'}</b>입니다.</div>`;
+  for (const u of hu.대운){
+    const 해 = 입력.년 + u.시작나이;
+    const 지금 = 나이 >= u.시작나이 && 나이 < u.시작나이 + 10;
+    const p = u.길흉.점수;
+    const 클 = p > 0 ? 'p살' : p < 0 ? 'p눌' : 'p섞';
+    const 천오 = 우리말[GAN[u.천간].ohaeng], 지오 = 우리말[GAN[JIJANGGAN[u.지지][0].gan].ohaeng];
+    h += `<div class="운줄${지금?' 지금':''}">
+      <span class="나이">${u.시작나이}세</span>
+      <span class="간지" style="color:var(--${색이름[GAN[u.천간].ohaeng]})">${u.간지}</span>
+      <span class="오">${천오}·${지오} <small>(${u.천간십성}·${u.지지십성})</small></span>
+      <span class="판 ${클}">${u.길흉.판정}</span>
+    </div>`;
+  }
+  h += `</section>`;
+
+  /* 알림 */
+  const 알 = [...(r.만세력?.경고 || [])];
+  if (시모름) 알.push('태어난 시각을 모르신다 하여 시주 없이 보았습니다. 시주는 늦은 때와 자녀 자리를 맡으므로, 그 부분은 비워 두었습니다.');
+  if (알.length) h += `<div class="알림"><b>확인해 주실 것</b><br>${알.join('<br>')}</div>`;
+  const 절 = r.만세력?.절기;
+  if (절) h += `<div class="알림 조용">절기 기준 — ${절.직전} 지나 ${절.지난}일째${절.다음?`, 다음 ${절.다음}까지 ${절.남은}일`:''}.
+    태어난 시각은 진태양시로 32분 당겨 계산했습니다.</div>`;
+
+  document.getElementById('화면결과').innerHTML = h;
+  화면('결과');
+}
+
+function 격설명(격){
+  return {정관:'자리와 규범을 다루며 사는 분입니다.', 편관:'감당하기 어려운 것을 다루며 사는 분입니다.',
+    정재:'실물과 재능을 다루며 사는 분입니다.', 편재:'실물과 재능을 다루며 사는 분입니다.',
+    정인:'배움과 기댈 바탕을 다루며 사는 분입니다.', 편인:'배움과 기댈 바탕을 다루며 사는 분입니다.',
+    식신:'만들어 내보내는 것을 다루며 사는 분입니다.', 상관:'빼어난 것을 밖으로 내는 것을 다루며 사는 분입니다.',
+    양인:'넘치는 힘을 다루며 사는 분입니다.', 건록:'빈 그릇입니다 — 담을 것을 스스로 고르는 자리지요.',
+    월겁:'빈 그릇입니다 — 담을 것을 스스로 고르는 자리지요.'}[격] || '';
+}
+/* 서사 문장의 **굵게**를 오행 색으로 */
+function 꾸밈(x){
+  return x.replace(/\*\*([^*]+)\*\*/g, (_,t) => {
+    const o = Object.keys(우리말).find(k => t.startsWith(우리말[k]) || t === 우리말[k]);
+    return o ? `<b class="${o}">${t}</b>` : `<b>${t}</b>`;
+  });
+}
+
+document.getElementById('시모름').addEventListener('change', e => {
+  for (const id of ['시','분']) document.getElementById(id).disabled = e.target.checked;
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !document.getElementById('화면입력').classList.contains('숨김')) 간명();
+});
+if ('serviceWorker' in navigator)
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
+</script>
+</body>
+</html>

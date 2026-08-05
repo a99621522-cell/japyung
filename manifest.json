@@ -1,0 +1,18 @@
+{
+  "name": "간명 — 자평진전으로 사주 보기",
+  "short_name": "간명",
+  "description": "자평진전 원문의 조문으로 사주를 봅니다. 맞히는 것이 아니라 왜 그런지 답할 수 있게.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#12141A",
+  "theme_color": "#12141A",
+  "lang": "ko",
+  "categories": ["lifestyle", "education"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
