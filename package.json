@@ -1,0 +1,9 @@
+{
+  "name": "ganmyeong-relay",
+  "version": "1.0.0",
+  "description": "간명 해설 중계 — Gemini 호출을 대신하고 API 키를 지킨다",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" },
+  "license": "MIT"
+}
