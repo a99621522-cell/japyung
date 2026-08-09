@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: ganmyeong-relay
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /health
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false          # Render 대시보드에서 직접 넣는다. 저장소에 올리지 않는다
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: ALLOW_ORIGIN
+        sync: false          # 앱 주소. 예: https://ganmyeong.onrender.com
+      - key: RATE_LIMIT
+        value: "20"
