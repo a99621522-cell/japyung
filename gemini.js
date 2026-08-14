@@ -181,7 +181,10 @@ async function 해석(m, opt = {}) {
   } = opt;
 
   const r = interpret(m, interpretOpt);
-  const 프롬프트 = toLLMBrief(r, opt);
+  // 브리프에는 **interpretOpt**를 넘겨야 한다. 바깥 opt에는 apiKey·model만 있고
+  // 주제·성별·출생연도는 interpretOpt 안에 있다. 여기를 opt로 두면 주제가 통째로 새고,
+  // 「금년 직장운」을 물어도 브리프에 그 말이 안 실려 엉뚱한 글이 나온다.
+  const 프롬프트 = toLLMBrief(r, interpretOpt);
 
   if (!apiKey) {
     return { 성공: false, 사유: 'API 키 없음', 판정: r,
