@@ -1,3 +1,5 @@
+# 저장소 루트에 둘 것. Render Blueprint는 루트의 render.yaml만 읽는다.
+# rootDir: server 는 이 파일 위치(루트) 기준이므로 server/ 폴더를 가리킨다.
 services:
   - type: web
     name: ganmyeong-relay
