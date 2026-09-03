@@ -1,60 +1,138 @@
 /**
- * mundap_route.js — /문답 라우트 (server.js에서 불러 쓴다)
+ * mundap_route.js — /문답 라우트
  *
- * /해설 과 재료·모델은 똑같고 브리프만 다르다. 그리고 브리프는 턴에 따라 갈린다:
- *   첫 물음(이력 0)  → haeseol.toLLMBrief   … 「묻는다」와 똑같은 상담글(분야 모범답안)
- *   이어지는 물음     → mundap.toMundapBrief … 소스 전체를 연 노트북LM식 자유 문답
+ * server.js는 판정을 하지 않고 engine/gemini.js의 해석() 하나에 맡긴다.
+ * 해석()은 안에서 interpret → haeseol.toLLMBrief → Gemini 호출을 다 한다.
+ * 문답은 그 가운데 **브리프만** 바꾸면 되는데, 그 자리가 해석() 안이다.
  *
- * 첫 답이 대화의 바닥이 된다. 처음부터 자유 문답으로 열면 상담글의 밀도를 잃고,
- * 계속 상담글로만 가면 「같은 대답만 한다」가 된다. 그래서 첫 턴만 상담글이다.
+ * 그래서 gemini.js를 건드리지 않고 되도록:
+ *   ① 여기서 직접 interpret을 돌려 r을 만들고
+ *   ② 턴에 따라 브리프를 고르고 (첫 물음=상담글 / 이어지는 물음=자유 문답)
+ *   ③ 만들어 둔 브리프를 그대로 모델에 보낼 창구를 찾는다
  *
- * 몸(요청) = { 명식, 출생연도, 성별, 절기날수, 질문, 이력:[{질문,답}] }
- * 응답     = { 성공:true, 본문 } | { 성공:false, 사유 }   — /해설과 같은 꼴이라 프론트가 그대로 읽는다
+ * ③이 문제다. gemini.js가 「완성된 브리프를 받아 보내는」 함수를 내보내면 그것을 쓰고,
+ * 없으면 마지막 수단으로 이 파일이 직접 REST를 부른다(인증 3방식은 gemini.js와 같은 순서).
  *
- * ┌─ server.js에 이렇게 끼운다 ─────────────────────────────────────────
+ * ┌─ server.js에 이렇게 끼운다 ────────────────────────────────
  * │ const { 문답처리 } = require('./engine/mundap_route');
- * │ …
- * │ if (req.method === 'POST' && url.pathname === '/문답') {
- * │   const 몸 = await 본문읽기(req);                       // /해설에서 쓰는 JSON 파서 그대로
- * │   const 답 = await 문답처리(몸, { 계산, 모델호출 });     // 아래 두 함수만 넘긴다
- * │   return json(res, 200, 답);                            // /해설에서 쓰는 응답 함수 그대로
+ * │ // 길 검사에 '/문답'을 넣고, 본문을 읽은 뒤:
+ * │ if (길 === '/문답') {
+ * │   const 답 = await 문답처리(입력, { apiKey: API_KEY, model: MODEL,
+ * │                                    온도: Number(process.env.TEMPERATURE || 0.7) });
+ * │   return 보냄(res, 200, 답, origin);
  * │ }
- * └────────────────────────────────────────────────────────────────────
- *
- *   계산(몸)        : /해설이 몸.명식으로 r을 만드는 바로 그 함수. 대개
- *                     interpret.interpret(몸.명식, { 성별, 출생연도, 절기날수 }) 를 감싼 것
- *   모델호출(브리프): /해설이 Gemini에 브리프를 보내 문자열을 받는 바로 그 함수.
- *                     gemini.js 안의 실제 REST 호출 (해석()이 brief를 스스로 만들면, brief를 받는 안쪽 함수)
- *
- * 이 두 개를 /해설 것과 같은 것으로 넘기면 인증·모델명·재시도·예산 가드가 전부 그대로 적용된다.
+ * └───────────────────────────────────────────────────────────
  */
-const mundap = require('./mundap');
-const haeseol = require('./haeseol');
+const mundap   = require('./mundap');
+const haeseol  = require('./haeseol');
+const gemini   = require('./gemini');
+const oegyeok  = require('./oegyeok');    // 22편 — 외격을 빌려도 되는 자리인지
+const japgyeok = require('./japgyeok');   // 47편 — 어느 잡격인지 이름을 대고 취운을 준다
+let interpret = null;
+try { interpret = require('./interpret'); } catch (e) {}
 
-async function 문답처리(몸, { 계산, 모델호출 }) {
+/**
+ * interpret 결과에 22편·47편 외격 층을 얹는다.
+ * 번들된 interpret.js는 단계22까지만 내므로 여기서 단계47을 덧붙인다.
+ * (interpret.js 안에 직접 넣으면 이 함수는 없어도 된다)
+ */
+function 외격층(r, m) {
   try {
-    if (!몸 || !몸.명식 || !몸.질문) return { 성공:false, 사유:'명식과 질문이 필요합니다' };
-    const 질문 = String(몸.질문).trim().slice(0, 600);
-    const 이력 = Array.isArray(몸.이력) ? 몸.이력.slice(-20) : [];   // 최근 20턴까지만 (이력은 프론트가 들고 있다)
+    // 22편 — 양인을 월령무용에 포함하도록 고친 판을 쓴다
+    r.단계22_외격 = oegyeok.analyze({ ctx: r.ctx, 결론: r.결론.성패 }, m);
+    r.단계47_잡격 = japgyeok.analyze(r.단계22_외격, m);
+  } catch (e) {}
+  return r;
+}
 
-    const r = await 계산(몸);
-    if (!r || !r.결론) return { 성공:false, 사유:'판정을 만들지 못했습니다' };
+// ── 브리프를 그대로 모델에 보낼 창구 찾기 ──────────────────
+// gemini.js가 무엇을 내보내는지 모르므로, 있을 법한 이름을 순서대로 본다.
+// (이 가운데 하나만 있으면 gemini.js는 손대지 않아도 된다)
+const 후보이름 = ['보내기', '호출', '모델호출', '생성', 'callModel', 'generate', 'raw', '브리프로'];
+function 모델창구() {
+  for (const n of 후보이름) if (typeof gemini[n] === 'function') return gemini[n];
+  return null;
+}
 
-    const 공통 = { 년도: new Date().getFullYear(), 출생연도: 몸.출생연도, 성별: 몸.성별 };
+// 마지막 수단 — 직접 REST. gemini.js와 같은 인증 3방식 순서로 시도한다.
+let 성공방식 = null;
+async function 직접호출(브리프, { apiKey, model, 온도 }) {
+  if (!apiKey) throw new Error('API 키가 없습니다');
+  const 주소 = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+  const 몸 = JSON.stringify({
+    contents: [{ role: 'user', parts: [{ text: 브리프 }] }],
+    generationConfig: { temperature: 온도 ?? 0.7, maxOutputTokens: 8192 },
+  });
+  const 방식들 = [
+    { 이름: 'header', url: 주소, 머리: { 'x-goog-api-key': apiKey } },
+    { 이름: 'bearer', url: 주소, 머리: { Authorization: `Bearer ${apiKey}` } },
+    { 이름: 'query',  url: `${주소}?key=${encodeURIComponent(apiKey)}`, 머리: {} },
+  ];
+  const 순서 = 성공방식
+    ? [방식들.find(v => v.이름 === 성공방식), ...방식들.filter(v => v.이름 !== 성공방식)]
+    : 방식들;
+  const 사유 = [];
+  for (const v of 순서) {
+    try {
+      const res = await fetch(v.url, { method: 'POST',
+        headers: Object.assign({ 'Content-Type': 'application/json' }, v.머리), body: 몸 });
+      if (!res.ok) { 사유.push(`${v.이름}:${res.status}`); continue; }
+      const d = await res.json();
+      const t = (d && d.candidates && d.candidates[0] && d.candidates[0].content
+                 && d.candidates[0].content.parts || []).map(p => p.text || '').join('');
+      if (t.trim()) { 성공방식 = v.이름; return t.trim(); }
+      사유.push(`${v.이름}:빈응답`);
+    } catch (e) { 사유.push(`${v.이름}:${String(e.message || e).slice(0, 40)}`); }
+  }
+  throw new Error('모델 호출 실패 — ' + 사유.join(', '));
+}
 
-    // 첫 물음은 「묻는다」와 똑같이 — 분야 모범답안이 실린 상담글로 답한다.
-    // 그 답이 대화의 바닥이 되고, 두 번째 물음부터 소스 전체를 연 자유 문답으로 간다.
+/**
+ * @param {object} 입력  { 명식, 출생연도, 성별, 절기날수, 질문, 이력:[{질문,답}] }
+ * @param {object} 설정  { apiKey, model, 온도 }
+ * @returns {{성공:boolean, 본문?:string, 사유?:string, 모드?:string}}
+ */
+async function 문답처리(입력, 설정 = {}) {
+  try {
+    if (!입력 || !입력.명식) return { 성공: false, 사유: '명식이 없습니다' };
+    const 질문 = String(입력.질문 || '').trim().slice(0, 600);
+    if (!질문) return { 성공: false, 사유: '질문이 없습니다' };
+    const 이력 = Array.isArray(입력.이력) ? 입력.이력.slice(-20) : [];
+
+    // ① 판정 — 앱이 보낸 여덟 글자로 서버에서 다시 낸다(해석()이 하던 것과 같은 호출)
+    if (!interpret || typeof interpret.interpret !== 'function')
+      return { 성공: false, 사유: 'interpret 모듈을 찾지 못했습니다' };
+    let r = interpret.interpret(입력.명식, {
+      출생연도: 입력.출생연도,
+      gender: 입력.성별 === '여' ? '여' : '남',
+      daysToJeolgi: 입력.절기날수,
+      세운개수: 입력.세운개수 ?? 3,
+    });
+    if (!r || !r.결론) return { 성공: false, 사유: '판정을 만들지 못했습니다' };
+    r = 외격층(r, 입력.명식);   // 22편·47편
+
+    // ② 첫 물음은 「묻는다」와 똑같이 상담글로. 두 번째부터 자유 문답.
+    const 공통 = { 년도: new Date().getFullYear(), 출생연도: 입력.출생연도, 성별: 입력.성별 };
     const 모드 = 이력.length === 0 ? '상담' : '문답';
     const 브리프 = 모드 === '상담'
       ? haeseol.toLLMBrief(r, Object.assign({ 주제: 질문 }, 공통))
       : mundap.toMundapBrief(r, Object.assign({ 질문, 이력 }, 공통));
 
-    const 본문 = await 모델호출(브리프);
+    // ③ 모델에 보낸다 — gemini.js의 창구가 있으면 그것을, 없으면 직접
+    const 창구 = 모델창구();
+    let 본문;
+    if (창구) {
+      본문 = await 창구(브리프, { apiKey: 설정.apiKey, model: 설정.model, 온도: 설정.온도 });
+      if (본문 && typeof 본문 === 'object') 본문 = 본문.본문 || 본문.text || '';
+    } else {
+      본문 = await 직접호출(브리프, 설정);
+    }
     if (!본문 || typeof 본문 !== 'string' || 본문.trim().length < 5)
-      return { 성공:false, 사유:'모델이 빈 답을 돌려주었습니다' };
-    return { 성공:true, 본문: 본문.trim(), 모드 };
+      return { 성공: false, 사유: '모델이 빈 답을 돌려주었습니다' };
+
+    return { 성공: true, 본문: 본문.trim(), 모드, 출처: 'gemini' };
   } catch (e) {
-    return { 성공:false, 사유: String(e && e.message || e).slice(0, 200) };
+    return { 성공: false, 사유: String((e && e.message) || e).slice(0, 200) };
   }
 }
 
