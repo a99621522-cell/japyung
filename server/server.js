@@ -19,7 +19,31 @@
  *   앱 ◀──해설──
  */
 const http = require('http');
+
+// ── 47편 외격 층을 interpret에 얹는다 ─────────────────────────
+//   gemini.js가 안에서 interpret을 부르므로, **gemini를 require하기 전에**
+//   감싸야 /해설(상담글)과 /문답 양쪽에 다 반영된다.
+//   interpret.js 안에 직접 두 줄을 넣었다면 이 블록은 지워도 된다.
+{
+  const interpret = require('./engine/interpret');
+  const oegyeok   = require('./engine/oegyeok');    // 22편 (양인을 월령무용에 포함한 판)
+  const japgyeok  = require('./engine/japgyeok');   // 47편 論雜格
+  const 원래 = interpret.interpret;
+  if (typeof 원래 === 'function' && !interpret.__외격층) {
+    interpret.interpret = function (m, opt) {
+      const r = 원래(m, opt);
+      try {
+        r.단계22_외격 = oegyeok.analyze({ ctx: r.ctx, 결론: r.결론.성패 }, m);
+        r.단계47_잡격 = japgyeok.analyze(r.단계22_외격, m);
+      } catch (e) {}
+      return r;
+    };
+    interpret.__외격층 = true;
+  }
+}
+
 const { 해석 } = require('./engine/gemini');
+const { 문답처리 } = require('./engine/mundap_route');   // 문답 모드 (자유 문답 + 47편 외격)
 
 const PORT     = process.env.PORT || 10000;
 const API_KEY  = process.env.GEMINI_API_KEY;
@@ -93,7 +117,7 @@ const 서버 = http.createServer(async (req, res) => {
   if (길 === '/health')
     return 보냄(res, 200, { 살아있음: true, 키: !!API_KEY, 모델: MODEL }, origin);
 
-  if (길 !== '/해설' && 길 !== '/interpret')
+  if (길 !== '/해설' && 길 !== '/interpret' && 길 !== '/문답')
     return 보냄(res, 404, { 오류: '없는 주소입니다' }, origin);
   if (req.method !== 'POST')
     return 보냄(res, 405, { 오류: 'POST로 보내 주세요' }, origin);
@@ -108,7 +132,9 @@ const 서버 = http.createServer(async (req, res) => {
       안내: `한 시간에 ${한도}번까지 볼 수 있습니다` }, origin);
 
   let 몸 = '';
-  req.on('data', c => { 몸 += c; if (몸.length > 20000) req.destroy(); });
+  // 문답은 대화 이력을 함께 보내므로 20KB로는 모자란다
+  const 몸한도 = (길 === '/문답') ? 200000 : 20000;
+  req.on('data', c => { 몸 += c; if (몸.length > 몸한도) req.destroy(); });
   req.on('end', async () => {
     let 입력;
     try { 입력 = JSON.parse(몸); }
@@ -116,6 +142,21 @@ const 서버 = http.createServer(async (req, res) => {
 
     const 탈 = 명식검사(입력.명식);
     if (탈) return 보냄(res, 400, { 오류: 탈 }, origin);
+
+    // ── 문답 모드 ──────────────────────────────
+    // 첫 물음은 「묻는다」와 똑같은 상담글, 두 번째부터 소스 전체를 연 자유 문답.
+    // 그 갈림은 mundap_route가 이력 길이로 스스로 판단한다.
+    if (길 === '/문답') {
+      try {
+        const 답 = await 문답처리(입력, {
+          apiKey: API_KEY, model: MODEL,
+          온도: Number(process.env.TEMPERATURE || 0.7),
+        });
+        return 보냄(res, 200, 답, origin);
+      } catch (e) {
+        return 보냄(res, 200, { 성공: false, 사유: '답을 만들지 못했습니다', 본문: null }, origin);
+      }
+    }
 
     try {
       const r = await 해석(입력.명식, {
