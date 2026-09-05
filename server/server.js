@@ -28,6 +28,21 @@ const http = require('http');
   const interpret = require('./engine/interpret');
   const oegyeok   = require('./engine/oegyeok');    // 22편 (양인을 월령무용에 포함한 판)
   const japgyeok  = require('./engine/japgyeok');   // 47편 論雜格
+  // 관법 토글 (2026-09-05) — 입력.관법 === '궁통보감'이면 격국 브리프 대신 궁통보감 척추 브리프를 낸다.
+  //   gemini.js가 haeseol.toLLMBrief(r, interpretOpt)를 부르므로 여기서 감싼다(gemini require 전).
+  const haeseol = require('./engine/haeseol');
+  if (typeof haeseol.궁통브리프 === 'function' && !haeseol.__관법) {
+    const 원래브리프 = haeseol.toLLMBrief;
+    haeseol.toLLMBrief = function (r, opt) {
+      let b = (opt && opt.관법 === '궁통보감') ? haeseol.궁통브리프(r, opt) : 원래브리프(r, opt);
+      // 답 검사기(2026-09-05): 앞 답이 검사에 걸렸으면 지적을 덧붙여 다시 쓰게 한다
+      if (opt && opt.검사지적) b += '\n' + opt.검사지적;
+      // 요청별 브리프 보관 — 검사기가 표 밖 간지·연도를 대조할 때 쓴다(opt는 요청마다 새 객체)
+      if (opt) opt.__브리프 = b;
+      return b;
+    };
+    haeseol.__관법 = true;
+  }
   const 원래 = interpret.interpret;
   if (typeof 원래 === 'function' && !interpret.__외격층) {
     interpret.interpret = function (m, opt) {
@@ -159,25 +174,45 @@ const 서버 = http.createServer(async (req, res) => {
     }
 
     try {
-      const r = await 해석(입력.명식, {
-        apiKey: API_KEY,
-        model: MODEL,
+      const interpretOpt = {
+        관법: 입력.관법 === '궁통보감' ? '궁통보감' : undefined,   // 유파 토글
+        출생연도: 입력.출생연도,          // 대운 나이 표기에만 쓴다
+        gender: 입력.성별 === '여' ? '여' : '남',
+        daysToJeolgi: 입력.절기날수,
+        세운시작: 입력.세운시작,
+        세운개수: 입력.세운개수 ?? 3,
+        주제: 입력.주제,                  // '직업' 같은 것. 없으면 전체
+      };
+      const 부르기 = () => 해석(입력.명식, {
+        apiKey: API_KEY, model: MODEL,
         온도: Number(process.env.TEMPERATURE || 0.7),
-        재시도: 1,
-        interpretOpt: {
-          출생연도: 입력.출생연도,          // 대운 나이 표기에만 쓴다
-          gender: 입력.성별 === '여' ? '여' : '남',
-          daysToJeolgi: 입력.절기날수,
-          세운시작: 입력.세운시작,
-          세운개수: 입력.세운개수 ?? 3,
-          주제: 입력.주제,                  // '직업' 같은 것. 없으면 전체
-        },
+        재시도: 1, interpretOpt,
       });
+      let r = await 부르기();
+      // ── 답 검사기 (2026-09-03 규칙들은 부탁일 뿐 — 서버가 기계적으로 검사한다) ──
+      let 검사 = null;
+      try {
+        const D = require('./engine/dapgeomsa');
+        const 모드 = interpretOpt.관법 === '궁통보감' ? '궁통' : (/\[이어묻기\]/.test(입력.주제 || '') ? '문답' : '상담');
+        if (r.성공 && r.본문) {
+          검사 = D.검사(r.본문, { 브리프: interpretOpt.__브리프, 모드, 궁통있음: /\[궁통보감 조건절 —/.test(interpretOpt.__브리프 || '') });
+          if (!검사.통과) {
+            interpretOpt.검사지적 = 검사.다시쓰기지시;
+            const r2 = await 부르기();
+            if (r2.성공 && r2.본문) {
+              const 검사2 = D.검사(r2.본문, { 브리프: interpretOpt.__브리프, 모드 });
+              // 다시 쓴 것이 더 낫으면 바꾼다(오류 수가 줄었을 때). 같거나 나쁘면 첫 답 유지
+              if (검사2.오류.length < 검사.오류.length) { r = r2; 검사 = 검사2; 검사.다시씀 = true; }
+            }
+          }
+        }
+      } catch (e) { /* 검사기가 없어도 답은 나가야 한다 */ }
       // 판정 전체를 돌려주지 않는다 — 앱이 이미 갖고 있고, 그만큼 응답이 가벼워진다
       보냄(res, 200, {
         성공: r.성공, 본문: r.본문, 출처: r.출처,
         격: r.판정?.결론?.격, 상신: r.판정?.결론?.상신, 성패: r.판정?.결론?.성패,
         사유: r.사유,
+        검사: 검사 ? { 통과: 검사.통과, 다시씀: !!검사.다시씀, 오류: 검사.오류.map(x => x.규칙 + ': ' + x.내용), 경고: 검사.경고.map(x => x.규칙 + ': ' + x.내용) } : undefined,
       }, origin);
     } catch (e) {
       // 무엇이 터졌든 앱은 조문 리포트로 넘어갈 수 있어야 한다
