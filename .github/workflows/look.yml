@@ -1,0 +1,41 @@
+# 화면 확인 — 배포된 화면 파일을 받아 app/ 에 넣고, 브라우저로 열어 캡처한 것을 site-look-result 브랜치에 올린다.
+# 작업 공간 프록시가 workers.dev를 막아 에이전트가 직접 못 여는 것을 대신한다.
+name: 화면 확인
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 앱 주소
+        default: https://misty-truth-03b6.a99621522.workers.dev/
+permissions:
+  contents: write
+jobs:
+  look:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: 화면 파일 받기
+        run: |
+          U="${{ inputs.url }}"; mkdir -p out/app
+          cd out/app
+          wget -q -e robots=off --page-requisites --no-host-directories --adjust-extension=off "$U" || true
+          for f in index.html engine.bundle.js manseryeok.browser.js mundap_ui.js sw.js manifest.json manifest.webmanifest privacy.html; do
+            [ -s "$f" ] || wget -q "$U$f" -O "$f" || rm -f "$f"
+          done
+          ls -la
+      - name: 브라우저로 열기
+        run: |
+          npm i --no-save playwright@1 >/dev/null 2>&1
+          npx playwright install --with-deps chromium >/dev/null 2>&1
+          node scripts/look.js "${{ inputs.url }}" out/look
+      - name: 결과 올리기
+        if: always()
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git checkout --orphan site-look-result
+          git rm -rq --cached . ; find . -mindepth 1 -maxdepth 1 ! -name out ! -name .git -exec rm -rf {} +
+          cp -r out/* . ; rm -rf out node_modules
+          git add -A ; git commit -qm "화면 확인 $(date -u +%FT%TZ)"
+          git push -qf origin site-look-result
