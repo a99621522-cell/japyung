@@ -5,7 +5,7 @@
 
 ## 구조
 - **화면**: Cloudflare Workers 정적 PWA (`index.html` + `engine.bundle.js` + `manseryeok.browser.js` + `mundap_ui.js` + `sw.js`).
-  명식(여덟 글자) 계산은 브라우저가 한다. **현재 화면 소스는 이 저장소에 없다**(`간명-웹앱-v8.zip`은 옛판). 배포는 zip을 Cloudflare 「새로운 배치」에 끌어놓는 수작업.
+  명식(여덟 글자) 계산은 브라우저가 한다. **화면 소스는 `app/`** (2026-10-02 배포본에서 받아 넣음. `간명-웹앱-v8.zip`은 옛판). 배포는 app/ 폴더를 zip으로 묶어 Cloudflare 「새로운 배치」에 끌어놓는 수작업 — 사용자가 한다. 화면을 고치면 `sw.js`의 캐시판 번호를 올릴 것. 아이콘 등 받지 못한 파일이 있을 수 있으니 zip을 만들 때 빠진 파일은 사용자에게 알린다.
 - **서버**: Render `ganmyeong-relay` (https://ganmyeong-relay.onrender.com), Root Directory `server/`, `node server.js`.
   라우트 `/health`(커밋 표시) · `/해설`(=`/interpret`, 상담글) · `/문답`(자유 문답). 판정은 서버가 interpret로 다시 내고 Gemini는 문장만 쓴다.
 - **엔진 파일은 두 벌**: 저장소 루트(원본)와 `server/engine/`(Render가 실제로 쓰는 것). 루트를 고치고 **같은 파일을 `server/engine/`에 복사**한다. `scripts/check.js`가 두 벌이 같은지 본다.
