@@ -32,7 +32,8 @@
 3. 브랜치에 커밋 → PR → main 병합. main에 `server/**`가 바뀌면 Render가 배포하고, GitHub Actions 「배포 확인」이 배포를 기다렸다가 `/해설`을 한 번 불러 답 전문을 로그에 남긴다.
    **결과 보기: 답 전문이 그 커밋의 댓글로 올라온다** — `gh api repos/a99621522-cell/japyung/commits/<sha>/comments --jq '.[-1].body'`. 이 작업 공간에서는 Actions 로그 파일 다운로드가 막혀 있으니 댓글로 읽는다.
    손으로 돌리기(서버 코드를 안 바꿨을 때): `gh api -X POST repos/a99621522-cell/japyung/actions/workflows/smoke.yml/dispatches -f ref=main` → main 맨 위 커밋의 댓글로 답이 온다.
-4. 이 작업 공간의 프록시는 onrender.com·workers.dev로 직접 나가지 못한다. 서버 확인은 위 Actions로 하거나, WebFetch로 `/health`만 본다.
+4. **화면 보기**: `gh api -X POST repos/a99621522-cell/japyung/actions/workflows/look.yml/dispatches -f ref=main` → GitHub에서 브라우저로 앱을 열어 시험 명식을 넣고 물음을 보낸 뒤, 캡처·화면 글자·배포된 화면 파일(app/)을 `site-look-result` 브랜치에 올린다. `git fetch origin site-look-result` 후 `git show origin/site-look-result:look/3-답.png > 파일`로 꺼내 Read로 본다.
+5. 이 작업 공간의 프록시는 onrender.com·workers.dev로 직접 나가지 못한다. 서버 확인은 위 Actions로 하거나, WebFetch로 `/health`만 본다.
 
 ## 알려진 것
 - `manse.js`는 루트(KST 절입 보정판)와 `server/engine`(옛판)이 다르다 — 맞출지 사용자 결정 대기.

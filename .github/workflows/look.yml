@@ -7,6 +7,9 @@ on:
       url:
         description: 앱 주소
         default: https://misty-truth-03b6.a99621522.workers.dev/
+      question:
+        description: 물음
+        default: 취업, 결혼, 재물, 건강을 알려주세요
 permissions:
   contents: write
 jobs:
@@ -27,9 +30,9 @@ jobs:
           ls -la
       - name: 브라우저로 열기
         run: |
-          npm i --no-save playwright@1 >/dev/null 2>&1
-          npx playwright install --with-deps chromium >/dev/null 2>&1
-          node scripts/look.js "${{ inputs.url }}" out/look
+          npm i --no-save playwright@1
+          npx playwright install --with-deps chromium
+          node scripts/look.js "${{ inputs.url }}" out/look "${{ inputs.question }}"
       - name: 결과 올리기
         if: always()
         run: |
