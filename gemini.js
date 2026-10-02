@@ -152,9 +152,15 @@ function 반복검사(text) {
 /** 검사에 걸린 문장만 덜어낸다. 통째로 버리는 것보다 낫다 */
 function 문제문장제거(text, 문제) {
   const 말 = 문제.flatMap(x => x.검출);
-  return text.split(/(?<=[.!?。])\s+/)
-    .filter(문장 => !말.some(w => 문장.includes(w)))
-    .join(' ').trim();
+  // 문장 사이의 줄바꿈을 지킨다 — 전엔 join(' ')으로 문단·▶ 머리말이 한 줄로 뭉개졌다 (2026-10-02)
+  const 조각 = text.split(/(?<=[.!?。])(\s+)/);
+  let out = '';
+  for (let i = 0; i < 조각.length; i += 2) {
+    const 문장 = 조각[i], 사이 = 조각[i + 1] || '';
+    if (말.some(w => 문장.includes(w))) { if (/\n/.test(사이) && !/\n$/.test(out)) out = out.trimEnd() + 사이; continue; }
+    out += 문장 + 사이;
+  }
+  return out.trim();
 }
 
 /** 재요청 프롬프트 — 무엇이 걸렸는지 알려준다 */

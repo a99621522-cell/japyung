@@ -193,7 +193,10 @@ const 서버 = http.createServer(async (req, res) => {
       let 검사 = null;
       try {
         const D = require('./engine/dapgeomsa');
-        const 모드 = interpretOpt.관법 === '궁통보감' ? '궁통' : (/\[이어묻기\]/.test(입력.주제 || '') ? '문답' : '상담');
+        // 설명 요청(「이게 무슨 말이야」)은 상담글 모양(▶ 다섯 머리말)을 요구하지 않는다 (2026-10-02)
+        let 설명 = false;
+        try { 설명 = require('./engine/swiunmal').설명요청인가(입력.주제); } catch (e) {}
+        const 모드 = interpretOpt.관법 === '궁통보감' ? '궁통' : 설명 ? '설명' : (/\[이어묻기\]/.test(입력.주제 || '') ? '문답' : '상담');
         if (r.성공 && r.본문) {
           검사 = D.검사(r.본문, { 브리프: interpretOpt.__브리프, 모드, 궁통있음: /\[궁통보감 조건절 —/.test(interpretOpt.__브리프 || '') });
           if (!검사.통과) {
