@@ -30,7 +30,8 @@
 1. 루트 파일을 고친다 → 바뀐 파일을 `server/engine/`에 복사
 2. `node scripts/check.js` — 전부 통과해야 한다
 3. 브랜치에 커밋 → PR → main 병합. main에 `server/**`가 바뀌면 Render가 배포하고, GitHub Actions 「배포 확인」이 배포를 기다렸다가 `/해설`을 한 번 불러 답 전문을 로그에 남긴다.
-   결과 보기: `gh run list --workflow=smoke.yml` → `gh run view <id> --log`. 손으로 돌리기: `gh workflow run smoke.yml`
+   **결과 보기: 답 전문이 그 커밋의 댓글로 올라온다** — `gh api repos/a99621522-cell/japyung/commits/<sha>/comments --jq '.[-1].body'`. 이 작업 공간에서는 Actions 로그 파일 다운로드가 막혀 있으니 댓글로 읽는다.
+   손으로 돌리기(서버 코드를 안 바꿨을 때): `gh api -X POST repos/a99621522-cell/japyung/actions/workflows/smoke.yml/dispatches -f ref=main` → main 맨 위 커밋의 댓글로 답이 온다.
 4. 이 작업 공간의 프록시는 onrender.com·workers.dev로 직접 나가지 못한다. 서버 확인은 위 Actions로 하거나, WebFetch로 `/health`만 본다.
 
 ## 알려진 것

@@ -47,6 +47,8 @@ async function 건강() {
   console.log(`\n── 응답 ── 성공 ${답.성공} · 출처 ${답.출처} · ${본문.length}자`);
   console.log('검사', JSON.stringify(답.검사 || null));
   console.log('\n' + 본문 + '\n');
+  // 에이전트가 읽을 수 있게 답을 파일로 남긴다 — 워크플로가 커밋 댓글로 올린다(작업 공간 프록시는 Actions 로그 파일을 못 받는다)
+  try { require('fs').writeFileSync('smoke-answer.md', `### 배포 확인 — 시험 명식 辛巳丁酉辛巳甲午(여), 물음 「${몸.주제}」\n\n서버 커밋 ${h.커밋} · 성공 ${답.성공} · ${본문.length}자\n\n검사: \`${JSON.stringify(답.검사 || null)}\`\n\n---\n\n${본문}\n`); } catch (e) {}
   const 머리 = ['▶ 한 줄로 말하면', '▶ 쉽게 풀어 보면', '▶ 왜 그렇게 보나요', '▶ 해 볼 만한 일', '▶ 이 답에 나온 말'];
   const 빠짐 = 머리.filter(m => !본문.includes(m));
   if (!답.성공) { console.log(`::error::해설 실패 — ${답.사유}`); process.exit(1); }
