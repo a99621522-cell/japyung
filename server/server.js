@@ -130,7 +130,8 @@ const 서버 = http.createServer(async (req, res) => {
 
   // 살아 있는지 — Render가 잠들지 않게 앱이 미리 깨울 때도 쓴다
   if (길 === '/health')
-    return 보냄(res, 200, { 살아있음: true, 키: !!API_KEY, 모델: MODEL }, origin);
+    // 커밋 — Render가 넣어 주는 RENDER_GIT_COMMIT. 배포가 끝났는지 밖에서 확인할 때 쓴다(scripts/smoke.js)
+    return 보냄(res, 200, { 살아있음: true, 키: !!API_KEY, 모델: MODEL, 커밋: (process.env.RENDER_GIT_COMMIT || '').slice(0, 7) || null }, origin);
 
   if (길 !== '/해설' && 길 !== '/interpret' && 길 !== '/문답')
     return 보냄(res, 404, { 오류: '없는 주소입니다' }, origin);

@@ -1,0 +1,13 @@
+# 올리기 전 점검 — 엔진 불러오기·브리프 네 갈래·쉬운 말 층·루트↔server/engine 일치·궁통보감 회귀
+name: 점검
+on:
+  push:
+  pull_request:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: node scripts/check.js

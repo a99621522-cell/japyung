@@ -1,0 +1,19 @@
+# 배포 확인 — main에 서버 코드가 들어오면 Render 배포를 기다렸다가 /해설을 한 번 불러 답 모양을 본다.
+# 답 전문이 로그에 남으므로 에이전트가 gh run view --log 로 읽을 수 있다. Gemini 요금 1회.
+name: 배포 확인
+on:
+  push:
+    branches: [main]
+    paths: ['server/**', 'render.yaml']
+  workflow_dispatch:
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: 배포 기다린 뒤 해설 한 번
+        env:
+          RELAY_URL: ${{ vars.RELAY_URL || 'https://ganmyeong-relay.onrender.com' }}
+        run: node scripts/smoke.js ${{ github.event_name == 'push' && github.sha || '' }}
