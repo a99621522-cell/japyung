@@ -1,0 +1,1761 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="간명 — 자평진전과 궁통보감, 두 고전으로만 사주를 봅니다. 맞히는 것이 아니라 왜 그런지 답할 수 있게 보는 방법입니다.">
+<meta name="theme-color" content="#F6F2EA">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="간명">
+<title>간명 — 자평진전으로 사주 보기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#F6F2EA; --card:#FFFFFF; --card2:#F4EEE2;
+  --border:#E8E1D2; --border2:#D9CFBB;
+  --gold:#A8802F; --gold2:#C9A84C; --gold-dim:#D9C48C;
+  --text:#2C2620; --muted:#7A7264; --dim:#A39A88;
+  --green:#1F8A63; --red:#C0492F;
+  /* 오행 — 크림 바탕에서 읽히도록 어둡게 잡았다 */
+  --목:#2E7D4F; --화:#D0301C; --토:#C79100; --금:#8E959E; --수:#1F1F23;
+  --r:12px; --r2:8px;
+  --명조:'Nanum Myeongjo', serif;
+  --본문:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--본문);
+  min-height:100vh;-webkit-font-smoothing:antialiased;line-height:1.65}
+button,input,select{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.숨김{display:none !important}
+
+/* ── 뼈대 ── */
+.shell{display:flex;min-height:100vh}
+.sidebar{width:220px;flex-shrink:0;background:var(--card);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.main{flex:1;min-width:0}
+
+.logo{padding:20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:11px}
+.logo-mark{width:36px;height:36px;background:linear-gradient(135deg,var(--gold-dim),var(--gold));
+  border-radius:9px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--명조);font-size:19px;font-weight:800;color:#FFF8E8}
+.logo-name{font-size:15px;font-weight:600;letter-spacing:-.3px;display:block}
+.logo-sub{font-size:10px;color:var(--gold);letter-spacing:1.6px;display:block}
+nav{flex:1;padding:12px 8px;overflow-y:auto}
+.nav-section{font-size:10px;color:var(--dim);letter-spacing:1.5px;padding:10px 10px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r2);
+  cursor:pointer;font-size:13px;color:var(--muted);transition:.15s;margin-bottom:2px;
+  width:100%;background:none;border:none;text-align:left}
+.nav-item:hover{background:var(--card2);color:var(--text)}
+.nav-item.active{background:rgba(201,168,76,.14);color:var(--gold);font-weight:600}
+.나침{font-size:11px;color:var(--dim);padding:14px;border-top:1px solid var(--border);line-height:1.7}
+
+.main-header{padding:16px 24px;border-bottom:1px solid var(--border);background:var(--card);
+  position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.page-title{font-size:16px;font-weight:600}
+.page-title small{display:block;font-size:12px;color:var(--muted);font-weight:400}
+.btn-gold{background:var(--gold);color:#FFF8E8;border:none;padding:8px 16px;border-radius:var(--r2);
+  font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+.btn-gold:hover{background:#96712a}
+.btn-line{background:none;border:1px solid var(--border2);color:var(--muted);padding:8px 14px;
+  border-radius:var(--r2);font-size:13px;cursor:pointer;transition:.15s}
+.btn-line:hover{border-color:var(--gold);color:var(--gold)}
+.content{padding:22px 24px 64px;max-width:880px}
+
+/* ── 카드 ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  padding:22px;margin-bottom:16px}
+.card-title{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.6px;
+  margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.gold-dot{width:6px;height:6px;background:var(--gold);border-radius:50%;flex-shrink:0}
+
+/* ── 첫 화면 ── */
+.여는말{font-family:var(--명조);font-size:26px;line-height:1.5;margin-bottom:10px;font-weight:400}
+.여는말 b{font-weight:800;color:var(--gold)}
+.여는쪽{color:var(--muted);font-size:14px;margin-bottom:26px}
+.입력줄{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.칸{display:flex;flex-direction:column;gap:5px}
+.칸 label{font-size:11px;color:var(--muted);letter-spacing:.3px}
+.칸 input,.칸 select{background:var(--bg);border:1px solid var(--border2);border-radius:var(--r2);
+  padding:9px 11px;font-size:15px;width:88px;transition:.15s}
+.칸 input:focus,.칸 select:focus{outline:none;border-color:var(--gold);background:var(--card)}
+.칸 input:disabled{opacity:.4}
+.칸.이름칸 input{width:170px}
+.고름{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;font-size:13px;color:var(--muted);align-items:center}
+.고름 label{display:flex;align-items:center;gap:6px;cursor:pointer}
+.역법말{color:var(--gold);font-size:12px}
+.도움{margin-top:18px;padding-top:16px;border-top:1px solid var(--border);
+  font-size:12.5px;color:var(--muted);line-height:1.8}
+.도움 b{color:var(--text)}
+
+/* ── 검색창 · 이 화면의 중심 ── */
+.찾기감{position:sticky;top:73px;z-index:15;background:var(--bg);
+  padding:14px 0 12px;margin-bottom:4px}
+.찾기{display:flex;align-items:center;gap:12px;background:var(--card);
+  border:1.5px solid var(--border2);border-radius:999px;padding:6px 6px 6px 20px;
+  box-shadow:0 1px 3px rgba(44,38,32,.05);transition:.18s}
+.찾기:focus-within{border-color:var(--gold);box-shadow:0 0 0 4px rgba(168,128,47,.12)}
+.찾기 svg{flex-shrink:0;color:var(--dim)}
+.찾기:focus-within svg{color:var(--gold)}
+.찾기 input{flex:1;min-width:0;border:none;background:none;outline:none;
+  font-size:16px;padding:12px 0}
+.찾기 input::placeholder{color:var(--dim)}
+.칸 input::placeholder{color:var(--dim);opacity:.7}
+.찾기 button{background:var(--gold);color:#FFF8E8;border:none;border-radius:999px;
+  padding:12px 24px;font-size:14.5px;font-weight:600;cursor:pointer;flex-shrink:0;transition:.15s}
+.찾기 button:hover{background:#96712a}
+.찾기 button:disabled{opacity:.5;cursor:default}
+.칩들{display:flex;gap:7px;margin-top:11px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.칩들::-webkit-scrollbar{display:none}
+.칩{white-space:nowrap;padding:7px 14px;border:1px solid var(--border2);background:var(--card);
+  color:var(--muted);border-radius:999px;font-size:13px;cursor:pointer;transition:.15s}
+.칩:hover{border-color:var(--gold);color:var(--gold)}
+.칩[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:#FFF8E8;font-weight:600}
+
+.옮김말{margin:14px 0 0;font-size:13px;color:var(--muted)}
+.옮김말 b{color:var(--gold)}
+.상담{margin-top:16px;line-height:1.95;white-space:pre-wrap;font-size:15.5px}
+.상담 .출처{display:block;margin-top:18px;padding-top:14px;border-top:1px solid var(--border);
+  color:var(--dim);font-size:12.5px;white-space:normal;line-height:1.7}
+.상담.풀이{white-space:normal}
+.풀이제{font-family:var(--명조);font-size:17px;font-weight:700;margin:22px 0 8px;color:var(--gold)}
+.풀이점{margin:.35rem 0 .35rem 1rem;position:relative}
+.풀이점::before{content:'·';position:absolute;left:-.9rem;color:var(--gold)}
+.풀이주{color:var(--muted);font-size:13px;margin:.6rem 0}
+.풀이선{border:none;border-top:1px solid var(--border);margin:20px 0}
+.틈{height:.5rem}
+.풀이표{width:100%;border-collapse:collapse;font-size:13.5px;margin:10px 0}
+.풀이표 th,.풀이표 td{padding:7px 9px;border-bottom:1px solid var(--border);text-align:left}
+.풀이표 th{color:var(--muted);font-weight:600;font-size:12px}
+.기다림{margin-top:16px;color:var(--muted);font-size:14px}
+.기다림::after{content:'';animation:점 1.4s steps(4,end) infinite}
+@keyframes 점{0%{content:''}25%{content:'·'}50%{content:'··'}75%{content:'···'}}
+/* 상담을 기다리는 동안 — 죽은 게 아니라 살아 있음을 눈으로 보여준다 */
+.기다림칸{display:flex;align-items:center;gap:14px;margin-top:16px;
+  background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  padding:16px 18px}
+.팽이{width:26px;height:26px;flex-shrink:0;border-radius:50%;
+  border:3px solid var(--border2);border-top-color:var(--gold);
+  animation:돌기 .9s linear infinite}
+@keyframes 돌기{to{transform:rotate(360deg)}}
+.기다림글 b{display:block;font-size:14.5px;color:var(--text)}
+.기다림글 span{font-size:12.5px;color:var(--dim)}
+@media (prefers-reduced-motion:reduce){.팽이{animation:none;border-top-color:var(--gold)}}
+.찾기 button .단추팽이{display:inline-block;width:14px;height:14px;vertical-align:-2px;
+  margin-right:7px;border-radius:50%;border:2px solid rgba(255,248,232,.4);
+  border-top-color:#FFF8E8;animation:돌기 .9s linear infinite}
+
+/* ── 명식 ── */
+.기둥들{display:flex;gap:10px;justify-content:center;margin:4px 0 6px}
+.기둥{flex:1;max-width:110px;text-align:center;background:var(--card2);
+  border:1px solid var(--border2);border-radius:var(--r2);padding:12px 6px}
+.기둥.일주{border-color:var(--gold-dim);background:rgba(201,168,76,.1)}
+.기둥.빔{opacity:.4}
+.기둥 .자리{font-size:10.5px;color:var(--dim);letter-spacing:1px;margin-bottom:8px}
+.기둥 .글자{font-family:var(--명조);font-size:34px;font-weight:700;line-height:1.1;display:block}
+.기둥 .소리{font-size:11px;color:var(--muted);display:block;margin-top:1px}
+.기둥 .십{font-size:11px;color:var(--gold);display:block;margin-top:3px}
+.기둥 .가름{height:1px;background:var(--border2);margin:9px 4px}
+.m목{color:var(--목)} .m화{color:var(--화)} .m토{color:var(--토)}
+.m금{color:var(--금)} .m수{color:var(--수)}
+b.木{color:var(--목)} b.火{color:var(--화)} b.土{color:var(--토)}
+b.金{color:var(--금)} b.水{color:var(--수)}
+
+.고리감{display:flex;justify-content:center;margin:6px 0 2px}
+svg.고리{width:100%;max-width:250px;height:auto}
+svg.고리 .생{fill:none;stroke:var(--border2);stroke-width:1}
+svg.고리 .극{stroke:var(--border2);stroke-width:.8;stroke-dasharray:3 4}
+svg.고리 .원{stroke-width:1.6}
+svg.고리 .이름{font-size:11.5px;font-weight:600;text-anchor:middle;font-family:var(--본문)}
+svg.고리 .수{font-size:9.5px;fill:var(--dim);text-anchor:middle;font-family:var(--본문)}
+svg.고리 .나표{font-size:9.5px;fill:var(--gold);text-anchor:middle;font-weight:700;font-family:var(--본문)}
+
+.이야기 p{margin:.7rem 0;font-size:15.5px}
+.다섯{width:100%;border-collapse:collapse;font-size:14px}
+.다섯 td{padding:9px 6px;border-bottom:1px solid var(--border)}
+.다섯 tr:last-child td{border-bottom:none}
+.다섯 td:first-child{width:64px;font-weight:600}
+.다섯 td:last-child{text-align:right;color:var(--muted);font-size:13px}
+
+.격줄{font-family:var(--명조);font-size:24px;font-weight:700;display:flex;
+  align-items:center;flex-wrap:wrap;gap:10px}
+.시간겹{display:block;max-width:260px;margin:2px auto}
+.시간겹주{font-size:11.5px;color:var(--dim);text-align:center;margin-top:4px;line-height:1.6}
+.희기{margin:10px 0 4px;padding:10px 12px;background:rgba(201,168,76,.06);border-radius:10px}
+.희기줄{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0;font-size:13px}
+.희기줄 b{min-width:74px;font-size:12.5px}
+.희기줄.좋음 b{color:#2E7D4F}.희기줄.나쁨 b{color:#D0301C}
+.희기칩{background:var(--card2);border:1px solid rgba(0,0,0,.08);border-radius:8px;padding:3px 9px;font-weight:600}
+.희기칩 small{font-weight:400;color:var(--dim);margin-left:5px}
+.희기주{font-size:11.5px;color:var(--dim);margin-top:6px;line-height:1.6}
+.검사줄{font-size:11px;color:#9a8f7e;margin-top:8px;padding-top:6px;border-top:1px dashed rgba(0,0,0,.08);cursor:help}
+.밭링크{text-align:right;margin:6px 4px 14px;font-size:12.5px}
+.밭링크 a{color:var(--gold);text-decoration:none;border-bottom:1px dashed var(--gold)}
+.밭링크 small{color:var(--dim)}
+.관법알림{border-left:3px solid var(--gold);margin-top:18px}
+.궁통요지{font-size:13.5px;line-height:1.7;color:#4a4236;margin:4px 0 10px}
+.궁통판정{background:#fff;border-left:4px solid #ccc;border-radius:10px;padding:10px 14px;margin:6px 0 10px;line-height:1.7}
+.궁통판정.없음{border-left-color:#bbb;color:#6b6257;font-size:13px}
+.궁통원문{font-family:serif;color:#6b5a38;font-size:13.5px}
+.궁통판정어{font-size:14px;margin-top:4px}.궁통방향{color:var(--dim);font-size:12.5px}
+.궁통결{margin-top:4px;font-size:14px}
+.궁통줄{font-size:13px;line-height:1.65;margin:4px 0;color:#4a4236}
+.궁통라벨{font-weight:700;font-size:12px;margin-right:6px}
+.궁통주{font-size:11.5px;color:var(--dim);margin-top:10px;line-height:1.6}
+.상담소제{font-weight:700;font-size:15px;margin:14px 0 4px;color:#3b3225}
+.상담항목{margin:4px 0 4px 10px;padding-left:10px;border-left:2px solid rgba(0,0,0,.1)}
+.취운카드{background:var(--card2);border:1px solid rgba(0,0,0,.06);border-radius:14px;padding:16px 18px;margin:0 0 14px}
+.취운제목{font-weight:700;font-size:15px;margin-bottom:8px}
+.취운제목 .좋음{color:#2E7D4F}.취운제목 .나쁨{color:#D0301C}
+.취운설명{font-size:13.5px;line-height:1.7;color:#4a4236;margin-bottom:10px}
+.취운근거{font-size:13px;line-height:1.7;background:rgba(255,255,255,.6);border-radius:10px;padding:10px 12px;margin-bottom:12px}
+.취운근거 .원문{font-family:serif;color:#6b5a38}
+.취운줄{margin-top:10px}
+.취운줄제목{font-weight:700;font-size:13px;margin:0 0 6px;padding-bottom:4px;border-bottom:1px dashed rgba(0,0,0,.12)}
+.취운줄제목.좋음{color:#2E7D4F}.취운줄제목.나쁨{color:#D0301C}
+.취운항목{background:#fff;border-radius:10px;padding:10px 12px;margin:6px 0;font-size:13px;line-height:1.65;border-left:3px solid #ccc}
+.취운항목.좋음{border-left-color:#2E7D4F}.취운항목.나쁨{border-left-color:#D0301C}
+.취운머리{display:flex;align-items:baseline;gap:8px;margin-bottom:2px}
+.취운이름{font-weight:700;font-size:15px}
+.취운십성{font-size:12px;color:var(--dim)}
+.취운뜻{color:#4a4236}
+.취운글자{margin:4px 0;display:flex;flex-wrap:wrap;gap:4px 12px}
+.취운글자 b{font-weight:600}.취운글자 small{color:var(--dim);margin-left:4px}
+.취운왜,.취운장면{margin-top:3px}
+.취운왜 em,.취운장면 em{font-style:normal;font-weight:700;color:var(--gold);margin-right:6px;font-size:12px}
+.취운주의{margin-top:8px;padding:8px 10px;background:#fff7e6;border-radius:8px;font-size:12.5px;line-height:1.65;color:#6b4e12}
+.격상세{margin:8px 0 2px}
+.격상세 summary{cursor:pointer;font-size:13px;color:var(--gold);font-weight:600;padding:4px 0}
+.상담 b{font-weight:700;background:linear-gradient(transparent 55%, rgba(191,155,74,.28) 55%);
+  padding:0 1px;border-radius:2px}
+.분야곡선판{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:12px;margin-top:4px}
+.분야곡선{border:1px solid var(--border);border-radius:10px;padding:6px 6px 2px;background:#fffdf7}
+#간명서{display:none}
+@media print{
+  @page{size:A4;margin:15mm 16mm}
+  body *{visibility:hidden}
+  #간명서, #간명서 *{visibility:visible}
+  #간명서{display:block;position:absolute;left:0;top:0;width:100%;
+    font-family:'Noto Serif KR','Nanum Myeongjo',serif;color:#2b2620;font-size:11.5pt;line-height:1.9}
+  #간명서 .쪽{page-break-after:always}
+  #간명서 .장{page-break-inside:auto}
+  #간명서 .장 h2{page-break-after:avoid;margin-top:9mm}
+  #간명서 .장:first-of-type h2{margin-top:0}
+  #간명서 .부록시작{page-break-before:always}
+  #간명서 .부록시작 h2{margin-top:0}
+  #간명서 .표지{min-height:230mm;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+  #간명서 .표제{font-size:30pt;letter-spacing:14px;margin:0 0 4mm;font-weight:700}
+  #간명서 .부제{font-size:10.5pt;color:#8a7f6d;margin-bottom:14mm}
+  #간명서 .표지명식{font-size:22pt;letter-spacing:6px;margin:8mm 0;font-weight:600}
+  #간명서 .표지정보{font-size:11pt;color:#5c5342;line-height:2.1}
+  #간명서 h2{font-size:15pt;border-bottom:2px solid #bf9b4a;padding-bottom:2mm;margin:0 0 5mm;letter-spacing:1px}
+  #간명서 h3{font-size:12pt;color:#7a6a3f;margin:6mm 0 2mm}
+  #간명서 h4,#간명서 .풀이제{font-size:11.5pt;margin:5mm 0 1.5mm;font-weight:700}
+  #간명서 p{margin:0 0 3mm;text-align:justify}
+  #간명서 table{width:100%;border-collapse:collapse;margin:3mm 0 5mm;font-size:10pt}
+  #간명서 th,#간명서 td{border:1px solid #cfc4ad;padding:1.6mm 2mm;text-align:center;vertical-align:top}
+  #간명서 th{background:#f3ede0;font-weight:600}
+  #간명서 td.왼{text-align:left}
+  #간명서 b{font-weight:700;background:linear-gradient(transparent 55%, rgba(191,155,74,.30) 55%)}
+  #간명서 .지금줄{background:#faf3df;font-weight:600}
+  #간명서 .분야곡선판{display:grid;grid-template-columns:1fr 1fr;gap:4mm;margin:2mm 0 4mm}
+  #간명서 .분야곡선{border:1px solid #e2d8c2;border-radius:2mm;padding:2mm;page-break-inside:avoid}
+  #간명서 .에세이{line-height:2.0}
+  #간명서 .에세이 br+br{display:block;content:'';margin-top:2mm}
+  #간명서 .십성절{margin:0 0 4mm;padding:2.5mm 3mm;border:1px solid #e2d8c2;border-radius:2mm;page-break-inside:avoid}
+  #간명서 .십성절 .이름{font-weight:700;font-size:11.5pt}
+  #간명서 .작게{font-size:9.5pt;color:#7d7362}
+  #간명서 .면책{font-size:9.5pt;color:#8a7f6d;border-top:1px solid #cfc4ad;padding-top:3mm;margin-top:8mm}
+  #간명서 details{display:block} #간명서 summary{display:none}
+  #간명서 .키워드칩들{margin:2mm 0} #간명서 .키워드칩{border:1px solid #bf9b4a;border-radius:8px;padding:0 2mm;margin-right:1.5mm;font-size:9.5pt}
+}
+.딱지풀이{margin:8px 0 2px;padding:10px 12px;background:var(--bg);border-left:3px solid var(--gold);
+  border-radius:0 var(--r2) var(--r2) 0;font-size:13.5px;color:var(--muted);line-height:1.75}
+.키워드칩들{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 2px}
+.키워드칩{padding:4px 12px;border:1px solid var(--border2);border-radius:999px;
+  background:var(--bg);font-size:12.5px;color:var(--muted)}
+.격상세줄{font-size:13.5px;line-height:1.75;margin:7px 0;color:var(--ink)}
+.격상세줄 b{color:var(--gold);font-weight:700;margin-right:6px}
+.판정딱지{font-family:var(--본문);font-size:12px;font-weight:600;color:var(--gold);
+  background:rgba(201,168,76,.14);padding:4px 11px;border-radius:999px}
+.설명{margin-top:10px;font-size:15px}
+.조문{margin-top:14px;display:flex;flex-direction:column;gap:6px}
+.조문 span{font-size:12.5px;color:var(--muted);background:var(--card2);
+  border-radius:var(--r2);padding:8px 11px;line-height:1.6}
+.조문 em{font-style:normal;color:var(--gold);font-weight:600;margin-right:8px}
+
+.운줄{display:grid;grid-template-columns:52px 62px 1fr auto;gap:10px;align-items:center;
+  padding:9px 10px;border-radius:var(--r2);font-size:13.5px}
+.운줄.지금{background:rgba(201,168,76,.13);font-weight:600}
+.운줄 .나이{color:var(--dim);font-size:12px}
+.운줄 .간지{font-family:var(--명조);font-size:18px;font-weight:700}
+.운줄 .오{color:var(--muted);font-size:12.5px}
+.운줄 .오 small{color:var(--dim)}
+.운줄 .판{font-size:12px;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.p살{background:rgba(31,138,99,.13);color:var(--green)}
+.p눌{background:rgba(192,73,47,.12);color:var(--red)}
+.p섞{background:var(--card2);color:var(--muted)}
+
+.알림{background:var(--card2);border-left:3px solid var(--gold-dim);border-radius:var(--r2);
+  padding:13px 15px;font-size:13.5px;margin-top:14px;line-height:1.75}
+.알림.조용{border-left-color:var(--border2);color:var(--muted);font-size:12.5px}
+
+.항{display:flex;align-items:center;gap:8px;padding:13px 0;border-bottom:1px solid var(--border)}
+.항:last-child{border-bottom:none}
+.항 .이{flex:1;font-size:14.5px;font-weight:500}
+.항 .이 small{display:block;color:var(--muted);font-size:12px;font-weight:400}
+.빔{color:var(--dim);text-align:center;padding:40px 0;font-size:14px;line-height:1.9}
+
+footer{color:var(--dim);font-size:12px;line-height:1.85;margin-top:26px;
+  padding-top:20px;border-top:1px solid var(--border)}
+footer b{color:var(--muted)}
+
+/* ── 좁은 화면 ── */
+@media (max-width:860px){
+  .shell{flex-direction:column}
+  .sidebar{width:100%;height:auto;position:static;flex-direction:row;align-items:center;
+    border-right:none;border-bottom:1px solid var(--border);padding:0 12px;gap:6px;overflow-x:auto}
+  .logo{border-bottom:none;padding:12px 6px 12px 0;flex-shrink:0}
+  nav{display:flex;padding:0;gap:4px;flex:0 0 auto}
+  .nav-section,.나침{display:none}
+  .nav-item{white-space:nowrap;font-size:12.5px;margin:0}
+  .main-header{padding:13px 16px}
+  .content{padding:16px 16px 56px}
+  .찾기감{top:60px;padding:12px 0 10px}
+  .찾기{padding:5px 5px 5px 16px;gap:9px}
+  .찾기 input{font-size:16px;padding:10px 0}
+  .찾기 button{padding:10px 18px;font-size:13.5px}
+  .card{padding:17px}
+  .여는말{font-size:22px}
+  .기둥 .글자{font-size:28px}
+  .운줄{grid-template-columns:46px 54px 1fr;gap:7px;font-size:12.5px}
+  .운줄 .판{grid-column:3;justify-self:end}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">看</div>
+    <div><span class="logo-name">간명</span><span class="logo-sub">看 命</span></div>
+  </div>
+  <nav>
+    <div class="nav-section">보기</div>
+    <button class="nav-item active" id="탭입력" onclick="화면('입력')">새 명식</button>
+    <button class="nav-item" id="탭결과" onclick="화면('결과')">지금 보는 명식</button>
+    <button class="nav-item" id="탭목록" onclick="화면('목록')">저장한 명식</button>
+  </nav>
+  <div class="나침">『자평진전』과 『궁통보감』<br>두 권으로만 봅니다.<br>신살·수명은 보지 않습니다.<br><a href="privacy.html" style="color:var(--dim);font-size:11px;text-decoration:none;border-bottom:1px dotted var(--dim)">개인정보처리방침</a></div>
+</aside>
+
+<main class="main">
+  <header class="main-header">
+    <div class="page-title" id="쪽제목">새 명식<small id="쪽부제">태어난 때를 넣어 주세요</small></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-line 숨김" id="저장단추" onclick="저장()">저장</button>
+      <select class="btn-line 숨김" id="상품선택" style="padding:6px">
+        <option value="종합">종합 간명서</option>
+        <option value="평생사주">평생사주</option>
+        <option value="신년운세">신년운세</option>
+        <option value="재물운분석">재물운 분석</option>
+        <option value="애정운완전정복">애정운 완전정복</option>
+        <option value="직업분석">직업 분석</option>
+      </select>
+      <button class="btn-line 숨김" id="간명서단추" onclick="간명서열기(document.getElementById('상품선택').value)">PDF 만들기</button>
+      <button class="btn-gold" onclick="화면('입력')">새로 보기</button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- 입력 -->
+    <div id="화면입력">
+      <div class="card">
+        <p class="여는말">태어난 달에서 <b>격</b>을 잡고,<br>그것을 떠받치는 글자를 찾습니다.</p>
+        <p class="여는쪽">맞히는 것이 아니라, 왜 그런지 답할 수 있게 보는 방법입니다.</p>
+
+        <div class="입력줄">
+          <div class="칸 이름칸"><label>이름 (안 적으셔도 됩니다)</label>
+            <input id="이름" placeholder="무명"></div>
+        </div>
+        <div class="입력줄" style="margin-top:14px">
+          <div class="칸"><label>태어난 해</label><input id="년" type="number" inputmode="numeric" autocomplete="off"></div>
+          <div class="칸"><label>달</label><input id="월" type="number" min="1" max="12" inputmode="numeric" autocomplete="off"></div>
+          <div class="칸"><label>날</label><input id="일" type="number" min="1" max="31" inputmode="numeric" autocomplete="off"></div>
+          <div class="칸"><label>시</label><input id="시" type="number" min="0" max="23" inputmode="numeric" autocomplete="off"></div>
+          <div class="칸"><label>분</label><input id="분" type="number" min="0" max="59" inputmode="numeric" autocomplete="off"></div>
+          <div class="칸"><label>성별</label><select id="성"><option value="여">여</option><option value="남">남</option></select></div>
+          <button class="btn-gold" style="padding:10px 26px;font-size:15px" onclick="간명()">본다</button>
+        </div>
+
+        <div class="고름">
+          <label><input type="radio" name="역법" value="양" id="양력" checked onchange="역법바뀜()"> 양력</label>
+          <label><input type="radio" name="역법" value="음" id="음력" onchange="역법바뀜()"> 음력</label>
+          <label id="윤달칸" class="숨김"><input type="checkbox" id="윤달" onchange="역법바뀜()"> 윤달</label>
+          <span class="역법말" id="역법말"></span>
+        </div>
+        <div class="고름">
+          <label><input type="checkbox" id="시모름"> 태어난 시각을 모릅니다</label>
+          <span style="color:var(--dim)">— 시주 없이 보되, 그만큼 볼 수 있는 것이 줄어듭니다.</span>
+        </div>
+
+        <div class="도움">
+          <b>양력·음력 어느 쪽으로 넣으셔도 됩니다.</b> 음력을 고르시면 그 해에 윤달이 있을 때만 윤달 칸이 열립니다. 음력은 1900~2050년까지 옮길 수 있습니다.<br>
+          시각은 태어난 지역의 시계 시각 그대로 넣으시면 됩니다. 진태양시 보정은 안에서 합니다.
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="gold-dot"></span>이 앱이 하는 일</div>
+        <p style="font-size:14.5px;color:var(--muted);line-height:1.85">
+          <b style="color:var(--text)">답하지 않는 것</b> — 몇 년에 무슨 일이 있을지, 얼마를 벌지, 어느 자리에 오를지는 보지 않습니다.
+          몸에 관한 것은 의사의 일이고, 마음이 힘드실 때는 사람에게 이야기하시는 편이 낫습니다.<br><br>
+          <b style="color:var(--text)">답하는 것</b> — 무엇을 다루며 사는가, 그 짜임이 온전한가, 지금이 어떤 결의 때인가.
+          모든 판정에는 원문의 근거가 붙으니, 안 맞는 대목이 있으면 어디서 어긋났는지 짚어보실 수 있습니다.
+        </p>
+      </div>
+    </div>
+
+    <!-- 결과 -->
+    <div id="화면결과" class="숨김"></div>
+
+    <!-- 목록 -->
+    <div id="화면목록" class="숨김">
+      <div class="card"><div class="card-title"><span class="gold-dot"></span>저장한 명식</div>
+        <div id="목록칸"></div></div>
+    </div>
+
+    <footer>
+      <b>근거로 삼은 책</b><br>
+      『자평진전(子平真詮)』 심효첨, 청 건륭 연간 — 격국(그릇)의 판정. 조문 114개는 모두 원문에서 왔고, 부록 명례 78건으로 검산했습니다.<br>『궁통보감(窮通寶鑑)』 여춘태 정리본, 청대 — 조후(계절의 결)의 판정. 120칸 조후표를 판본 두 종의 원문과 전수 대조했습니다.<br><br>
+      <b>개인정보</b><br>
+      넣으신 생년월일시는 <b>이 기기에만</b> 저장되며 어디로도 보내지 않습니다.
+      물음을 여쭐 때 나가는 것은 <b>명식 여덟 글자와 물으신 문장뿐</b>입니다.
+    </footer>
+  </div>
+</main>
+</div>
+
+<script src="manseryeok.browser.js"></script>
+<script src="engine.bundle.js"></script>
+<script>
+/* 엔진이 안 붙었으면 「Cannot read properties of undefined」로 죽는 대신
+   무엇이 잘못됐고 어떻게 고치는지 화면에 띄운다.
+   대개 서비스 워커가 옛 번들을 물고 있는 경우다. */
+if (!window.간명엔진 || !window.간명엔진.interpret) {
+  document.body.innerHTML = `<div style="max-width:520px;margin:14vh auto;padding:0 24px;
+    font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;color:#2C2620;line-height:1.8">
+    <div style="font-family:'Nanum Myeongjo',serif;font-size:30px;font-weight:800;color:#A8802F">看 命</div>
+    <h1 style="font-size:19px;margin:18px 0 10px">엔진을 불러오지 못했습니다</h1>
+    <p style="color:#7A7264;font-size:14.5px">기기에 옛 파일이 남아 있는 것 같습니다.
+      아래를 누르시면 저장된 것을 비우고 새로 받습니다. 넣어 두신 명식은 지워지지 않습니다.</p>
+    <button id="싹비움" style="margin-top:20px;background:#A8802F;color:#FFF8E8;border:none;
+      border-radius:8px;padding:12px 22px;font-size:15px;font-weight:600;cursor:pointer">
+      비우고 새로 받기</button>
+    <p style="color:#A39A88;font-size:12.5px;margin-top:22px">
+      그래도 안 되면 브라우저를 완전히 닫았다 다시 열어 주세요.</p></div>`;
+  document.getElementById('싹비움').onclick = async () => {
+    try {
+      const rs = await navigator.serviceWorker?.getRegistrations?.() || [];
+      for (const r of rs) await r.unregister();
+      const ks = await caches.keys();
+      for (const k of ks) await caches.delete(k);
+    } catch (e) {}
+    location.reload(true);
+  };
+  throw new Error('엔진 없음 — 아래 코드는 돌리지 않는다');
+}
+const E = window.간명엔진;
+const 우리말 = {木:'나무',火:'불',土:'흙',金:'쇠',水:'물'};
+const 색이름 = {木:'목',火:'화',土:'토',金:'금',水:'수'};
+const 소리 = {甲:'갑',乙:'을',丙:'병',丁:'정',戊:'무',己:'기',庚:'경',辛:'신',壬:'임',癸:'계',
+ 子:'자',丑:'축',寅:'인',卯:'묘',辰:'진',巳:'사',午:'오',未:'미',申:'신',酉:'유',戌:'술',亥:'해'};
+const {GAN, JIJANGGAN, sipseong} = E.지장간;
+const KEY = 'ganmyeong.saved.v1';
+// 탭 복원 때 브라우저가 입력칸을 되살려 놓는 것을 비운다 — 새 명식은 늘 빈 칸에서
+window.addEventListener('pageshow', e => {
+  if (!e.persisted) return;
+  for (const id of ['년','월','일','시','분','이름'])
+    { const el = document.getElementById(id); if (el) el.value = ''; }
+});
+let 현재 = null;
+let 마지막문답 = null;   // {질문, 맺음} — 같은 명식에서 이어 묻기에 쓴다
+
+/* ── 화면 전환 ── */
+const 쪽이름 = {입력:['새 명식','태어난 때를 넣어 주세요'],
+                결과:['간명','무엇을 다루며 사는가'],
+                목록:['저장한 명식','이 기기에만 있습니다']};
+function 화면(어디){
+  if (어디 === '결과' && !현재) 어디 = '입력';
+  for (const k of ['입력','결과','목록']){
+    document.getElementById('화면'+k).classList.toggle('숨김', k !== 어디);
+    document.getElementById('탭'+k).classList.toggle('active', k === 어디);
+  }
+  document.getElementById('저장단추').classList.toggle('숨김', 어디 !== '결과');
+  document.getElementById('간명서단추').classList.toggle('숨김', 어디 !== '결과');
+  document.getElementById('상품선택').classList.toggle('숨김', 어디 !== '결과');
+  document.getElementById('쪽제목').firstChild.nodeValue = 쪽이름[어디][0];
+  document.getElementById('쪽부제').textContent = 쪽이름[어디][1];
+  if (어디 === '목록') 목록그리기();
+  window.scrollTo({top:0,behavior:'instant'});
+}
+
+/* ── 양력·음력 ── */
+function 역법바뀜(){
+  const 음 = document.getElementById('음력').checked;
+  const 년 = +document.getElementById('년').value;
+  const 월 = +document.getElementById('월').value;
+  const 윤번 = 음 ? E.음력.윤달번호(년) : 0;
+  const 열까 = 음 && 윤번 === 월;   // 그 해 그 달에 실제로 윤달이 있을 때만
+  document.getElementById('윤달칸').classList.toggle('숨김', !열까);
+  if (!열까) document.getElementById('윤달').checked = false;
+  const 말 = document.getElementById('역법말');
+  if (!음) { 말.textContent = ''; return; }
+  const R = E.음력.범위;
+  if (년 < R.처음 || 년 > R.끝) { 말.textContent = `음력은 ${R.처음}~${R.끝}년만 됩니다`; return; }
+  말.textContent = 윤번 ? `${년}년은 윤${윤번}월이 있습니다` : `${년}년에는 윤달이 없습니다`;
+}
+function 음력탈(년,월,일,윤){
+  const R = E.음력.범위;
+  if (년 < R.처음 || 년 > R.끝) return `음력은 ${R.처음}년부터 ${R.끝}년까지만 옮길 수 있습니다.`;
+  if (윤 && E.음력.윤달번호(년) !== 월) return `${년}년에는 윤${월}월이 없습니다. 윤달 표시를 풀어 주세요.`;
+  const 크기 = E.음력.달크기(년, 월, 윤);
+  if (크기 && 일 > 크기) return `음력 ${년}년 ${월}월은 ${크기}일까지입니다.`;
+  return '그 음력 날짜가 없습니다. 다시 확인해 주세요.';
+}
+['년','월'].forEach(id => document.getElementById(id).addEventListener('change', 역법바뀜));
+
+/* ── 저장 ── */
+const 읽기 = () => { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch(e){ return []; } };
+const 쓰기 = a => { try { localStorage.setItem(KEY, JSON.stringify(a)); } catch(e){} };
+function 저장(){
+  if (!현재) return;
+  const a = 읽기();
+  const 새 = {...현재.입력, 때: Date.now()};
+  const i = a.findIndex(x => x.년===새.년 && x.월===새.월 && x.일===새.일 && x.시===새.시 && x.분===새.분);
+  if (i >= 0) a[i] = 새; else a.unshift(새);
+  쓰기(a.slice(0, 60));
+  const b = document.getElementById('저장단추');
+  b.textContent = '저장됨'; setTimeout(() => b.textContent = '저장', 1400);
+}
+function 목록그리기(){
+  const a = 읽기(), box = document.getElementById('목록칸');
+  if (!a.length){ box.innerHTML = '<div class="빔">아직 저장한 명식이 없습니다.<br>명식을 보신 뒤 위쪽 «저장»을 누르시면 여기 쌓입니다.</div>'; return; }
+  box.innerHTML = a.map((x,i) => `<div class="항">
+    <div class="이">${x.이름 || '무명'}
+      <small>${x.년}. ${x.월}. ${x.일}. ${x.시모름 ? '시각 모름' : x.시+'시 '+x.분+'분'} · ${x.성별}</small></div>
+    <button class="btn-line" onclick="불러(${i})">보기</button>
+    <button class="btn-line" onclick="지우(${i})">지움</button>
+  </div>`).join('');
+}
+function 불러(i){
+  const x = 읽기()[i]; if (!x) return;
+  document.getElementById('양력').checked = true;   // 저장은 양력으로 해 둔다
+  for (const [k,id] of [['이름','이름'],['년','년'],['월','월'],['일','일'],['시','시'],['분','분']])
+    document.getElementById(id).value = x[k] ?? '';
+  document.getElementById('성').value = x.성별;
+  document.getElementById('시모름').checked = !!x.시모름;
+  역법바뀜(); 간명();
+}
+function 지우(i){ const a = 읽기(); a.splice(i,1); 쓰기(a); 목록그리기(); }
+
+/* ── 오행 고리 ── */
+function 고리(m, s){
+  const 차례 = ['木','火','土','金','水'];
+  const R = 84, cx = 116, cy = 114;
+  const 점 = 차례.map((o,i) => {
+    const a = (-90 + i*72) * Math.PI/180;
+    return {o, x: cx + R*Math.cos(a), y: cy + R*Math.sin(a)};
+  });
+  const 세 = {}; 차례.forEach(o => 세[o] = 0);
+  [m.yeonGan,m.wolGan,m.ilGan,m.siGan].filter(Boolean).forEach(g => 세[GAN[g].ohaeng] += 1);
+  // 2026-09-01 버그 수정: 큰 무게(0.7)는 여기(첫 원소)가 아니라 정기(正氣)가 받아야 한다.
+  // 이 명식(戊申 庚申 壬申 己酉)에서 가장 센 오행이 土 4.1 → 金 4.1로 바로잡힌다.
+  [m.yeonJi,m.wolJi,m.ilJi,m.siJi].filter(Boolean).forEach(j =>
+    JIJANGGAN[j].forEach(x => 세[GAN[x.gan].ohaeng] += (x.wi === '정기' ? 0.7 : 0.3)));
+
+  let v = `<svg class="고리" viewBox="0 0 232 228" role="img" aria-label="다섯 기운의 고리">`;
+  v += `<circle class="생" cx="${cx}" cy="${cy}" r="${R}"/>`;
+  for (let i=0;i<5;i++){
+    const a = 점[i], b = 점[(i+2)%5];
+    v += `<line class="극" x1="${a.x.toFixed(1)}" y1="${a.y.toFixed(1)}" x2="${b.x.toFixed(1)}" y2="${b.y.toFixed(1)}"/>`;
+  }
+  점.forEach(p => {
+    const 나임 = p.o === s.나.오행;
+    const r = 12.5 + Math.min(11, 세[p.o]*2.4);
+    const c = `var(--${색이름[p.o]})`;
+    v += `<circle class="원" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r.toFixed(1)}"
+          fill="${나임?c:'var(--card)'}" stroke="${c}" ${나임?'':'stroke-opacity=".55"'}/>`;
+    v += `<text class="이름" x="${p.x.toFixed(1)}" y="${(p.y-2).toFixed(1)}"
+          fill="${나임?'#FFF8E8':c}">${우리말[p.o]}</text>`;
+    v += `<text class="수" x="${p.x.toFixed(1)}" y="${(p.y+9).toFixed(1)}"
+          ${나임?'fill="rgba(255,248,232,.85)"':''}>${세[p.o].toFixed(1)}</text>`;
+    if (나임) v += `<text class="나표" x="${p.x.toFixed(1)}" y="${(p.y+r+11).toFixed(1)}">나</text>`;
+  });
+  v += `<text class="수" x="${cx}" y="${cy-7}">바깥 고리는 낳음</text>`;
+  v += `<text class="수" x="${cx}" y="${cy+7}">안쪽 선은 극함</text></svg>`;
+  return v;
+}
+
+/* ── 간명 ── */
+function 간명(){
+  const v = id => document.getElementById(id).value;
+  const n = id => +v(id);
+  const 시모름 = document.getElementById('시모름').checked;
+  // 빈 칸 검사 — 보기글만 보고 누르는 실수를 막는다
+  const 비었나 = [['년','태어난 해'],['월','달'],['일','날']]
+    .concat(시모름 ? [] : [['시','시'],['분','분']])
+    .filter(([id]) => v(id).trim() === '');
+  if (비었나.length){
+    alert(비었나.map(x=>x[1]).join(', ') + ' 칸을 넣어 주세요.');
+    document.getElementById(비었나[0][0]).focus();
+    return;
+  }
+  const 해 = n('년');
+  if (해 < 1900 || 해 > 2050){ alert('태어난 해는 1900~2050년 사이로 넣어 주세요.'); return; }
+  const 음 = document.getElementById('음력').checked;
+  const 윤 = document.getElementById('윤달').checked;
+  let 년=n('년'), 월=n('월'), 일=n('일');
+  if (음) {
+    const 양 = E.음력.양력으로(년, 월, 일, 윤);
+    if (!양) { alert(음력탈(년,월,일,윤)); return; }
+    년=양.년; 월=양.월; 일=양.일;
+  }
+  const 입력 = {이름:v('이름').trim(), 년, 월, 일,
+                시:시모름?12:n('시'), 분:시모름?0:n('분'), 성별:v('성'), 시모름,
+                음력: 음 ? {년:n('년'), 월:n('월'), 일:n('일'), 윤달:윤} : null};
+
+  let r;
+  try { r = E.interpret.생년월일시로({...입력, 성별:입력.성별}); }
+  catch(e) { alert('날짜를 다시 확인해 주세요. ' + (e.message||'')); return; }
+  현재 = {입력, r};
+  마지막문답 = null;
+
+  const m = r.명식;
+  const s = E.서사.analyze(r);
+  const c = r.결론;
+
+  const 기둥 = (자리, 간, 지, 나임) => {
+    if (!간) return `<div class="기둥 빔"><div class="자리">${자리}</div>
+      <span class="글자">·</span><div class="가름"></div><span class="글자">·</span></div>`;
+    // 2026-09-01 버그 수정: [0]은 여기(餘氣)다. 지지를 대표하는 것은 정기(正氣)이므로
+    // 여기를 쓰면 열두 지지 전부에서 십성과 글자 색이 어긋난다.
+    // (申 → 戊 편관으로 표시되던 것이 庚 편인으로, 酉 → 庚 편인이 辛 정인으로 바로잡힌다)
+    // 같은 파일 아래쪽 표(지지 줄)는 이미 정기를 쓰고 있어 두 곳이 어긋나 있었다.
+    const 지본 = ((JIJANGGAN[지] || []).find(h => h.wi === '정기') || JIJANGGAN[지][0]).gan;
+    return `<div class="기둥${나임?' 일주':''}"><div class="자리">${자리}</div>
+      <span class="글자 m${색이름[GAN[간].ohaeng]}">${간}</span>
+      <span class="소리">${소리[간]}</span>
+      <span class="십">${나임?'나':sipseong(m.ilGan,간)}</span>
+      <div class="가름"></div>
+      <span class="글자 m${색이름[GAN[지본].ohaeng]}">${지}</span>
+      <span class="소리">${소리[지]}</span>
+      <span class="십">${sipseong(m.ilGan, 지본)}</span></div>`;
+  };
+
+  let h = 찾기감HTML();
+
+  h += `<div class="card"><div class="card-title"><span class="gold-dot"></span>명식</div>
+    <div class="기둥들">
+      ${기둥('시', 시모름?null:m.siGan, m.siJi)}
+      ${기둥('일', m.ilGan, m.ilJi, true)}
+      ${기둥('월', m.wolGan, m.wolJi)}
+      ${기둥('년', m.yeonGan, m.yeonJi)}
+    </div>
+    <div class="고리감">${고리(m, s)}</div>
+    <div class="이야기">${s.이야기.map(x => `<p>${꾸밈(x)}</p>`).join('')}</div>
+  </div>`;
+
+  h += `<div class="card"><div class="card-title"><span class="gold-dot"></span>다섯 기운</div>
+    <table class="다섯">`;
+  for (const k of ['나','낳아주는','내가낳는','내가극하는','나를극하는']){
+    const d = s.다섯[k];
+    h += `<tr><td><b class="${d.오행}">${d.우리말}</b></td><td>${d.뜻}</td><td>${d.십성}</td></tr>`;
+  }
+  h += `</table></div>`;
+
+  /* 격 */
+  const 쉬운십성 = {정인:'배움과 문서', 편인:'남다른 통찰', 정관:'자리와 규범', 편관:'밀어붙이는 과업',
+                정재:'차곡히 쌓는 돈', 편재:'크게 굴리는 돈', 식신:'만들어 내보내는 힘', 상관:'틀을 깨는 재주',
+                비견:'내 편이 되는 힘', 겁재:'경쟁하며 나누는 힘'};
+  const 딱지 = {성격:'짜임이 온전합니다', 성중유패:'서긴 했지만 흔드는 글자를 안고 있습니다',
+                패중유성:'흠이 있었지만 구해주는 글자 덕에 다시 섰습니다',
+                패격:'짜임이 깨져 있어 운에서 메워야 합니다',
+                상신미현:'기둥이 될 글자가 아직 드러나지 않았습니다'}[c.성패] || c.성패;
+  const 딱지풀이 = {
+성격:'태어난 달에서 잡은 격이 그릇이고, 그 그릇을 떠받치는 글자가 기둥입니다. 이 명식은 그릇과 기둥이 서로 맞게 놓여 있고 그 사이를 깨는 글자도 없습니다 — 타고난 결을 별 탈 없이 그대로 쓸 수 있는 짜임이라는 뜻입니다.',
+성중유패:'그릇과 기둥은 섰는데, 팔자 안에 그 기둥을 흔드는 글자가 함께 들어 있습니다. 평소에는 온전히 쓰다가, 그 글자가 힘을 받는 운이 올 때 흔들림이 겉으로 드러나는 짜임입니다.',
+패중유성:'기둥을 깨는 글자가 있었지만, 그것을 눌러 주는 글자가 팔자 안에 함께 있어 도로 선 경우입니다. 흠집을 딛고 선 그릇이라, 그 구해준 글자가 이 명식의 은인입니다.',
+패격:'그릇은 잡혔는데 그것을 떠받칠 자리가 깨져 있어, 타고난 것만으로는 온전히 서지 못한 짜임입니다. 결이 없는 것이 아니라 쓰기 어렵게 놓인 것이니, 빈 곳을 메워 주는 운이 올 때 제 모양이 삽니다.',
+상신미현:'격은 잡혔는데 그것을 떠받칠 기둥 글자가 아직 팔자에 드러나지 않았습니다. 운에서 그 글자가 들어올 때 짜임이 비로소 완성되는 명식입니다.'}[c.성패] || '';
+  h += `<div class="card"><div class="card-title"><span class="gold-dot"></span>무엇을 다루며 사는가</div>
+    <div class="격줄"><span>${c.격}격<span style="color:#8a7a5c;font-size:13px"> — ${쉬운십성[c.격]||''}</span>${c.상신?` <span style="color:var(--gold)">기둥: ${c.상신}(${쉬운십성[c.상신]||''})</span>`:''}</span><span class="판정딱지">${딱지}</span></div>`;
+  if (딱지풀이) h += `<div class="딱지풀이">${딱지풀이}</div>`;
+  h += `<div class="설명">${격별칭(c.격)}${격설명(c.격)}${c.상신?` 그것을 <b>${c.상신}</b>이 떠받칩니다.`:''}</div>`;
+  h += 격키워드(c.격);
+  h += 격자세히(c.격);
+  h += `<div class="조문"><span><em>취용</em>${c.근거||''}</span>`;
+  // 조문의 한글 풀이 — E.해설.JOMUN에 해설키→한 문장이 이미 있으니 그걸 먼저 보여주고,
+  // 한자 원문은 참고용으로 괄호 안에 작게 남긴다. (한자만 덜렁 나오던 문제 수정)
+  const 조문사전 = (typeof E !== 'undefined' && E.해설 && E.해설.JOMUN) || {};
+  for (const 종 of ['성격','패격','구응'])
+    for (const x of (c.조문?.[종] || [])) {
+      const 풀이 = 조문사전[x.해설키];
+      h += `<span><em>${종}</em>${풀이 ? 풀이 : ''}${풀이 ? ` <span style="color:#9a8a68;font-size:12px">(원문: ${x.원문})</span>` : x.원문}</span>`;
+    }
+  h += `</div>`;
+  if (r.단계상신미현 && !r.단계상신미현.해당없음){
+    const x = r.단계상신미현;
+    h += `<div class="알림"><b>떠받칠 글자가 아직 안 나왔습니다</b><br>${x.상담문구}<br>
+      ${x.열쇠?.length ? '기다리는 글자 — ' + x.열쇠.map(z=>z.글자+'('+z.십성+')').join(' · ') : ''}</div>`;
+  }
+  h += `</div>`;
+
+  /* 운 */
+  const hu = r.단계11_행운;
+  const 올해 = new Date().getFullYear(), 나이 = 올해 - 입력.년;
+  h += 시간겹HTML(m, r);
+  h += `<div class="card"><div class="card-title"><span class="gold-dot"></span>운 — ${hu.방향} · ${hu.대운수}세부터</div>`;
+  // 2026-09-03: 「반기는 것은 실물·내보내는 힘…」 한 줄은 명리를 모르면 무슨 말인지 알 수 없다(실측).
+  //   격 카드의 고정표(격만 보고 짠 것, 상신과 모순 나던 것)도 함께 걷어내고,
+  //   엔진 취운 조문 하나를 출처로 낱말마다 풀어 주는 카드로 바꿨다.
+  h += 희기표(r.결론.격, r.결론.상신, m.ilGan, hu);
+  h += 궁통카드(m);
+  h += 대운곡선(hu.대운, 나이);
+  for (const u of hu.대운){
+    const 지금 = 나이 >= u.시작나이 && 나이 < u.시작나이 + 10;
+    const p = u.길흉.점수;
+    const 클 = p > 0 ? 'p살' : p < 0 ? 'p눌' : 'p섞';
+    // 2026-09-01 버그 수정: 지지의 오행은 여기가 아니라 정기로 잡는다(申은 土가 아니라 金).
+    const 지정기 = ((JIJANGGAN[u.지지] || []).find(h => h.wi === '정기') || JIJANGGAN[u.지지][0]).gan;
+    const 천오 = 우리말[GAN[u.천간].ohaeng], 지오 = 우리말[GAN[지정기].ohaeng];
+    h += `<div class="운줄${지금?' 지금':''}">
+      <span class="나이">${u.시작나이}세</span>
+      <span class="간지 m${색이름[GAN[u.천간].ohaeng]}">${u.간지}</span>
+      <span class="오">${천오}·${지오} <small>(${u.천간십성}·${u.지지십성})</small></span>
+      <span class="판 ${클}">${({'결이 크게 눌림':'참고 지키는 십 년','결이 눌림':'조심하며 지키는 십 년','뒤섞임':'좋고 나쁨이 섞인 십 년','결이 살아남':'풀리는 십 년','결이 크게 살아남':'크게 풀리는 십 년'})[u.길흉.판정]||u.길흉.판정}</span>
+    </div>`;
+  }
+  h += `</div>`;
+
+  h += `<div class="card"><div class="card-title"><span class="gold-dot"></span>분야별 열여섯 해</div>` + 분야곡선판(r, 입력.성별) + `</div>`;
+
+  /* 알림 */
+  const 알 = [...(r.만세력?.경고 || [])];
+  if (시모름) 알.push('태어난 시각을 모르신다 하여 시주 없이 보았습니다. 시주는 늦은 때와 자녀 자리를 맡으므로, 그 부분은 비워 두었습니다.');
+  /* 시지 경계 30분 안 — 시주가 갈릴 수 있음을 알린다 */
+  // 엔진 쪽에서 이미 「보정하면 ○○, 하지 않으면 ○○」 경고를 냈으면(외부 만세력) 여기 계산은 겹치니 건너뛴다
+  const 엔진이경계경고냄 = 알.some(t => String(t).includes('시주가 경계에 있다'));
+  if (!시모름 && !엔진이경계경고냄) {
+    const 보정분 = (typeof manseryeok !== 'undefined') ? 30 : 32;   // 2026-09-03: 외부 만세력이면 -30분(시중 관행)
+    const 실시 = 입력.시 + (입력.분 - 보정분) / 60;         // 진태양시 보정 후 시각
+    const 경계 = Math.round((실시 - 1) / 2) * 2 + 1;       // 가장 가까운 시지 경계(홀수 시)
+    const 거리분 = Math.abs(실시 - 경계) * 60;
+    if (거리분 <= 30) {
+      // 경계 반대편 시각으로 한 번 더 계산해 다른 쪽 시주를 구한다 (일주 바뀜까지 처리)
+      const 반대실시 = 경계 + (실시 < 경계 ? 0.02 : -0.02);
+      let 벽시 = 반대실시 + 보정분/60;
+      let 넘김 = 0;
+      if (벽시 >= 24) { 벽시 -= 24; 넘김 = 1; }
+      if (벽시 < 0)   { 벽시 += 24; 넘김 = -1; }
+      const 반시 = Math.floor(벽시), 반분 = Math.min(59, Math.round((벽시 - 반시) * 60));
+      try {
+        const 밑 = new Date(입력.년, 입력.월-1, 입력.일 + 넘김);
+        const r2 = E.interpret.생년월일시로({...입력,
+          년:밑.getFullYear(), 월:밑.getMonth()+1, 일:밑.getDate(), 시:반시, 분:반분});
+        const m2 = r2.명식;
+        const 이쪽 = m.siGan + m.siJi, 저쪽 = m2.siGan + m2.siJi;
+        if (저쪽 && 저쪽 !== 이쪽) {
+          // 엔진의 짧은 경계 경고와 겹치지 않게 그쪽을 뺀다
+          const i = 알.findIndex(t => String(t).includes('시주가 경계에 가깝다'));
+          if (i >= 0) 알.splice(i, 1);
+          알.push(`태어난 시각이 시 경계에 가깝습니다 — 보정하면 경계에서 ${Math.round(거리분)}분 차이입니다. `
+            + `<b>${이쪽}(${소리[m.siGan]}${소리[m.siJi]})</b>시로 보았지만, 시계가 몇 분만 달라도 `
+            + `<b>${저쪽}(${소리[m2.siGan]}${소리[m2.siJi]})</b>시가 됩니다. `
+            + `출생 시각이 확실치 않으시면 두 쪽을 다 넣어 견주어 보세요.`);
+        }
+      } catch(e) { /* 반대편 계산 실패 시 알림 생략 */ }
+    }
+  }
+  if (알.length) h += `<div class="알림"><b>확인해 주실 것</b><br>${알.join('<br>')}</div>`;
+  if (입력.음력) {
+    const L = 입력.음력;
+    h += `<div class="알림 조용">음력 ${L.년}년 ${L.윤달?'윤 ':''}${L.월}월 ${L.일}일을
+      <b>양력 ${입력.년}년 ${입력.월}월 ${입력.일}일</b>로 옮겨 보았습니다.</div>`;
+  }
+  const 절 = r.만세력?.절기;
+  if (절) h += `<div class="알림 조용">절기 기준 — ${절.직전} 지나 ${절.지난날}일째${절.다음?`, 다음 ${절.다음}까지 ${절.남은날}일`:''}.
+    태어난 시각은 ${r.만세력?.보정 ? r.만세력.보정.replace('진태양시 ','진태양시로 ').replace('-','') + '당겨' : '진태양시로 32분 당겨'} 계산했습니다.</div>`;
+
+  document.getElementById('화면결과').innerHTML = h;
+  화면('결과');
+}
+
+/* ── 물음 ─────────────────────────────────────
+   명식은 기기 안에서 다 냈다. 서버로 나가는 것은
+   **여덟 글자와 물으신 문장뿐**이고, 생년월일시는 보내지 않는다. */
+const 중계 = 'https://ganmyeong-relay.onrender.com';
+const 물음목록 = ['일과 자리','재물','관계','집과 문서','배움','독립','올해와 앞으로','나라는 사람','몸을 쓰는 방식'];
+// 관법 토글 (2026-09-05) — 같은 질문을 두 유파로 나란히 읽는다. 기본은 자평진전(78건 검증된 문법),
+//   궁통보감은 「이 달의 밭에 무엇이 있고 없나」가 척추. 두 유파를 한 답에 섞지 않는 병렬 원칙.
+//   2026-09-05 사용자 지적 「내담자가 헷갈리지 않을까」 — 질문 전에 책을 고르게 하지 않는다.
+//   기본 답은 늘 격(자평진전) 척추 하나이고, 그 안에 궁통보감 단락이 들어 있다.
+//   답 아래 「이 물음을 밭의 눈으로도 보기」 링크를 누른 사람만 두 번째 답을 본다.
+let 관법 = '자평진전';
+let 마지막물음 = null;   // 「다른 책으로도 보기」가 같은 물음을 다시 보내기 위해
+function 밭으로도보기(){
+  if (!마지막물음) return;
+  관법 = '궁통보감';
+  return 물어보기(마지막물음.주제, null, 마지막물음.물음).finally(() => { 관법 = '자평진전'; });
+}
+const 보기말 = ['올해 일이 어떻게 풀릴까요','돈은 어떤 방식으로 다루는 사람인가요',
+                '이직을 생각하고 있습니다','저는 어떤 사람인가요'];
+
+function 찾기감HTML(){
+  const 예 = 보기말[Math.floor(Math.random()*보기말.length)];
+  return `<div class="찾기감">
+    <div class="찾기">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+      <input id="물음칸" placeholder="${예}" aria-label="궁금한 것을 물어보세요"
+             onkeydown="if(event.key==='Enter')물어보기()">
+      <button id="물음단추" onclick="물어보기()">묻는다</button>
+    </div>
+    <div class="칩들">${물음목록.map(q =>
+      `<button class="칩" aria-pressed="false" onclick="물어보기('${q}',this)">${q}</button>`).join('')}</div>
+    <div id="상담칸"></div>
+  </div>`;
+}
+
+async function 물어보기(주제, 단추, 물음직접){
+  if (!현재) return;
+  const 입력칸 = document.getElementById('물음칸');
+  const 물음 = 물음직접 || (주제 || 입력칸.value.trim());
+  if (관법 === '자평진전') 마지막물음 = { 주제, 물음 };
+  if (!물음) { 입력칸.focus(); return; }
+  if (주제) 입력칸.value = 주제;
+  for (const b of document.querySelectorAll('.칩'))
+    b.setAttribute('aria-pressed', b === 단추 ? 'true' : 'false');
+
+  const 칸 = document.getElementById('상담칸');
+  // 「밭의 눈으로도 보기」는 첫 답 아래에 덧붙이는 것 — 대기 표시가 첫 답을 지우지 않게 미리 보관
+  const 보관 = (관법 === '궁통보감') ? 칸.innerHTML.replace(/<div class="밭링크">[\s\S]*?<\/div>/, '') : null;
+  const 단 = document.getElementById('물음단추');
+  단.disabled = true;
+  const 단원래 = 단.textContent;
+  단.innerHTML = '<span class="단추팽이" aria-hidden="true"></span>쓰는 중';
+
+  // 어느 주제로 읽었는지 먼저 보여 드린다 — 엉뚱하게 잡히면 바로 아실 수 있게
+  const 잡힘 = E.juje.고르기(물음);
+  const 머리 = (잡힘 && 잡힘 !== 물음)
+    ? `<p class="옮김말">「${물음}」${조사(물음,'을','를')} <b>${잡힘}</b>${조사(잡힘,'으로','로')} 읽었습니다.</p>` : '';
+
+  // 기다림 표시 — 시간이 갈수록 문구가 바뀌어야 「아직 살아 있다」를 안다.
+  //   무료 서버는 잠들어 있으면 깨는 데 30초쯤 걸린다. 그걸 말해주지 않으면
+  //   같은 화면만 보다가 닫아 버린다.
+  칸.innerHTML = 머리 + `<div class="기다림칸" role="status" aria-live="polite">
+    <div class="팽이" aria-hidden="true"></div>
+    <div class="기다림글"><b id="기다림말">상담 글을 쓰고 있습니다</b>
+    <span id="기다림쪽">원문의 차례로 명식을 짚는 중입니다</span></div></div>`;
+  const 말 = t => { const el = document.getElementById('기다림말'); if (el) el.textContent = t; };
+  const 쪽 = t => { const el = document.getElementById('기다림쪽'); if (el) el.textContent = t; };
+  const 타이머 = [
+    setTimeout(() => { 말('서버를 깨우고 있습니다'); 쪽('한동안 조용하면 서버가 잠들어 있어서, 처음엔 30초쯤 걸립니다'); }, 8000),
+    setTimeout(() => { 말('거의 다 되었습니다'); 쪽('격과 상신을 짚어 문장을 다듬는 중입니다'); }, 30000),
+    setTimeout(() => { 말('오래 걸리고 있습니다'); 쪽('조금만 더 기다려 주세요 — 1분을 넘기면 멈추고 알려 드립니다'); }, 55000),
+  ];
+  const 그만 = new AbortController();
+  const 시간초과 = setTimeout(() => 그만.abort(), 90000);
+  const 정리 = () => { 타이머.forEach(clearTimeout); clearTimeout(시간초과);
+    단.disabled = false; 단.textContent = 단원래; };
+
+  const m = 현재.r.명식;
+  // 2026-09-03: 직접 쳐서 물은 것은 /문답으로, 분야 칩을 누른 것은 /해설로.
+  //   /문답은 서버가 알아서 가른다 — 첫 물음이면 상담글, 「무슨 말이야」류 설명 요청이면 설명,
+  //   이어지는 물음이면 앞 답을 물고 자유 문답. 조문 리포트를 읽다 「이게 무슨 말이야」라고
+  //   쳤는데 명식을 처음부터 펼치는 상담글이 나오던 문제(9/3 실측)가 이것으로 풀린다.
+  //   칩은 「이 분야 상담글을 주세요」라는 뜻이니 지금처럼 /해설 상담글이 맞다.
+  const 문답으로 = !주제 && typeof window.문답이력 === 'function' && 관법 !== '궁통보감';   // 「밭으로도 보기」는 늘 상담글(/해설)
+  const 몸 = { 명식: {yeonGan:m.yeonGan, yeonJi:m.yeonJi, wolGan:m.wolGan, wolJi:m.wolJi,
+                      ilGan:m.ilGan, ilJi:m.ilJi},
+               출생연도: 현재.입력.년, 성별: 현재.입력.성별, 관법 };
+  if (문답으로) {
+    몸.질문 = 물음;
+    몸.이력 = window.문답이력();
+  } else {
+    몸.주제 = (마지막문답 && 관법 !== '궁통보감')
+      ? `[이어묻기] 앞 질문: "${마지막문답.질문}" / 앞 답의 맺음: "${마지막문답.맺음}" ⇒ 새 질문: ${물음}`
+      : 물음;   // 밭의 눈 답은 같은 물음을 처음부터 다시 보는 것이라 이어묻기로 포장하지 않는다
+  }
+  if (!현재.입력.시모름) { 몸.명식.siGan = m.siGan; 몸.명식.siJi = m.siJi; }
+  // 대운수는 순행이면 남은날, 역행이면 지난날이다. 엔진이 갈라 준 값을 그대로 보낸다.
+  const 대 = 현재.r.만세력?.대운;
+  if (대 && 대.날수 != null) 몸.절기날수 = 대.날수;
+
+  try {
+    const res = await fetch(중계 + (문답으로 ? '/문답' : '/해설'), { method:'POST', signal: 그만.signal,
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify(몸) });
+    const d = await res.json();
+    // 문답 모드로 답했으면 「~로 읽었습니다」 머리말은 뜻이 안 맞으니 뺀다
+    const 문답모드답 = (문답으로 && d && d.모드 === '문답');
+    const 관법표시 = (관법==='궁통보감' && !문답모드답)
+      ? `<div class="알림 조용 관법알림"><b>계절의 눈으로 본 답</b>(궁통보감) — 위의 답은 격의 눈(자평진전)으로 본 것이고, 이것은 같은 물음을 다른 책으로 본 것입니다. 두 답이 갈리는 곳이 있으면 어느 쪽이 틀린 게 아니라 다른 것을 보는 것입니다.</div>`
+      : '';
+    const 머리쓸것 = (문답모드답 ? '' : 머리) + 관법표시;
+    if (d.본문) {
+      // 실패했으면 그 사실을 **먼저** 알린다. 아래에 묻어 두면
+      // 물음과 상관없는 조문 리포트를 답으로 읽으시게 된다.
+      const 알림 = d.성공 ? '' : `<div class="알림" style="margin:14px 0 0">
+        <b>지금은 해설을 만들지 못했습니다</b><br>
+        물으신 「${물음}」에 대한 답 대신, 이 명식의 <b>조문 풀이 전체</b>를 아래에 보여 드립니다.
+        잠시 뒤 다시 눌러 주세요.${d.사유 ? `<br><span style="color:var(--dim);font-size:12px">사유 — ${d.사유}</span>` : ''}</div>`;
+      const 밭링크 = (d.성공 && 관법==='자평진전' && !문답모드답 && (typeof E!=='undefined') && E.궁통조문 && !E.궁통조문.analyze(현재.r.명식).해당없음)
+        ? `<div class="밭링크"><a href="#" onclick="밭으로도보기();return false;">이 물음을 계절의 눈으로도 보기 <small>(궁통보감)</small></a></div>` : '';
+      const 덧붙임 = (관법==='궁통보감');
+      const 새내용 = 머리쓸것 + 알림 + `<div class="상담${d.성공?'':' 풀이'}">${
+        d.성공 ? 꾸밈(d.본문) : 마크다운(d.본문)}<span class="출처">${
+        d.성공 ? '자평진전과 궁통보감의 판정을 재료로 삼아 쓴 글입니다. 정해진 앞일이 아니라 짜임을 읽은 것입니다.'
+               : '조문 그대로의 풀이입니다. 물으신 주제에 맞춘 글이 아닙니다.'}</span>${검사표시(d.검사)}</div>` + 밭링크;
+      if (덧붙임 && 보관 != null) 칸.innerHTML = 보관 + 새내용;   // 첫 답(격) 아래에 밭 답을 덧붙인다
+      else 칸.innerHTML = 새내용;
+      if (d.성공 && 관법 !== '궁통보감') {   // 밭의 눈 답은 나란히 보는 것 — 이어묻기·문답 이력에 넣지 않는다
+        const 맺 = (d.본문.match(/정리하면[^\n]*/g)||[]).pop()
+                 || d.본문.split('\n').filter(x=>x.trim())[0] || '';
+        마지막문답 = { 질문: String(물음).slice(0,200),
+                       맺음: 맺.replace(/\*\*/g,'').slice(0,400) };
+        // 이력 반영 — 문답으로 갔으면 이어 붙이고, 칩(상담글)이면 그 상담글을 새 바닥으로 삼는다
+        try {
+          if (문답으로 && window.문답추가) window.문답추가(String(물음), d.본문);
+          else if (window.문답씨앗) window.문답씨앗(String(물음), d.본문);
+        } catch(e){}
+        // 2026-09-01: 시간말과 운세말이 바로 붙어야만 잡던 정규식은 「내년도 운세」(조사 '도')나
+        // 「올해는 운세가 어때」(어순)를 놓쳤다. 둘이 문장 어디에 있든 함께 있으면 잡는다.
+        const 신시간=/올해|내년|금년|명년|신년|새해|한\s*해|이번\s*해|(20\d{2})\s*년/;
+        const 신운세=/운세|운이\s*어때|운은\s*어때|흐름이\s*어때|어떻게\s*되|어떻게\s*풀리/;
+        const 신재={ test:q => 신시간.test(q) && 신운세.test(q) };
+        // 2026-08-27: "향후 3년" "앞으로 5년" 같은 여러 해 질문 — 연도별 큰 흐름 +
+        // 그 안의 각 연도를 달마다·분야별로 쪼갠 그래프까지 함께 붙인다.
+        const 다년 = /향후\s*\d*\s*년|앞으로\s*\d*\s*년|다음\s*\d*\s*년|\d+\s*년\s*(간|동안|사이)|몇\s*년/;
+        if (신재.test(물음)) {
+          const ym=String(물음).match(/(20\d{2})\s*년/), 기준=new Date().getFullYear();
+          const 년 = ym?parseInt(ym[1],10):(/내년|신년|새해/.test(물음)?기준+1:기준);
+          칸.insertAdjacentHTML('beforeend', 월운그림(현재.r, 년));
+          // 이번 해 총평(월운그림)만이 아니라, 같은 해를 분야별로도 나눠 보여준다
+          칸.insertAdjacentHTML('beforeend', 월별분야곡선판(현재.r, 현재.입력.성별, 년));
+        } else if (다년.test(물음) && !신재.test(물음)) {
+          const nm = 물음.match(/(\d+)\s*년/);
+          let N = nm ? parseInt(nm[1],10) : 5;           // "몇 년"처럼 숫자가 없으면 5년으로
+          N = Math.max(2, Math.min(N, 10));               // 2~10년 사이로 안전하게
+          const 기준 = new Date().getFullYear();
+          칸.insertAdjacentHTML('beforeend',
+            `<div class="card" style="margin-top:14px"><div class="card-title"><span class="gold-dot"></span>앞으로 ${N}년 — 연도별 큰 흐름</div>
+             ${분야곡선판(현재.r, 현재.입력.성별, N, null)}</div>`);
+          // 2026-08-27: 3년까지는 해마다 달별 그래프까지 다 붙이지만,
+          // 그보다 길면 카드가 너무 많아지므로 연도별 큰 그림 하나로 요약한다.
+          if (N <= 3) {
+            for (let y=기준; y<기준+N; y++)
+              칸.insertAdjacentHTML('beforeend', 월별분야곡선판(현재.r, 현재.입력.성별, y));
+          } else {
+            칸.insertAdjacentHTML('beforeend',
+              `<p class="작게" style="text-align:center;color:var(--dim);margin-top:8px">
+               ${N}년처럼 긴 기간은 연도별 큰 흐름만 보여드립니다. 특정 한두 해를 좁혀 다시 물으시면
+               그 해의 달마다 결까지 그래프로 보여드립니다.</p>`);
+          }
+        } else {
+          // 2026-08-27: 신년운세가 아닌 분야별 질문(일과 자리·재물·관계 등)에도
+          // 같은 그래프를 붙인다. 질문을 어느 분야로 읽었는지(잡힘)를 그대로
+          // 곡선 선택에 써서, 위에서 「~로 읽었습니다」라 밝힌 그 분야의 16년
+          // 곡선과, 올해(질문이 "내년"을 가리키면 내년)의 열두 달 곡선을 붙인다.
+          const 곡선매핑 = { '일과 자리':'일과 자리', '재물':'재물', '독립':'재물',
+                             '집과 문서':'문서와 집', '배움':'문서와 집', '관계':'관계' };
+          const 필터 = 잡힘 ? (곡선매핑[잡힘] || null) : null;   // 나라는 사람·올해와 앞으로·몸은 전체 4곡선
+          const 기준 = new Date().getFullYear();
+          const 년도 = /내년/.test(물음) ? 기준+1 : 기준;
+          칸.insertAdjacentHTML('beforeend',
+            `<div class="card" style="margin-top:14px"><div class="card-title"><span class="gold-dot"></span>이 답과 함께 보는 흐름</div>
+             ${분야곡선판(현재.r, 현재.입력.성별, 16, 필터)}</div>`);
+          칸.insertAdjacentHTML('beforeend', 월운그림(현재.r, 년도));
+        }
+        칸.insertAdjacentHTML('beforeend',
+          `<div class="작은이음" style="margin-top:10px;font-size:12px;color:var(--dim)">
+             다음 질문은 이 답에 <b>이어서</b> 답합니다 ·
+             <a href="#" onclick="마지막문답=null;this.parentNode.textContent='처음부터 새로 묻습니다.';return false" style="color:var(--gold)">처음부터 묻기</a></div>`);
+      }
+    } else {
+      칸.innerHTML = 머리 + `<p class="기다림">${d.오류 || d.사유 || '답을 만들지 못했습니다'}. 잠시 뒤 다시 눌러 주세요.</p>`;
+    }
+  } catch(e) {
+    칸.innerHTML = 머리 + (e.name === 'AbortError'
+      ? `<p class="기다림">1분 반을 기다렸는데 답이 오지 않았습니다. 서버가 몹시 붐비는 것 같으니, 잠시 뒤 「묻는다」를 다시 눌러 주세요.</p>`
+      : `<p class="기다림">연결이 되지 않았습니다. 인터넷을 확인하시고 다시 눌러 주세요.</p>`);
+  } finally { 정리(); }
+}
+
+/* 대운 인생 곡선 — 판정 점수(-2~+2)를 부드러운 곡선으로 */
+function 대운곡선(대운들, 나이){
+  if(!대운들||!대운들.length) return '';
+  const W=720,H=210,L=34,R=16,T=26,B=54;
+  const n=대운들.length, 폭=(W-L-R)/n;
+  const X=i=>L+폭*i+폭/2, Y=p=>T+(H-T-B)/2-(p||0)*((H-T-B)/2/2.2);
+  const pts=대운들.map((u,i)=>[X(i),Y(u.길흉?.점수??0)]);
+  let d=`M ${pts[0][0]} ${pts[0][1]}`;
+  for(let i=1;i<pts.length;i++){const [x0,y0]=pts[i-1],[x1,y1]=pts[i],cx=(x0+x1)/2;
+    d+=` C ${cx} ${y0}, ${cx} ${y1}, ${x1} ${y1}`;}
+  const 영역=d+` L ${pts[pts.length-1][0]} ${Y(-2.6)} L ${pts[0][0]} ${Y(-2.6)} Z`;
+  let 지금띠='', 지금표='';
+  대운들.forEach((u,i)=>{ if(나이>=u.시작나이&&나이<u.시작나이+10){
+    지금띠=`<rect x="${L+폭*i}" y="${T-8}" width="${폭}" height="${H-T-B+16}" fill="rgba(191,155,74,.10)" rx="6"/>`;
+    지금표=`<g><rect x="${X(i)-19}" y="${T-22}" width="38" height="17" rx="8" fill="#bf9b4a"/>
+      <text x="${X(i)}" y="${T-9.5}" text-anchor="middle" font-size="10.5" fill="#fff">지금</text></g>`; }});
+  const 점=pts.map(([x,y],i)=>{const p=대운들[i].길흉?.점수??0;
+    const c=p>0?'#a3812f':p<0?'#8a6f5a':'#a49a86';
+    return `<circle cx="${x}" cy="${y}" r="4.4" fill="${c}" stroke="#fffdf7" stroke-width="1.6"/>`;}).join('');
+  const 라벨=대운들.map((u,i)=>`<text x="${X(i)}" y="${H-B+18}" text-anchor="middle" font-size="11" fill="#5c5342">${u.간지}</text>
+    <text x="${X(i)}" y="${H-B+33}" text-anchor="middle" font-size="9.5" fill="#8a7f6d">${u.시작나이}세~</text>`).join('');
+  return `<div class="운곡선"><svg viewBox="0 0 ${W} ${H}" style="width:100%;display:block;font-family:'Nanum Myeongjo','NanumGothic',serif">
+    <line x1="${L}" y1="${Y(0)}" x2="${W-R}" y2="${Y(0)}" stroke="#cfc4ad" stroke-dasharray="4 4"/>
+    <text x="${L-6}" y="${Y(2)+4}" text-anchor="end" font-size="9.5" fill="#8a7f6d">풀림</text>
+    <text x="${L-6}" y="${Y(-2)+4}" text-anchor="end" font-size="9.5" fill="#8a7f6d">지킴</text>
+    ${지금띠}
+    <path d="${영역}" fill="rgba(191,155,74,.15)"/>
+    <path d="${d}" fill="none" stroke="#bf9b4a" stroke-width="2.6" stroke-linecap="round"/>
+    ${점}${지금표}${라벨}
+  </svg><div class="작게" style="text-align:center;color:var(--dim);font-size:11px;margin-top:2px">
+    큰 계절의 흐름 — 위로 갈수록 결이 풀리는 십 년, 아래로 갈수록 지키는 십 년입니다</div></div>`;
+}
+
+/* 분야별 16년 곡선 — 그 분야의 글자가 오고 묶이고 흔들리는 것만 점수로.
+   필터를 주면(예: '재물') 그 한 분야 곡선만 크게 그린다 — 질문 답변에 붙이는 용도. */
+function 분야곡선판(r, 성별, 몇해=16, 필터=null){
+  const m=r.명식, 올해=new Date().getFullYear();
+  const sip=g=>g===m.ilGan?'비견':sipseong(m.ilGan,g);
+  const 간합={甲:'己',己:'甲',乙:'庚',庚:'乙',丙:'辛',辛:'丙',丁:'壬',壬:'丁',戊:'癸',癸:'戊'};
+  const 충짝={子:'午',午:'子',丑:'未',未:'丑',寅:'申',申:'寅',卯:'酉',酉:'卯',辰:'戌',戌:'辰',巳:'亥',亥:'巳'};
+  const 합짝={子:'丑',丑:'子',寅:'亥',亥:'寅',卯:'戌',戌:'卯',辰:'酉',酉:'辰',巳:'申',申:'巳',午:'未',未:'午'};
+  const 천간들=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+  const 글자of=군=>천간들.filter(g=>군.includes(sip(g)));
+  const 원국천간=[m.yeonGan,m.wolGan,m.siGan].filter(Boolean);
+  let 분야들=[
+    {이름:'일과 자리', 군:['정관','편관'], 덧:''},
+    {이름:'재물',      군:['정재','편재'], 덧:''},
+    {이름:'문서와 집', 군:['정인','편인'], 덧:''},
+    {이름:'관계',      군: 성별==='여'?['정관']:['정재'], 궁:m.ilJi, 덧:' · 자리 '+ (m.ilJi||'')},
+  ];
+  if (필터) 분야들 = 분야들.filter(f=>f.이름===필터);
+  if (!분야들.length) 분야들=[
+    {이름:'일과 자리', 군:['정관','편관'], 덧:''},
+    {이름:'재물',      군:['정재','편재'], 덧:''},
+    {이름:'문서와 집', 군:['정인','편인'], 덧:''},
+    {이름:'관계',      군: 성별==='여'?['정관']:['정재'], 궁:m.ilJi, 덧:' · 자리 '+ (m.ilJi||'')},
+  ];
+  const 해들=[]; for(let y=올해;y<올해+몇해;y++){const g=E.seun.연간지(y);해들.push({y,간:g.천간,지:g.지지});}
+  const 판 = 분야들.map(f=>{
+    const 글=글자of(f.군);
+    const 점수들=해들.map(t=>{
+      let p=0, 온=0;
+      if(글.includes(t.간)) 온=2;
+      const hs=JIJANGGAN[t.지]||[];
+      for(const h of hs){ if(글.includes(h.gan)) 온=Math.max(온, h.wi==='정기'?1.5:1); }
+      p+=온;
+      // 오는 글자가 원국 천간과 합해 묶이면 반감
+      if(글.includes(t.간) && 원국천간.includes(간합[t.간])) p-=1;
+      // 원국에 드러난 분야 글자를 그 해 천간이 합으로 묶으면 감점
+      for(const g of 글) if(원국천간.includes(g) && 간합[t.간]===g) p-=1;
+      // 관계: 배우자 자리의 충·합
+      if(f.궁){ if(충짝[t.지]===f.궁) p-=1.5; else if(합짝[t.지]===f.궁) p+=0.7; }
+      return Math.max(-2, Math.min(2.6, p));
+    });
+    return {이름:f.이름+' — '+글.join('·')+f.덧, 점수들};
+  });
+  const 작은=({이름,점수들})=>{
+    const W=340,H=150,L=26,R=8,T=24,B=30, n=점수들.length, 폭=(W-L-R)/(n-1);
+    const X=i=>L+폭*i, Y=p=>T+(H-T-B)*(1-(p+2)/4.6);
+    const pts=점수들.map((p,i)=>[X(i),Y(p)]);
+    let d=`M ${pts[0][0]} ${pts[0][1]}`;
+    for(let i=1;i<n;i++){const [x0,y0]=pts[i-1],[x1,y1]=pts[i],cx=(x0+x1)/2;
+      d+=` C ${cx} ${y0}, ${cx} ${y1}, ${x1} ${y1}`;}
+    const 영역=d+` L ${X(n-1)} ${H-B} L ${X(0)} ${H-B} Z`;
+    const 눈=해들.map((t,i)=> i%3===0?`<text x="${X(i)}" y="${H-B+16}" text-anchor="middle" font-size="9" fill="#8a7f6d">${String(t.y).slice(2)}</text>`:'' ).join('');
+    const 꼭=점수들.reduce((a,p,i)=>p>점수들[a]?i:a,0);
+    return `<div class="분야곡선"><svg viewBox="0 0 ${W} ${H}" style="width:100%;display:block;font-family:'Nanum Myeongjo','NanumGothic',serif">
+      <text x="${L}" y="14" font-size="11.5" fill="#5c5342" font-weight="600">${이름}</text>
+      <line x1="${L}" y1="${Y(0)}" x2="${W-R}" y2="${Y(0)}" stroke="#cfc4ad" stroke-dasharray="3 4"/>
+      <path d="${영역}" fill="rgba(191,155,74,.13)"/>
+      <path d="${d}" fill="none" stroke="#bf9b4a" stroke-width="2.2" stroke-linecap="round"/>
+      <circle cx="${X(꼭)}" cy="${Y(점수들[꼭])}" r="4" fill="#a3812f" stroke="#fffdf7" stroke-width="1.4"/>
+      <text x="${X(꼭)}" y="${Y(점수들[꼭])-8}" text-anchor="middle" font-size="10" fill="#a3812f" font-weight="600">${해들[꼭].y}</text>
+      ${눈}</svg></div>`;
+  };
+  return `<div class="분야곡선판${필터?' 단일':''}">${판.map(작은).join('')}</div>
+    <div class="작게" style="text-align:center;color:var(--dim);font-size:11px;margin:4px 0 2px">
+    분야의 글자가 오는 해일수록 위로 — 천간으로 오면 크게, 지지 속으로 오면 작게, 합으로 묶이면 깎아 그렸습니다</div>`;
+}
+
+/* 한 해 열두 달 그림 — 곡선 + 자동 이름표. 취운 조문(희·기)과 충합만으로 채점 */
+function 월운그림(r, 년){
+  const m=r.명식, hu=r.단계11_행운||{};
+  const 희=(hu.취운조문?.희)||[], 기=(hu.취운조문?.기)||[];
+  const 카=g=>{const s=(g===m.ilGan)?'비견':sipseong(m.ilGan,g);
+    return {비견:'비겁',겁재:'비겁',식신:'식상',상관:'식상',정재:'재',편재:'재',
+            정관:'관살',편관:'관살',정인:'인',편인:'인'}[s];};
+  const 생활어={비겁:'나',식상:'성과',재:'돈',관살:'일',인:'서류'};
+  const 밝은말={인:'계약·시험에 좋은 달',관살:'승진·인정의 달',재:'돈이 도는 달',식상:'성과 내는 달',비겁:'힘이 붙는 달'};
+  const 조심말={재:'지출·투자 조심',인:'서류 실수 조심',관살:'윗분과 마찰 조심',식상:'말 조심',비겁:'나눠 갖는 일 조심'};
+  const 값=c=>희.includes(c)?1:기.includes(c)?-1:0;
+  const 충짝={子:'午',午:'子',丑:'未',未:'丑',寅:'申',申:'寅',卯:'酉',酉:'卯',辰:'戌',戌:'辰',巳:'亥',亥:'巳'};
+  const 합짝={子:'丑',丑:'子',寅:'亥',亥:'寅',卯:'戌',戌:'卯',辰:'酉',酉:'辰',巳:'申',申:'巳',午:'未',未:'午'};
+  const 원지=[m.yeonJi,m.wolJi,m.ilJi,m.siJi].filter(Boolean);
+  const 첫월간={甲:'丙',己:'丙',乙:'戊',庚:'戊',丙:'庚',辛:'庚',丁:'壬',壬:'壬',戊:'甲',癸:'甲'};
+  const G10=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+  const 지열=['寅','卯','辰','巳','午','未','申','酉','戌','亥','子','丑'];
+  const 양=['2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월','1월'];
+  const 년간=E.seun.연간지(년).천간; let gi=G10.indexOf(첫월간[년간]);
+  const 달=지열.map((지,i)=>{
+    const 간=G10[(gi+i)%10], 충=원지.includes(충짝[지]), 합=원지.includes(합짝[지]);
+    const c간=카(간), c지=카(JIJANGGAN[지][JIJANGGAN[지].length-1].gan);
+    let p=값(c간)*1.2+값(c지)*0.8; if(충)p-=0.9; if(합)p+=0.4;
+    return {이름:양[i],간,지,c간,충,합,p:Math.max(-2,Math.min(2,p))};
+  });
+  // 자동 이름표: 으뜸 달 · 조심 달 · (버금 달)
+  const 순=달.map((t,i)=>[t.p,i]).sort((a,b)=>b[0]-a[0]);
+  const 표들=[];
+  const 밝이유=t=>밝은말[t.c간]||'밝은 달';
+  const 조심이유=t=>t.충?'큰 결정 미루는 달':(값(t.c간)<0?(조심말[t.c간]||'지키는 달'):'지키는 달');
+  if(순[0][0]>0.6) 표들.push([순[0][1], 밝이유(달[순[0][1]]), 'g']);
+  if(순[0][0]>0.6 && 순[1][0]>1.0 && Math.abs(순[1][1]-순[0][1])>1) 표들.push([순[1][1], 밝이유(달[순[1][1]]), 'g']);
+  const 꼴=순[순.length-1]; if(꼴[0]<-0.6) 표들.push([꼴[1], 조심이유(달[꼴[1]]), 'd']);
+  const 꼴2=순[순.length-2]; if(꼴2[0]<-1.0 && Math.abs(꼴2[1]-꼴[1])>1) 표들.push([꼴2[1], 조심이유(달[꼴2[1]]), 'd']);
+  // 그리기
+  const W=760,H=290,L=40,R=14,T=58,B=58, n=12;
+  const X=i=>L+(W-L-R)/(n-1)*i, Y=p=>T+(H-T-B)*(1-(p+2)/4.2);
+  const pts=달.map((t,i)=>[X(i),Y(t.p)]);
+  let d=`M ${pts[0][0]} ${pts[0][1]}`;
+  for(let i=1;i<n;i++){const [x0,y0]=pts[i-1],[x1,y1]=pts[i],cx=(x0+x1)/2;
+    d+=` C ${cx} ${y0}, ${cx} ${y1}, ${x1} ${y1}`;}
+  const 영역=d+` L ${X(n-1)} ${H-B} L ${X(0)} ${H-B} Z`;
+  const 점=pts.map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="4.4" fill="${달[i].p>0.05?'#a3812f':달[i].p<-0.05?'#8a6f5a':'#a49a86'}" stroke="#fffdf7" stroke-width="1.5"/>`).join('');
+  const 라벨=달.map((t,i)=>`<text x="${X(i)}" y="${H-B+20}" text-anchor="middle" font-size="11.5" fill="#5c5342">${t.이름}</text>
+    <text x="${X(i)}" y="${H-B+36}" text-anchor="middle" font-size="10" fill="#8a7f6d">${생활어[t.c간]||''}</text>`).join('');
+  const 핀=표들.map(([i,글,종])=>{const [x,y]=pts[i], c=종==='g'?'#a3812f':'#8a6f5a';
+    const w=글.length*11+18; let yy=(달[i].p>=0? y-40 : y-42); if(yy<T-46) yy=T-46;
+    let xx=Math.min(Math.max(x, L+w/2), W-R-w/2);
+    return `<g><rect x="${xx-w/2}" y="${yy}" width="${w}" height="22" rx="11" fill="${c}"/>
+      <text x="${xx}" y="${yy+15.5}" text-anchor="middle" font-size="12" fill="#fff">${글}</text>
+      <line x1="${x}" y1="${yy+22}" x2="${x}" y2="${y-7}" stroke="${c}" stroke-width="1.3"/></g>`;}).join('');
+  return `<div class="card 월운카드"><div class="card-title"><span class="gold-dot"></span>${년}년 열두 달의 결</div>
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;display:block;font-family:'Nanum Myeongjo','NanumGothic',serif">
+      <rect x="${L}" y="${T}" width="${W-L-R}" height="${Y(0.6)-T}" fill="rgba(191,155,74,.08)"/>
+      <rect x="${L}" y="${Y(-0.6)}" width="${W-L-R}" height="${H-B-Y(-0.6)}" fill="rgba(138,111,90,.07)"/>
+      <text x="${L}" y="20" font-size="12" fill="#5c5342" font-weight="600">이 명식이 반기는 기운이 오는 달은 위로, 꺼리거나 흔들리는 달은 아래로</text>
+      <text x="${L}" y="38" font-size="10.5" fill="#8a7f6d">위 옅은 띠=밝은 구간 · 아래 옅은 띠=지킬 구간 · 달 아래 낱말=그 달에 움직이는 것(일·돈·서류·성과)</text>
+      <line x1="${L}" y1="${Y(0)}" x2="${W-R}" y2="${Y(0)}" stroke="#cfc4ad" stroke-dasharray="4 4"/>
+      <path d="${영역}" fill="rgba(191,155,74,.13)"/>
+      <path d="${d}" fill="none" stroke="#bf9b4a" stroke-width="2.6" stroke-linecap="round"/>
+      ${점}${핀}${라벨}
+    </svg>
+    <div class="작게" style="text-align:center;color:var(--dim);font-size:11px;margin-top:2px">
+      취운 조문(반기는 것·꺼리는 것)과 원국과의 충·합만으로 계산한 절기월 흐름입니다 — 위 해설과 함께 보세요</div></div>`;
+}
+
+/* 2026-08-27: 한 해를 분야별(일과 자리·재물·문서와 집·관계)로 나눠 달마다 그린다.
+   분야곡선판의 연도별 점수 매기기를 그대로 절기월 단위로 옮긴 것 — 로직은 같고
+   x축만 열여섯 해 대신 열두 달이다. "올해 운세"류 질문에 종합 곡선(월운그림)과
+   함께 붙여, 어느 달에 어느 분야가 밝고 흔들리는지를 따로 보여준다. */
+function 월별분야곡선판(r, 성별, 년){
+  const m=r.명식;
+  const sip=g=>g===m.ilGan?'비견':sipseong(m.ilGan,g);
+  const 간합={甲:'己',己:'甲',乙:'庚',庚:'乙',丙:'辛',辛:'丙',丁:'壬',壬:'丁',戊:'癸',癸:'戊'};
+  const 충짝={子:'午',午:'子',丑:'未',未:'丑',寅:'申',申:'寅',卯:'酉',酉:'卯',辰:'戌',戌:'辰',巳:'亥',亥:'巳'};
+  const 합짝={子:'丑',丑:'子',寅:'亥',亥:'寅',卯:'戌',戌:'卯',辰:'酉',酉:'辰',巳:'申',申:'巳',午:'未',未:'午'};
+  const 천간들=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+  const 글자of=군=>천간들.filter(g=>군.includes(sip(g)));
+  const 원국천간=[m.yeonGan,m.wolGan,m.siGan].filter(Boolean);
+  const 분야들=[
+    {이름:'일과 자리', 군:['정관','편관'], 덧:''},
+    {이름:'재물',      군:['정재','편재'], 덧:''},
+    {이름:'문서와 집', 군:['정인','편인'], 덧:''},
+    {이름:'관계',      군: 성별==='여'?['정관']:['정재'], 궁:m.ilJi, 덧:''},
+  ];
+  // 절기월(오호둔) — 월운그림과 같은 방식으로 그 해 열두 달의 간지를 세운다
+  const 첫월간={甲:'丙',己:'丙',乙:'戊',庚:'戊',丙:'庚',辛:'庚',丁:'壬',壬:'壬',戊:'甲',癸:'甲'};
+  const G10=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+  const 지열=['寅','卯','辰','巳','午','未','申','酉','戌','亥','子','丑'];
+  const 양=['2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월','1월'];
+  const 년간=E.seun.연간지(년).천간; let gi=G10.indexOf(첫월간[년간]);
+  const 달들=지열.map((지,i)=>({이름:양[i], 간:G10[(gi+i)%10], 지}));
+
+  const 판 = 분야들.map(f=>{
+    const 글=글자of(f.군);
+    const 점수들=달들.map(t=>{
+      let p=0, 온=0;
+      if(글.includes(t.간)) 온=2;
+      const hs=JIJANGGAN[t.지]||[];
+      for(const h of hs){ if(글.includes(h.gan)) 온=Math.max(온, h.wi==='정기'?1.5:1); }
+      p+=온;
+      if(글.includes(t.간) && 원국천간.includes(간합[t.간])) p-=1;
+      for(const g of 글) if(원국천간.includes(g) && 간합[t.간]===g) p-=1;
+      if(f.궁){ if(충짝[t.지]===f.궁) p-=1.5; else if(합짝[t.지]===f.궁) p+=0.7; }
+      return Math.max(-2, Math.min(2.6, p));
+    });
+    return {이름:f.이름+' — '+글.join('·')+f.덧, 점수들};
+  });
+  const 작은=({이름,점수들})=>{
+    const W=340,H=150,L=26,R=8,T=24,B=28, n=점수들.length, 폭=(W-L-R)/(n-1);
+    const X=i=>L+폭*i, Y=p=>T+(H-T-B)*(1-(p+2)/4.6);
+    const pts=점수들.map((p,i)=>[X(i),Y(p)]);
+    let d=`M ${pts[0][0]} ${pts[0][1]}`;
+    for(let i=1;i<n;i++){const [x0,y0]=pts[i-1],[x1,y1]=pts[i],cx=(x0+x1)/2;
+      d+=` C ${cx} ${y0}, ${cx} ${y1}, ${x1} ${y1}`;}
+    const 영역=d+` L ${X(n-1)} ${H-B} L ${X(0)} ${H-B} Z`;
+    const 눈=달들.map((t,i)=> i%2===0?`<text x="${X(i)}" y="${H-B+15}" text-anchor="middle" font-size="8.5" fill="#8a7f6d">${t.이름.replace('월','')}</text>`:'' ).join('');
+    const 꼭=점수들.reduce((a,p,i)=>p>점수들[a]?i:a,0);
+    return `<div class="분야곡선"><svg viewBox="0 0 ${W} ${H}" style="width:100%;display:block;font-family:'Nanum Myeongjo','NanumGothic',serif">
+      <text x="${L}" y="14" font-size="11.5" fill="#5c5342" font-weight="600">${이름}</text>
+      <line x1="${L}" y1="${Y(0)}" x2="${W-R}" y2="${Y(0)}" stroke="#cfc4ad" stroke-dasharray="3 4"/>
+      <path d="${영역}" fill="rgba(191,155,74,.13)"/>
+      <path d="${d}" fill="none" stroke="#bf9b4a" stroke-width="2.2" stroke-linecap="round"/>
+      <circle cx="${X(꼭)}" cy="${Y(점수들[꼭])}" r="4" fill="#a3812f" stroke="#fffdf7" stroke-width="1.4"/>
+      <text x="${X(꼭)}" y="${Y(점수들[꼭])-8}" text-anchor="middle" font-size="10" fill="#a3812f" font-weight="600">${달들[꼭].이름}</text>
+      ${눈}</svg></div>`;
+  };
+  return `<div class="card" style="margin-top:10px"><div class="card-title"><span class="gold-dot"></span>${년}년 — 달마다, 분야별로</div>
+    <div class="분야곡선판">${판.map(작은).join('')}</div>
+    <div class="작게" style="text-align:center;color:var(--dim);font-size:11px;margin:4px 0 2px">
+    그 분야의 글자가 오는 달일수록 위로 그렸습니다 — 절기월(입절일부터) 기준</div></div>`;
+}
+
+/* 받침에 따라 조사를 고른다 — 「자리으로」 같은 말이 나가면 안 된다 */
+function 조사(말, 있을때, 없을때){
+  // 「어때?」처럼 문장부호로 끝나면 그 앞의 한글을 본다
+  const 글 = String(말).replace(/[^가-힣]+$/,'');
+  const c = 글.slice(-1).charCodeAt(0);
+  if (!(c >= 0xAC00 && c <= 0xD7A3)) return 있을때;   // 한글이 없으면 안전한 쪽
+  const 종성 = (c - 0xAC00) % 28;
+  // 「으로/로」는 ㄹ받침(종성 8)일 때도 '로'다 — 「재물로」이지 「재물으로」가 아니다
+  if (있을때 === '으로' && 종성 === 8) return 없을때;
+  return 종성 ? 있을때 : 없을때;
+}
+
+function 격설명(격){
+  return {
+정관:'자리와 규범을 다루며 사는 분입니다. 맡은 자리의 무게를 알고 약속과 절차를 지키는 데서 힘이 나오는 사람이라, 조직과 제도 안에서 신뢰를 쌓아 올라가는 길이 몸에 맞습니다. 명예가 재산보다 앞서는 그릇이라, 이름에 흠이 가는 일을 가장 아프게 느낍니다. 다만 규칙이 무너진 판이나 명분 없는 일 앞에서는 남들보다 크게 흔들립니다.',
+편관:'감당하기 어려운 것을 다루며 사는 분입니다. 압박과 위기를 남들처럼 피하는 게 아니라 정면으로 받아 다스리는 데서 존재감이 나오는 사람이라, 책임이 무겁고 결단이 필요한 자리에서 오히려 빛납니다. 평온한 날보다 비상한 날에 강한 그릇입니다. 다만 그 힘을 눌러 쓸 장치가 없으면 압박이 곧 소모가 되니, 이 격은 다스리는 글자가 있느냐가 전부입니다.',
+정재:'차곡히 쌓는 실물을 다루며 사는 분입니다. 허황한 것을 믿지 않고 손에 잡히는 것 — 돈, 살림, 성과 — 을 하나씩 늘려가는 데서 안정을 얻는 사람이라, 꾸준함과 관리가 강점입니다. 약속한 것은 지키고 계산은 분명한 그릇입니다. 다만 지키려는 마음이 커질수록 기회 앞에서 몸이 무거워지는 게 이 격의 그늘입니다.',
+편재:'크게 굴리는 재물을 다루며 사는 분입니다. 돈과 사람과 기회가 도는 판 전체를 읽는 눈이 있어, 한 곳에 묶이기보다 넓게 벌여 흐름을 타는 데서 힘이 나옵니다. 씀씀이가 시원하고 사람을 끄는 그릇입니다. 다만 들고 나는 폭이 큰 만큼, 지키는 장치 없이는 모인 것이 흩어지기도 쉽습니다.',
+정인:'배움과 문서, 기댈 바탕을 다루며 사는 분입니다. 지식과 명분과 어른의 그늘 — 눈에 안 보이는 자산이 이 분의 밑천이라, 배워서 자격을 얻고 그 이름으로 사는 길이 몸에 맞습니다. 사람들이 믿고 기대오는 그릇입니다. 다만 받는 것에 익숙해지면 스스로 나서는 힘이 늦되고, 돈 앞에서 명분을 다치기 쉬운 게 이 격의 시험입니다.',
+편인:'남다른 통찰과 한쪽으로 깊은 배움을 다루며 사는 분입니다. 남들이 다 가는 정석 대신 이면을 읽는 자기만의 눈이 있어, 전문 분야를 깊게 파거나 남이 못 보는 것을 알아채는 데서 힘이 나옵니다. 혼자 있는 시간이 밑천이 되는 그릇입니다. 다만 생각이 깊은 만큼 의심도 깊어, 다 된 일을 스스로 뒤집지 않는 것이 과제입니다.',
+식신:'만들어 내보내는 힘을 다루며 사는 분입니다. 한 우물을 깊게 파서 결과물 — 글, 기술, 음식, 기획 — 을 세상에 내놓는 데서 보람과 밥이 함께 나오는 사람이라, 서두르지 않고 익혀서 내는 것이 강점입니다. 곁을 넉넉하게 하는 그릇입니다. 다만 내보내는 것이 곧 나를 쓰는 일이라, 쉼 없이 만들다 속이 비는 것을 조심해야 합니다.',
+상관:'틀을 깨고 빼어난 것을 밖으로 내는 분입니다. 정해진 답을 그대로 받지 못하고 더 나은 것을 찾아내는 총기가 있어, 표현하고 설득하고 혁신하는 자리에서 빛납니다. 남들이 못 하는 말을 하는 그릇입니다. 다만 그 총기가 위를 향하면 자리와 부딪히니, 재능을 어디로 흘려보내느냐가 이 격의 평생 숙제입니다.',
+양인:'넘치는 힘을 다루며 사는 분입니다. 남들 몫까지 감당하는 강단과 승부 근성이 있어, 거친 일과 큰 판을 몸으로 뚫는 데서 존재감이 나옵니다. 위기에 앞장서는 그릇입니다. 다만 칼은 쥔 사람을 먼저 시험하는 법이라, 이 힘을 눌러 쓸 규율이 있느냐에 따라 대성과 낭패가 갈립니다.',
+건록:'스스로 서는 힘을 타고난 분입니다. 월령이 곧 나의 뿌리라 남의 그늘 없이도 버티는 자립의 그릇인데, 그래서 무엇을 담을지는 정해져 있지 않습니다 — 팔자의 다른 글자에서 재물이든 명예든 스스로 골라 이뤄야 하는 자리입니다. 다만 내 힘이 강한 만큼 나누는 일에는 인색해지기 쉬운 게 그늘입니다.',
+월겁:'스스로 서는 힘을 타고난 분입니다. 월령이 곧 나의 편이라 남의 그늘 없이도 버티는 자립의 그릇인데, 그래서 무엇을 담을지는 정해져 있지 않습니다 — 팔자의 다른 글자에서 재물이든 명예든 스스로 골라 이뤄야 하는 자리입니다. 다만 곁의 힘이 강한 만큼 내 것을 지키는 장치가 함께 필요합니다.'
+  }[격] || '';
+}
+function 궁통카드(m){
+  // 2026-09-05: 궁통보감 조건절 층 — 원문의 「배합 → 판정」. 판정어는 원문 그대로, 결 번역 병기.
+  //   자평진전 격국과 병렬 — 격국은 그릇, 이 층은 이 달의 밭. 조문화 안 된 일간·달은 카드를 안 만든다.
+  const G = (typeof E !== 'undefined') && E.궁통조문; if (!G) return '';
+  let r; try { r = G.analyze(m); } catch(e) { return ''; }
+  if (!r || r.해당없음) return '';
+  const 방향말 = {으뜸:'결이 크게 열리는 배합', 좋음:'결이 열리는 배합', 보통:'먹고 사는 데 모자람 없는 배합', 평범:'결이 크지 않은 배합', 막힘:'결이 막히는 배합'};
+  const 방향색 = {으뜸:'#2E7D4F', 좋음:'#2E7D4F', 보통:'#8a6d1f', 평범:'#7a6f60', 막힘:'#B0301C'};
+  // 물상은 일간마다 다르다 — 己만 밭이다 (2026-09-07 사용자 지적 「그런데 왜 밭이야?」)
+  const 물상 = {甲:'큰 나무',乙:'풀과 덩굴',丙:'해',丁:'등불',戊:'큰 산',己:'기름진 밭',庚:'쇠',辛:'보석',壬:'강물',癸:'단비'}[r.일간] || r.일간;
+  const 계절 = {寅:'초봄',卯:'봄',辰:'늦봄',巳:'초여름',午:'한여름',未:'늦여름',申:'초가을',酉:'가을',戌:'늦가을',亥:'초겨울',子:'한겨울',丑:'늦겨울'}[r.월] || r.월+'월';
+  let x = `<div class="card"><div class="card-title"><span class="gold-dot"></span>궁통보감이 보는 계절 — ${계절}(${r.월}월)의 ${물상}(${r.일간})</div>`;
+  x += `<div class="궁통요지">이 달의 필요 글자는 <b>${r.용.join(' → ')}</b>${r.기 && r.기.length ? `, 꺼리는 글자는 <b>${r.기.join('·')}</b>` : ''}입니다. ${r.요지}</div>`;
+  if (r.주판정) {
+    const p = r.주판정, 색 = 방향색[p.방향] || '#7a6f60';
+    x += `<div class="궁통판정" style="border-left-color:${색}">
+      <div class="궁통원문">「${p.원문}」</div>
+      <div class="궁통판정어">원문 판정어 <b style="color:${색}">「${p.판정어}」</b>${p.방향 ? ` <span class="궁통방향">— ${방향말[p.방향]}</span>` : ''}</div>
+      <div class="궁통결">${p.결}</div>
+    </div>`;
+  } else {
+    x += `<div class="궁통판정 없음">이 명식은 원문이 든 조건절 어디에도 정확히 들어맞지 않습니다. 아래 바탕과 흠으로 읽습니다.</div>`;
+  }
+  const 줄 = (라벨, xs, 색) => xs.map(z => `<div class="궁통줄"><span class="궁통라벨" style="color:${색}">${라벨}</span> 「${z.원문}」 — ${z.결}</div>`).join('');
+  x += 줄('바탕', r.바탕, '#8a6d1f') + 줄('흠', r.흠, '#B0301C') + 줄('완화', r.완화, '#2E7D4F');
+  x += r.그밖의판정.map(z => `<div class="궁통줄"><span class="궁통라벨">함께 걸린 조건</span> 「${z.원문}」 → 「${z.판정어}」 — ${z.결}</div>`).join('');
+  x += `<div class="궁통주">원문의 판정어(科甲·平常·孤苦 등)는 배합에 대한 옛 표현이지 사람에 대한 등급이 아닙니다. 자평진전 격국과는 별개 층 — 격국이 「무엇을 다루며 사는가」를 말하고, 이 층은 「이 달의 밭에 무엇이 갖춰졌는가」를 말합니다. 둘이 갈리면 모순이 아니라 층의 차이입니다.</div></div>`;
+  return x;
+}
+function 희기표(격, 상신, 일간, hu){
+  // 2026-09-03 재작성.
+  //   전에는 격만 보고 짠 고정표를 썼다. 그래서 식신격 用편인 명식에서 바로 위 성격 줄은
+  //   「편인이 식신을 알맞게 다스려 격을 살린다」고 하는데 이 상자는 「꺼리는 기운: 편인」이라
+  //   적혀 서로 모순이었다(9/3 실측). 출처를 엔진의 취운 조문(자평진전 39~46편, 격×상신)
+  //   하나로 통일하고, 「반긴다/꺼린다」가 무슨 말인지 낱말마다 풀어 준다.
+  const 규 = hu && hu.취운조문; if (!규) return '';
+  const 갈래 = {비견:'비겁',겁재:'비겁',식신:'식상',상관:'식상',정재:'재',편재:'재',정관:'관살',편관:'관살',정인:'인',편인:'인',
+                비겁:'비겁',식상:'식상',재:'재',관살:'관살',인:'인'};
+  const 안 = {비겁:['비견','겁재'],식상:['식신','상관'],재:['정재','편재'],관살:['정관','편관'],인:['정인','편인']};
+  const 우리말 = {비겁:'같은 편',식상:'내보내는 힘',재:'실물',관살:'틀',인:'밑천'};
+  const 뜻 = {비겁:'나와 같은 기운 — 내 힘, 동료, 경쟁자',
+              식상:'내가 낳는 기운 — 만들어 내보내는 것, 표현, 결과물',
+              재:'내가 다루는 기운 — 돈, 실물, 손에 잡히는 성과',
+              관살:'나를 다스리는 기운 — 자리, 규범, 직책, 압박',
+              인:'나를 낳아 주는 기운 — 배움, 문서, 자격, 뒷받침'};
+  const 장면 = {
+    재:  {희:'돈이 붙고, 계약이 성사되고, 만든 것이 팔리는 결', 기:'돈 문제가 짜임을 흔들고 실물에 매이는 결'},
+    식상:{희:'표현·프로젝트·결과물이 늘고 하던 일이 풀리는 결', 기:'하던 일에서 벗어나 딴 데로 새거나 규범과 부딪히는 결'},
+    인:  {희:'배움·자격·문서·뒷받침이 힘이 되는 결', 기:'공부·문서·기다림에 묶여 활동이 멈추는 결'},
+    관살:{희:'자리·직책이 오고 규범이 뒷받침하는 결', 기:'조직·규범·압박이 하던 일을 규제하는 결'},
+    비겁:{희:'동료와 내 힘이 늘어 버티는 결', 기:'경쟁·나눠 갖기로 내 것이 새는 결'}};
+  // 갈래 사이의 관계 — 왜 반기고 꺼리는지를 격과의 관계로 말한다
+  const 낳음 = {비겁:'식상',식상:'재',재:'관살',관살:'인',인:'비겁'};      // A가 B를 낳는다
+  const 침  = {비겁:'재',식상:'관살',재:'인',관살:'비겁',인:'식상'};        // A가 B를 친다
+  const 격갈래 = 갈래[격] || (격==='양인'||격==='건록'||격==='월겁' ? '비겁' : null);
+  const 상신갈래 = 상신 ? 갈래[상신] : null;
+  function 왜(갈, 쪽){
+    if (!격갈래) return '';
+    const 좋 = 쪽==='희';
+    if (갈===격갈래) return 좋 ? '격 자체의 기운입니다. 운에서 더 오면 하던 일이 두터워집니다.'
+                              : '격이 이미 넘치는데 더 보태면 과해집니다.';
+    if (낳음[격갈래]===갈) return 좋 ? '격이 낳는 기운입니다. 만든 것이 열매로 바뀝니다.'
+                                     : '격의 힘이 그쪽으로 새어 나갑니다.';
+    if (낳음[갈]===격갈래) return 좋 ? '격의 뿌리가 되어 격을 키웁니다.'
+                                     : '격을 키우다 넘치게 합니다.';
+    if (침[갈]===격갈래) return 좋 ? '격이 넘칠 때 눌러 알맞게 합니다.'
+                                   : '격을 눌러 내보내는 힘을 막습니다.';
+    if (침[격갈래]===갈) return 좋 ? '격이 다스릴 상대라 격이 쓸모를 얻습니다.'
+                                   : '격과 맞부딪혀 서로 다칩니다.';
+    return '';
+  }
+  // 이 명식에서 그 갈래의 글자가 어디 있는지 — 실명표와 같은 계산
+  function 글자들(갈){
+    const 이름들 = 안[갈]||[];
+    return 이름들.map(nm => {
+      const g = Object.keys(GAN).find(x => x!==일간 && sipseong(일간,x)===nm) || (nm==='비견'?일간:null);
+      if (!g) return null;
+      const m = 현재.r.명식, 곳=[];
+      for (const [k,라벨] of [['yeonGan','년간'],['wolGan','월간'],['siGan','시간']]) if (m[k]===g) 곳.push(라벨);
+      if (nm==='비견') 곳.unshift('일간');
+      for (const [k,라벨] of [['yeonJi','년지'],['wolJi','월지'],['ilJi','일지'],['siJi','시지']]) {
+        const hs = m[k] && JIJANGGAN[m[k]]; if (!hs) continue;
+        const h = hs.find(x=>x.gan===g); if (h) 곳.push(`${라벨} ${m[k]}${h.wi==='정기'?'의 본기':' 속'}`);
+      }
+      return `<b>${nm} ${g}</b><small>${곳.length ? 곳.join('·') : '원국에 없음 — 운에서 올 때 크게 움직임'}</small>`;
+    }).filter(Boolean).join(' ');
+  }
+  function 항목(x, 쪽){
+    const 갈 = 갈래[x]; if (!갈) return '';
+    const 구체 = 안[갈] && !안[갈].includes(x) ? null : x;            // '정관'처럼 하나만 짚었는지
+    const 이름 = 구체 && 구체!==갈 ? 구체 : 우리말[갈];
+    const 상신충돌 = (쪽==='기' && 상신갈래===갈);
+    return `<div class="취운항목 ${쪽==='희'?'좋음':'나쁨'}">
+      <div class="취운머리"><span class="취운이름">${이름}</span><span class="취운십성">${구체&&구체!==갈 ? 구체 : 안[갈].join('·')}</span></div>
+      <div class="취운뜻">${뜻[갈]}</div>
+      <div class="취운글자">${글자들(갈)}</div>
+      <div class="취운왜"><em>왜</em>${왜(갈,쪽)}</div>
+      <div class="취운장면"><em>삶에서는</em>${장면[갈][쪽]}</div>
+      ${상신충돌 ? `<div class="취운주의">★ 헷갈리는 자리 — 원국의 <b>${상신}</b>은 격을 떠받치는 기둥(상신)인데 여기서는 「꺼리는 기운」입니다. 원국에 있는 만큼은 약이지만, 운에서 같은 기운이 <u>더</u> 오면 과해져 격을 누릅니다. 원국에 있는 것과 운에서 오는 것은 다릅니다.</div>` : ''}
+    </div>`;
+  }
+  const 원문 = (규.원문||[]).filter(Boolean);
+  return `<div class="취운카드">
+    <div class="취운제목">운이 오면 — 이 명식이 <span class="좋음">반기는 기운</span>과 <span class="나쁨">꺼리는 기운</span></div>
+    <div class="취운설명">「반긴다」는 앞으로의 운(대운·세운)에서 그 기운의 글자가 들어올 때 이 명식의 <b>격이 살아난다</b>는 뜻이고, 「꺼린다」는 <b>눌린다</b>는 뜻입니다. 좋다·나쁘다의 절대치가 아니라 결이 어느 쪽으로 기우는지의 방향입니다. 반기는 기운도 겹치면 넘치고, 꺼리는 기운도 원국이 다스리면 약이 됩니다.</div>
+    <div class="취운근거">이 명식은 <b>${규.국||격+'격'}</b>입니다. ${원문.length ? `자평진전이 이 짜임의 운에 대해 말한 조문 — <span class="원문">「${원문.join('」「')}」</span>` : ''}</div>
+    <div class="취운줄"><div class="취운줄제목 좋음">반기는 기운</div>${(규.희||[]).map(x=>항목(x,'희')).join('') || '<div class="취운항목">조문에 따로 없음</div>'}</div>
+    <div class="취운줄"><div class="취운줄제목 나쁨">꺼리는 기운</div>${(규.기||[]).map(x=>항목(x,'기')).join('') || '<div class="취운항목">따로 없음</div>'}</div>
+  </div>`;
+}
+function 시간겹HTML(m, r){
+  try{
+    const now=new Date();
+    const GANS=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'], JIS=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+    const 오행G={甲:'목',乙:'목',丙:'화',丁:'화',戊:'토',己:'토',庚:'금',辛:'금',壬:'수',癸:'수'};
+    const 충P={子:'午',午:'子',丑:'未',未:'丑',寅:'申',申:'寅',卯:'酉',酉:'卯',辰:'戌',戌:'辰',巳:'亥',亥:'巳'};
+    const 합P={子:'丑',丑:'子',寅:'亥',亥:'寅',卯:'戌',戌:'卯',辰:'酉',酉:'辰',巳:'申',申:'巳',午:'未',未:'午'};
+    const 원지=[m.yeonJi,m.wolJi,m.ilJi,m.siJi].filter(Boolean);
+    const 표식=지=>원지.includes(충P[지])?' · <tspan fill="#D0301C">충</tspan>':(원지.includes(합P[지])?' · <tspan fill="var(--gold)">합</tspan>':'');
+    // 세운
+    const Y=now.getFullYear(); const 세=GANS[(Y-4)%10]+JIS[(Y-4)%12];
+    // 월운(절기 근사: 매월 절입 대략일)
+    const 절=[6,4,6,5,6,6,7,8,8,8,7,7]; // 1~12월 절입 근사일
+    let mi=now.getMonth(); if(now.getDate()<절[mi]) mi=(mi+11)%12; // 절입 전이면 전달
+    const 월지i=(mi+1)%12; // 1월(丑)=1, 2월(寅)=2 … 8월(申)=8
+    const 첫월={甲:2,己:2,乙:4,庚:4,丙:6,辛:6,丁:8,壬:8,戊:0,癸:0};
+    const 월간=GANS[(첫월[세[0]]+((월지i-2+12)%12))%10], 월=월간+JIS[월지i];
+    // 일운(JDN)
+    const a2=Math.floor((14-(now.getMonth()+1))/12), y2=Y+4800-a2, m2=(now.getMonth()+1)+12*a2-3;
+    const JDN=now.getDate()+Math.floor((153*m2+2)/5)+365*y2+Math.floor(y2/4)-Math.floor(y2/100)+Math.floor(y2/400)-32045;
+    const 일i=(JDN+49)%60, 일=GANS[일i%10]+JIS[일i%12];
+    // 시운(한국 보정: 자시 23:30~)
+    const mm=now.getHours()*60+now.getMinutes(); const 시지i=Math.floor(((mm+30)%1440)/120);
+    const 서두={甲:0,己:0,乙:2,庚:2,丙:4,辛:4,丁:6,壬:6,戊:8,癸:8};
+    const 시=GANS[(서두[일[0]]+시지i)%10]+JIS[시지i];
+    // 대운
+    let 대='', 진행=0;
+    const hu=r&&r.단계11_행운; const 나이=Y-입력.년;
+    if(hu&&hu.대운) for(const u of hu.대운) if(나이>=u.시작나이&&나이<u.시작나이+10){대=u.간지;진행=(나이-u.시작나이)/10;break;}
+    const 층=[[100,대||'—','대운 '+(대?Math.floor(진행*10)+1+'년째':'')],[79,세,'올해'],[60,월,'이달'],[43,일,'오늘'],[27,시,'지금']];
+    const C=115;
+    let g='<svg class="시간겹" viewBox="0 0 230 230">';
+    for(const [rad,gz,라벨] of 층){
+      const col='var(--'+(오행G[gz[0]]||'금')+')';
+      g+=`<circle cx="${C}" cy="${C}" r="${rad}" fill="none" stroke="${col}" stroke-opacity=".16" stroke-width="15"/>`;
+      if(rad===100&&대){const L=2*Math.PI*100;g+=`<circle cx="${C}" cy="${C}" r="100" fill="none" stroke="var(--gold)" stroke-opacity=".55" stroke-width="15" stroke-dasharray="${L*진행} ${L}" transform="rotate(-90 ${C} ${C})"/>`;}
+      g+=`<text x="${C}" y="${C-rad+4}" text-anchor="middle" font-size="11" font-weight="700" fill="${col}" paint-order="stroke" stroke="#F6F2EA" stroke-width="3">${gz}${gz!=='—'?표식(gz[1]):''}<tspan fill="var(--dim)" font-weight="400" font-size="9"> ${라벨}</tspan></text>`;
+    }
+    g+=`<text x="${C}" y="${C+5}" text-anchor="middle" font-size="20" font-weight="800" fill="var(--${오행G[m.ilGan]})">${m.ilGan}</text>`;
+    g+='</svg><div class="시간겹주">지금 이 순간을 둘러싼 시간의 겹 — 안에서 밖으로 갈수록 긴 호흡입니다. 충·합은 원국 지지와의 관계입니다.</div>';
+    return '<div class="card"><div class="card-title"><span class="gold-dot"></span>시간의 겹</div>'+g+'</div>';
+  }catch(e){return '';}
+}
+function 격별칭(격){
+  const B={정관:'자리를 지키는 사람',편관:'위기를 다스리는 사람',정재:'차곡히 쌓는 사람',편재:'판을 굴리는 사람',
+           정인:'배움으로 서는 사람',편인:'이면을 읽는 사람',식신:'깊게 파서 내놓는 사람',상관:'틀을 깨는 사람',
+           양인:'칼을 쥔 사람',건록:'제 힘으로 서는 사람',월겁:'곁과 함께 서는 사람'}[격];
+  return B ? `<b>「${B}」</b> — ` : '';
+}
+function 격키워드(격){
+  const K={정관:['원칙','책임','신중함','명예','신뢰'],
+           편관:['결단','승부','책임감','담대함','위기대응'],
+           정재:['성실','관리','실속','약속','안정'],
+           편재:['스케일','유연함','사교성','기회포착','베풂'],
+           정인:['학습','수용','명분','인내','품는 결'],
+           편인:['통찰','몰입','독창성','신중함','깊이'],
+           식신:['몰입','꾸준함','온화함','낙천','장인기질'],
+           상관:['표현력','순발력','비판정신','매력','혁신'],
+           양인:['강단','추진력','의리','승부욕','담대함'],
+           건록:['자립','뚝심','자존감','독립성','꾸준함'],
+           월겁:['동료애','추진력','자립','결속','배포']}[격];
+  if(!K) return '';
+  return `<div class="키워드칩들">${K.map(k=>`<span class="키워드칩">${k}</span>`).join('')}</div>`;
+}
+function 격자세히(격){
+  const 결={
+정관:'속에는 「마땅함」의 저울이 하나 있습니다. 무슨 일이든 되느냐 안 되느냐보다 옳으냐 그르냐를 먼저 재고, 그 저울이 기울면 이익이 커도 마음이 안 갑니다. 감정을 잘 드러내지 않아 차갑게 보이기도 하지만, 실은 실망시키고 싶지 않다는 마음이 큰 사람입니다. 결정은 느린 대신 한번 정한 것은 잘 뒤집지 않고, 말한 것은 지키려 자신을 몹니다. 그래서 곁에서 보면 「믿고 맡길 수 있는 사람」이라는 평이 먼저 옵니다.',
+편관:'속에 긴장이 있어야 오히려 안정되는 사람입니다. 평온이 길어지면 좀이 쑤시고, 어려운 과제가 주어지면 눈빛이 달라집니다. 결정이 빠르고 책임을 피하지 않아 사람들이 위기 때 먼저 찾는 얼굴이 됩니다. 다만 그 강함은 자신에게도 향해서, 스스로를 몰아붙이다 몸이 먼저 신호를 보내는 일이 잦습니다. 강해 보이려는 것이 아니라 물러서는 법을 배우지 못한 것에 가까운 사람입니다.',
+정재:'눈에 보이고 손에 잡히는 것을 믿는 사람입니다. 말보다 숫자, 가능성보다 실적이 편하고, 오늘 한 만큼 내일이 나아지는 구조라야 마음이 놓입니다. 화려한 것에는 잘 안 흔들리는 대신 잃는 것에는 남보다 민감해서, 결정 앞에서 셈이 길어집니다. 표현은 담백해도 제 사람은 실속으로 챙기는, 겪을수록 진가가 드러나는 유형입니다.',
+편재:'세상을 하나의 판으로 봅니다. 돈과 사람과 기회가 어디서 어디로 흐르는지가 눈에 들어오고, 그 흐름에 올라탄 순간 가장 살아 있음을 느낍니다. 셈이 빠르면서도 씀씀이는 시원해서 곁에 사람이 모이고, 낯선 자리에서도 금세 중심이 됩니다. 다만 마음이 늘 다음 판에 가 있어, 지금 손에 쥔 것을 지루해하는 것이 속버릇입니다.',
+정인:'받아들이는 힘이 큰 사람입니다. 새로운 것을 배우고 이치를 깨치는 데서 기쁨이 오고, 급한 일 앞에서도 「먼저 알아보고」 움직이는 신중함이 있습니다. 다투기보다 품는 쪽이라 곁 사람들이 기대오는데, 정작 자기 어려움은 잘 말하지 않습니다. 명분과 도리가 서야 힘이 나는 체질이라, 옳지 않다고 느끼는 일에는 큰 이익 앞에서도 몸이 굳습니다.',
+편인:'남들과 같은 답에 만족하지 못하는 사람입니다. 겉으로 드러난 것 뒤의 「진짜 이유」가 궁금하고, 한번 꽂힌 주제는 끝까지 파고듭니다. 여럿 속보다 혼자만의 시간에서 힘이 차오르고, 그 고요 속에서 남들이 놓친 것을 알아챕니다. 다만 그 눈이 자신에게도 향해 스스로를 자주 검열하고, 다 된 마음도 한 번 더 의심하는 것이 속버릇입니다.',
+식신:'무언가를 만들고 있을 때 가장 자기다운 사람입니다. 급하게 여럿을 벌이기보다 하나를 오래 들여다보며 익히는 쪽이고, 그렇게 익힌 것이 결과물로 나올 때 깊은 만족을 느낍니다. 겨루고 빼앗는 일에는 흥미가 적고, 제 것을 나누는 데서 오히려 기운을 얻습니다. 곁을 편안하게 하는 결이라 사람들이 모이는데, 정작 본인에게는 몰입할 자기만의 시간이 꼭 필요합니다.',
+상관:'머릿속이 늘 「더 나은 방법」으로 돌아가는 사람입니다. 정해진 답을 들으면 그대로 받기보다 허점부터 보이고, 그것을 말과 글로 바꿔내는 순발력이 있습니다. 표현할 때 살아나고 억누를 때 병이 나는 체질이라, 무대가 있느냐 없느냐가 컨디션을 좌우합니다. 인정에 민감해서 알아주는 한마디에 크게 움직이고, 무시당했다는 느낌에는 그만큼 크게 흔들립니다.',
+양인:'몸에 힘이 넘치는 사람입니다. 생각보다 행동이 먼저고, 어려운 판일수록 물러서기보다 정면으로 받는 담대함이 있습니다. 제 사람이라 정하면 손해를 보면서도 지키는 의리가 있어 따르는 이가 생깁니다. 다만 그 힘은 쓸 곳이 있어야 순해지는 것이라, 겨룰 대상이 없는 평온한 날에 오히려 탈이 나기 쉽습니다.',
+건록:'남에게 기대는 것이 몸에 안 맞는 사람입니다. 제 힘으로 서고 제 몫은 제가 감당해야 마음이 놓여서, 어려울 때도 도움을 청하는 말이 잘 안 나옵니다. 기복 없이 꾸준히 가는 뚝심이 있어 오래 두고 보면 결국 서 있는 쪽입니다. 속은 자존심이 강해, 지시받는 것보다 맡겨지는 것에서 힘이 납니다.',
+월겁:'함께일 때 힘이 나는 사람입니다. 혼자도 서지만 곁을 모아 같이 벌일 때 판이 커지고, 사람을 묶는 구심력이 있습니다. 내 것을 아끼지 않고 나누는 배포가 매력인데, 그 경계가 흐려지면 가까운 사이일수록 상처가 됩니다. 겉은 무던해도 속으로는 「내 몫」에 대한 셈이 분명한 사람입니다.'};
+
+  const D={
+정관:['맡은 일의 경계가 분명할 때 최고의 성과를 냅니다. 절차를 무시한 지름길에는 마음이 불편해 손을 안 대고, 그래서 느려 보여도 사고가 없습니다. 공직·법무·관리처럼 규범이 곧 무기인 자리가 몸에 맞습니다.','예의와 도리를 지키는 관계가 편하고, 무례한 사람과는 깊어지지 못합니다. 믿음을 한번 주면 오래가지만, 실망도 오래 갑니다.','정직한 돈만 편안합니다. 요행의 돈은 벌어도 마음이 불편한 체질이라, 안정된 수입과 계획된 지출이 맞습니다.','명분이 무너질 때 — 내 이름에 흠이 가거나, 지켜온 규칙이 우스워지는 순간 크게 흔들립니다.','원칙에 유연함을 한 스푼 — 규칙이 사람을 위한 것임을 기억할 때 이 격은 존경으로 완성됩니다.'],
+편관:['위기 상황, 마감 압박, 아무도 못 맡는 일 — 남들이 피하는 자리에서 오히려 집중력이 올라갑니다. 군·경·의료·구조·구조조정처럼 긴장이 상시인 일이 맞고, 한가한 자리에선 스스로 문제를 만들기도 합니다.','강한 사람에겐 강하고 약한 사람에겐 의외로 부드럽습니다. 시시한 관계보다 전우 같은 관계 몇을 깊게 둡니다.','돈은 수단이지 목적이 아니라, 크게 쓰고 크게 법니다. 다만 승부 욕심이 돈에 붙으면 위험해집니다.','다스릴 대상이 없어질 때, 혹은 압박이 다스림의 한계를 넘을 때 — 그때 이 힘은 안으로 향해 몸과 마음을 칩니다.','힘을 눌러 쓰는 장치 — 규율, 운동, 신앙, 스승 — 를 평생 곁에 두는 것. 그것이 이 격의 보험입니다.'],
+정재:['꾸준함이 무기입니다. 화려한 한 방보다 매일의 관리로 이기는 사람이라, 회계·운영·살림·실무처럼 새는 곳을 막는 일에서 대체 불가가 됩니다.','약속을 지키는 사람에게만 마음을 엽니다. 표현은 담백해도 챙기는 것은 실속으로 하는 유형입니다.','돈의 결이 가장 밝은 격입니다. 모으고 지키는 데 타고났고, 장부가 맞아야 잠이 옵니다. 다만 큰 기회 앞에서 셈이 길어져 때를 놓치기도 합니다.','계획 밖의 일 — 갑작스런 변수와 셈이 안 서는 상황에서 남들보다 크게 피로해집니다.','가끔은 계산 없이 저지르는 연습 — 잃어도 되는 만큼을 정해 모험하는 것이 이 격의 숨통입니다.'],
+편재:['판 전체를 보는 눈이 있어 기획·영업·투자·유통처럼 사람과 돈이 도는 일에서 빛납니다. 한 자리에 묶이면 시들고, 무대가 넓을수록 살아납니다.','발이 넓고 베풀 줄 알아 사람이 모입니다. 다만 넓은 만큼 얕아지기 쉬워, 깊은 관계 몇을 따로 가꿔야 합니다.','돈이 들어오는 재주는 타고났는데 머무는 재주는 따로 길러야 합니다. 버는 계좌와 지키는 계좌를 나누는 것이 처방입니다.','판이 닫힐 때 — 움직일 무대가 없어지고 한 곳에 묶일 때 이 격은 급격히 생기를 잃습니다.','흐름을 타되 닻 하나는 내려두기 — 지키는 사람이나 장치를 곁에 두면 이 격의 스케일이 실물이 됩니다.'],
+정인:['배워서 자격을 얻고 그 이름으로 서는 길이 정석입니다. 교육·연구·행정·문서를 다루는 일이 몸에 맞고, 사람들이 이 분의 말을 믿는 것 자체가 자산입니다.','기대오는 사람을 품는 어른의 결이 있습니다. 다만 받는 관계에 익숙해 먼저 손 내미는 연습이 필요할 때가 있습니다.','돈보다 명분이 앞서는 체질이라 큰돈 욕심은 적은데, 그래서 돈 문제로 명분을 다치는 순간을 가장 조심해야 합니다.','기댈 바탕이 흔들릴 때 — 믿던 어른·조직·이론이 무너지는 순간 뿌리째 흔들립니다.','배운 것을 세상에 내놓는 것 — 받은 지식을 자기 결과물로 바꿀 때 이 격은 스승의 자리에 오릅니다.'],
+편인:['남들이 놓치는 이면을 읽습니다. 전문·기술·연구·상담·종교처럼 깊이가 무기인 좁은 길에서 대가가 되는 유형이고, 넓고 얕은 일에선 재미를 못 느낍니다.','혼자의 시간이 충전이라 관계는 좁고 깊게 갑니다. 마음을 연 소수에게는 누구보다 통찰 있는 조언자가 됩니다.','돈에 대한 감각이 독특해 남다른 데서 벌기도 하지만, 확신이 지나쳐 한 곳에 몰기 쉬운 것은 경계할 일입니다.','의심이 통찰을 넘어설 때 — 다 된 일을 스스로 뒤집고, 사람을 먼저 밀어내는 순간이 이 격의 함정입니다.','통찰을 세상과 연결하는 다리 하나 — 발표하고 가르치고 기록하는 습관이 이 격을 기인에서 대가로 바꿉니다.'],
+식신:['한 우물을 오래 파서 결과물로 말하는 사람입니다. 창작·기술·요리·기획·콘텐츠처럼 만들어 내놓는 모든 일이 무대이고, 조직에서도 결국 산출물로 인정받습니다.','같이 있으면 편안해지는 결이라 사람이 곁에 모입니다. 싸움보다 밥을 사는 쪽으로 문제를 풉니다.','내 결과물이 값을 받는 구조 — 그것이 이 격의 돈입니다. 투기보다 실력의 복리가 맞습니다.','만들 수 없을 때 — 내보낼 곳이 막히거나 몸이 소진됐을 때 이 격은 안에서부터 시듭니다. 쉼도 생산의 일부입니다.','깊이에 이름을 붙이는 것 — 파온 우물을 자격과 브랜드로 만들 때 밥이 업이 됩니다.'],
+상관:['정해진 답을 의심하는 총기가 재산입니다. 말과 글, 방송·강의·마케팅·혁신처럼 표현하고 설득하는 일에서 빛나고, 시키는 대로만 하는 자리에선 병이 납니다.','매력 있고 재치 있어 사람을 끌지만, 윗사람의 허술함을 참지 못해 부딪히기도 합니다. 존경할 수 있는 상대를 만나는 게 복입니다.','재능이 돈이 되는 격이라 수입의 천장이 높은데, 들쭉날쭉하기도 쉬워 고정 축 하나를 따로 두는 것이 좋습니다.','재능을 알아주지 않을 때 — 무시당했다는 느낌이 이 격의 화약고입니다. 그 순간의 말 한마디를 조심해야 합니다.','총기의 방향을 위가 아니라 작품으로 — 비판을 창작으로 바꾸는 순간 이 격은 시대의 언어가 됩니다.'],
+양인:['몸과 배짱으로 뚫는 일 — 현장·수술·운동·특수직처럼 강단이 필요한 자리가 무대입니다. 위기에 제일 먼저 나서고, 그래서 따르는 사람이 생깁니다.','내 사람은 끝까지 지키는 의리가 있는데, 그 기준이 좁아 편이 갈리기 쉽습니다.','돈을 힘으로 벌 줄 아는데 지키는 데는 서툴러, 관리자를 곁에 두는 것이 낫습니다.','칼끝이 안을 향할 때 — 싸울 대상이 없어지면 이 힘은 자신과 가까운 사람을 칩니다. 그것이 이 격의 가장 큰 적입니다.','힘에 규율을 입히는 것 — 다스려진 양인은 장수가 되고, 풀린 양인은 사고가 됩니다. 평생의 한 문장입니다.'],
+건록:['남의 그늘 없이 서는 자립의 명입니다. 창업·독립·전문직처럼 내 이름으로 하는 일이 맞고, 조직에 있어도 결국 독자 영역을 만들어야 편해집니다.','도움을 청하는 게 어색해 혼자 감당하는 버릇이 있습니다. 대등한 동료 관계에서 가장 편안합니다.','스스로 벌어 스스로 서는 구조라 기복은 적은데, 무엇으로 벌지는 팔자의 다른 글자가 정합니다 — 그 글자를 찾는 것이 반평생의 일입니다.','기댈 수도 기대게 할 수도 없는 고립 — 혼자 힘이 강한 만큼 나누지 못하면 곁이 빕니다.','내 힘의 쓸 곳을 정하는 것 — 빈 그릇에 무엇을 담을지 스스로 고르는 자리임을 받아들일 때 이 명은 자유가 됩니다.'],
+월겁:['남의 그늘 없이 서는 자립의 명입니다. 동료·형제 같은 곁의 힘이 강해 함께 벌이는 일에 강한데, 그만큼 내 몫을 지키는 선이 필요합니다.','사람을 모으고 함께 가는 데 능하지만, 가까운 사이일수록 돈 문제는 문서로 해두는 것이 관계를 지킵니다.','벌 힘은 충분한데 곁에서 나눠 가는 구조라, 지키는 장치 — 계약, 분리된 계좌 — 가 곧 재테크입니다.','내 것과 남의 것의 경계가 무너질 때 — 보증과 동업의 상처가 이 격의 단골 시험입니다.','함께 서되 몫은 분명히 — 그 균형을 잡으면 곁의 힘이 전부 내 세력이 됩니다.']
+  };
+  const d=D[격]; if(!d) return '';
+  const 줄들=[...(결[격]?[결[격]]:[]), ...d];
+  const 이름=[...(결[격]?['타고난 결']:[]), '일과 자리','사람과 관계','돈','흔들리는 순간','자라는 길'];
+  return `<details class="격상세" open><summary>이 격을 더 자세히</summary>`+
+    줄들.map((t,i)=>`<div class="격상세줄"><b>${이름[i]}</b> ${t}</div>`).join('')+`</details>`;
+}
+/* 조문 리포트는 마크다운으로 온다. 그대로 뿌리면 ##과 |표|가 글자로 보인다. */
+function 마크다운(src){
+  const 줄들 = String(src).split('\n');
+  let out = '', 표 = [];
+  const 표비움 = () => {
+    if (!표.length) return;
+    const 칸 = r => r.replace(/^\||\|$/g,'').split('|').map(c=>c.trim());
+    const 머리 = 칸(표[0]);
+    const 몸 = 표.slice(1).filter(r => !/^[\s|:-]+$/.test(r)).map(칸);
+    out += '<table class="풀이표"><thead><tr>'
+        + 머리.map(c=>`<th>${꾸밈(c)}</th>`).join('') + '</tr></thead><tbody>'
+        + 몸.map(r=>'<tr>'+r.map(c=>`<td>${꾸밈(c)}</td>`).join('')+'</tr>').join('')
+        + '</tbody></table>';
+    표 = [];
+  };
+  for (const 줄 of 줄들){
+    const t = 줄.trim();
+    if (t.startsWith('|')) { 표.push(t); continue; }
+    표비움();
+    if (!t) { out += '<div class="틈"></div>'; continue; }
+    const h = t.match(/^(#{1,4})\s+(.*)$/);
+    if (h) { const n = Math.min(4, h[1].length + 2); out += `<h${n} class="풀이제">${꾸밈(h[2])}</h${n}>`; continue; }
+    if (/^(---+|===+|\*\*\*+)$/.test(t)) { out += '<hr class="풀이선">'; continue; }
+    const li = t.match(/^[-*]\s+(.*)$/);
+    if (li) { out += `<p class="풀이점">${꾸밈(li[1])}</p>`; continue; }
+    // *기울임 한 줄*은 주석으로 본다
+    const em = t.match(/^\*([^*].*)\*$/);
+    if (em) { out += `<p class="풀이주">${꾸밈(em[1])}</p>`; continue; }
+    out += `<p>${꾸밈(t)}</p>`;
+  }
+  표비움();
+  return out;
+}
+
+/* 서사 문장의 **굵게**를 오행 색으로 */
+// 답 검사기 결과(2026-09-05) — 서버가 답을 기계 검사한 결과를 회색 한 줄로. 통과·경고 없음이면 표시 안 함.
+//   내담자용이 아니라 만든 사람이 품질을 보기 위한 것. 오류가 남아 있으면 그 사실을 밝힌다.
+function 검사표시(g){
+  if (!g) return '';
+  const 조각 = [];
+  if (g.다시씀) 조각.push('첫 답이 검사에 걸려 다시 썼습니다');
+  if (g.오류 && g.오류.length) 조각.push('남은 오류 ' + g.오류.length + '건: ' + g.오류.map(x=>x.split(':')[0]).join('·'));
+  if (g.경고 && g.경고.length) 조각.push('경고 ' + g.경고.length + '건: ' + g.경고.map(x=>x.split(':')[0]).join('·'));
+  if (!조각.length) return '';
+  return `<div class="검사줄" title="${(g.오류||[]).concat(g.경고||[]).join('\n').replace(/"/g,'&quot;')}">검사 — ${조각.join(' · ')}</div>`;
+}
+function 꾸밈(x){
+  // 2026-09-05: 신년운세 답이 「### 2027년의 성격」처럼 제목 표시를 그대로 드러내던 것을 고침 —
+  //   ###/## 줄은 소제목으로, 줄머리 「* 」「- 」는 항목으로 바꾼다. 형광펜(**)은 그대로.
+  return x
+    .replace(/^#{2,4}\s*(.+)$/gm, (_,t) => `<div class="상담소제">${t}</div>`)
+    .replace(/^\s*[\*\-]\s+(.+)$/gm, (_,t) => `<div class="상담항목">${t}</div>`)
+    .replace(/\*\*([^*]+)\*\*/g, (_,t) => {
+      const o = Object.keys(우리말).find(k => t.startsWith(우리말[k]) || t === 우리말[k]);
+      return o ? `<b class="${o}">${t}</b>` : `<b>${t}</b>`;
+    });
+}
+
+
+// ───────────── 간명서 본문: 상품별 질문 목록 (서버 해설을 절마다 하나씩) ─────────────
+// 2026-08-27: 점신·정통운세류 유료 사주 PDF(14~45쪽)를 참고해 상품을 5개로 쪼갬.
+// "여백으로 장수 채우기"는 8/21에 이미 폐기한 방식이라(v29), 대신 각 상품 안을
+// 실제 세부 주제(예: 재물→부자운진단·주의사항·돈버는비결·자산관리법)로 나눠 채운다.
+// 분량글자는 서버(해설 엔드포인트)가 opt.분량글자로 받아 toLLMBrief에 그대로 넘겨야
+// 동작한다 — server.js의 /해설 라우트에 이 필드를 opt로 넘기는 한 줄이 필요하다.
+const 상품표 = {
+  종합: [
+    ['첫째 장 — 나라는 사람',       '저는 어떤 사람인가요? 타고난 결과 강점, 조심할 자리를 알려주세요'],
+    ['둘째 장 — 일과 자리',         '저의 일과 직장의 결은 어떤가요? 어떤 자리가 맞고 앞으로 몇 해는 어떻게 흘러가나요'],
+    ['셋째 장 — 재물',              '저의 재물의 결은 어떤가요? 돈이 모이는 방식과 조심할 해를 알려주세요'],
+    ['넷째 장 — 사람과 관계',       '저의 관계와 인연의 결은 어떤가요? 배우자 자리와 사람 복을 알려주세요'],
+    ['다섯째 장 — 집과 문서',       '집과 문서, 계약의 결은 어떤가요? 앞으로 사고파는 시기의 결을 알려주세요'],
+    ['여섯째 장 — 몸을 쓰는 방식',  '저의 몸과 기운의 결은 어떤가요? 무엇에 지치기 쉽고 어떻게 돌보면 좋은가요'],
+    ['일곱째 장 — 올해와 앞으로',   '올해와 앞으로 몇 해의 흐름을 정리해 주세요. 벌일 해와 지킬 해를 알려주세요'],
+  ],
+  평생사주: [
+    ['총운',       '제 평생의 전체적인 결을 총운으로 정리해 주세요', '1800~2400자로 격의 전체 그림을 충분히 풀어 주세요'],
+    ['재물운',     '제 평생 재물의 결은 어떤가요', '1500~2000자'],
+    ['애정운',     '제 평생 애정과 인연의 결은 어떤가요', '1500~2000자'],
+    ['직업운',     '제게 맞는 직업과 일의 결은 어떤가요', '1500~2000자'],
+    ['건강운',     '제 건강과 몸의 결은 어떤가요', '1200~1600자'],
+    ['자녀운',     '제 자녀 자리와 자녀 인연의 결은 어떤가요', '1200~1600자'],
+    ['대운 총론',  '제 인생의 대운 열 개를 하나하나 순서대로, 각 대운마다 무슨 결인지 짚어 설명해 주세요', '2500~3500자로 대운 하나하나를 문단으로 나눠 충분히 써 주세요'],
+  ],
+  신년운세: (()=>{ const y = new Date().getFullYear()+1; return [
+    ['신년총운',      `${y}년 한 해 전체의 총운을 정리해 주세요`, '900~1200자'],
+    ['재물운',        `${y}년 재물의 결을 알려주세요`, '900~1200자'],
+    ['애정운',        `${y}년 애정과 연애의 결을 알려주세요`, '900~1200자'],
+    ['결혼운',        `${y}년 결혼과 관련된 결을 알려주세요`, '900~1200자'],
+    ['직장·사업운',   `${y}년 직장과 사업의 결을 알려주세요`, '900~1200자'],
+    ['부부관계',      `${y}년 부부 관계의 결을 알려주세요`, '900~1200자'],
+    ['올해의 지침',   `${y}년 한 해를 살아가는 데 필요한 지침을 알려주세요`, '900~1200자'],
+    ['월별운세',      `${y}년 신년운세를 달별로 자세히 알려주세요`, '5000~7000자로 열두 달 전부를 한 달도 빠짐없이 짚어 주세요'],
+  ]; })(),
+  재물운분석: [
+    ['부자운 진단',   '제가 부자가 될 사주인지 재물 그릇을 진단해 주세요', '1400~1800자'],
+    ['주의사항',      '제 재물과 관련해 조심해야 할 것을 알려주세요', '1400~1800자'],
+    ['돈 버는 비결',  '제게 맞는 돈 버는 방법과 비결을 알려주세요', '1400~1800자'],
+    ['자산관리법',    '제게 맞는 자산관리 방법을 알려주세요', '1400~1800자'],
+  ],
+  애정운완전정복: [
+    ['이성운',        '제 이성운을 알려주세요', '1400~1800자'],
+    ['배우자운',      '제 배우자 자리와 배우자 인연을 알려주세요', '1400~1800자'],
+    ['연애기질',      '제 연애 기질과 스타일을 알려주세요', '1400~1800자'],
+    ['애정 조언',     '제 애정 생활에 대한 조언을 해주세요', '1400~1800자'],
+  ],
+  직업분석: [
+    ['적성',           '제 적성에 맞는 일이 무엇인지 알려주세요', '1400~1800자'],
+    ['직업운',         '제 직업운을 알려주세요', '1400~1800자'],
+    ['사업운',         '제 사업운과 창업 적합성을 알려주세요', '1400~1800자'],
+    ['피해야 할 직업', '제가 피해야 할 직업이나 일의 방식을 알려주세요', '1200~1500자'],
+    ['성공 조언',      '제가 성공하기 위한 조언을 해주세요', '1400~1800자'],
+  ],
+};
+const 상품이름 = { 종합:'종합 간명서', 평생사주:'평생사주', 신년운세:'신년운세',
+                   재물운분석:'재물운 분석', 애정운완전정복:'애정운 완전정복', 직업분석:'직업 분석' };
+async function 간명서에세이(물음, 분량글자){
+  const m = 현재.r.명식;
+  const 몸 = { 명식:{yeonGan:m.yeonGan,yeonJi:m.yeonJi,wolGan:m.wolGan,wolJi:m.wolJi,ilGan:m.ilGan,ilJi:m.ilJi},
+               출생연도: 현재.입력.년, 성별: 현재.입력.성별, 주제: 물음, 분량글자 };
+  if (!현재.입력.시모름){ 몸.명식.siGan=m.siGan; 몸.명식.siJi=m.siJi; }
+  const 대 = 현재.r.만세력?.대운; if (대 && 대.날수!=null) 몸.절기날수 = 대.날수;
+  const 그만 = new AbortController(); const t = setTimeout(()=>그만.abort(), 100000);
+  try{
+    const res = await fetch(중계 + '/해설', {method:'POST', signal:그만.signal,
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify(몸)});
+    const d = await res.json();
+    return (d && d.성공 && d.본문) ? d.본문 : null;
+  }catch(e){ return null; }
+  finally{ clearTimeout(t); }
+}
+
+// ───────────── 간명서 (본문 = 개인화 에세이, 부록 = 확정 판정 자료) ─────────────
+async function 간명서열기(상품 = '종합'){
+  if(!현재){ alert('먼저 명식을 봐 주세요.'); return; }
+  const 간명서질문 = 상품표[상품] || 상품표.종합;
+  const 단추=document.getElementById('간명서단추'); const 원래=단추.textContent; 단추.disabled=true;
+  // 본문 에세이 — 차례로 받아 온다 (무료 서버라 한 편에 십수 초씩 걸린다)
+  const 에세이들=[];
+  for (let i=0;i<간명서질문.length;i++){
+    단추.textContent = `쓰는 중 ${i+1}/${간명서질문.length}…`;
+    const 글 = await 간명서에세이(간명서질문[i][1], 간명서질문[i][2]);
+    에세이들.push([간명서질문[i][0], 글]);
+  }
+  단추.textContent = '엮는 중…';
+  const r=현재.r, m=r.명식, c=r.결론, 입=현재.입력;
+  const 올해=new Date().getFullYear();
+  const sip=g=>g===m.ilGan?'비견':sipseong(m.ilGan,g);
+  const esc=t=>String(t??'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  const 자리들간=[['년간',m.yeonGan],['월간',m.wolGan],['일간',m.ilGan],['시간',m.siGan]];
+  const 자리들지=[['년지',m.yeonJi],['월지',m.wolJi],['일지',m.ilJi],['시지',m.siJi]];
+  const 충짝={子:'午',午:'子',丑:'未',未:'丑',寅:'申',申:'寅',卯:'酉',酉:'卯',辰:'戌',戌:'辰',巳:'亥',亥:'巳'};
+  const 합짝={子:'丑',丑:'子',寅:'亥',亥:'寅',卯:'戌',戌:'卯',辰:'酉',酉:'辰',巳:'申',申:'巳',午:'未',未:'午'};
+  const 간합={甲:'己',己:'甲',乙:'庚',庚:'乙',丙:'辛',辛:'丙',丁:'壬',壬:'丁',戊:'癸',癸:'戊'};
+  const 지풀=ji=>{const hs=JIJANGGAN[ji]||[];const 본=hs.find(h=>h.wi==='정기');
+    const 숨=hs.filter(h=>h.wi!=='정기').map(h=>h.gan+'='+sip(h.gan)).join('·');
+    return `${ji}(본기 ${본?본.gan+'='+sip(본.gan):'?'}${숨?', 속에 '+숨:''})`;};
+  const 대조=(간,지)=>{const o=[];
+    자리들간.filter(([n,g])=>n!=='일간'&&g===간합[간]).forEach(([n,g])=>o.push(`${n} ${g}을 합`));
+    if(간합[간]===m.ilGan)o.push(`일간 ${m.ilGan}와 합`);
+    자리들지.filter(([n,z])=>z===충짝[지]).forEach(([n,z])=>o.push(`${n} ${z}와 충`));
+    자리들지.filter(([n,z])=>z===합짝[지]).forEach(([n,z])=>o.push(`${n} ${z}와 합`));
+    return o;};
+  // 십성 실명표
+  const 표={}; for(const g of ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸']){
+    const n=sip(g); if(!표[n])표[n]={글자:g,곳:[]}; }
+  표['비견'].곳.push('일간 자체');
+  자리들간.forEach(([n,g])=>{ if(g&&n!=='일간')표[sip(g)].곳.push(n+'에 드러남'); });
+  자리들지.forEach(([n,ji])=>{ if(!ji)return; (JIJANGGAN[ji]||[]).forEach(h=>{
+    표[sip(h.gan)].곳.push(h.wi==='정기'?`${n} ${ji}의 본기`:`${n} ${ji} 속에 숨음`); }); });
+  const 뜻={정관:'자리와 규범 — 직장·직위·법도·(여명)남편',편관:'압박과 결단 — 책임·위기·승부·(여명)연인',
+    정재:'차곡한 재물 — 월급·실물·관리·(남명)아내',편재:'굴리는 재물 — 사업·투자·유통·(남명)아버지',
+    정인:'문서와 배움 — 자격·계약·명의·어머니',편인:'통찰과 이면 — 전문기술·특수한 배움',
+    식신:'만들어 내놓는 힘 — 산출물·표현·(여명)자식',상관:'틀을 깨는 표현 — 언변·혁신·재주',
+    비견:'나와 같은 힘 — 자립·동료',겁재:'겨루며 나누는 힘 — 경쟁·분배'}; 
+  const 순서=['정관','편관','정재','편재','정인','편인','식신','상관','비견','겁재'];
+  // 그 십성이 오는 해 (16년)
+  const 세=[]; for(let y=올해;y<올해+16;y++){const g=E.seun.연간지(y);세.push({y,간:g.천간,지:g.지지});}
+  const 오는해=g=>{const 밖=세.filter(t=>t.간===g).map(t=>t.y);
+    const 속=세.filter(t=>(JIJANGGAN[t.지]||[]).some(h=>h.gan===g)).map(t=>t.y);
+    const o=[]; if(밖.length)o.push('천간으로 '+밖.join('·')); 
+    const 속만=속.filter(y=>!밖.includes(y)); if(속만.length)o.push('지지 속으로 '+속만.join('·'));
+    return o.join(', ')||'앞 16년 안에는 오지 않음';};
+  // 대운
+  const 행=r.단계11_행운||{}; const 대운들=행.대운||[]; const 세는=올해-입.년+1;
+  const 지금대운=d=>세는>=d.시작나이&&세는<d.시작나이+10;
+  // 세운 한 줄
+  const 축={정관:'자리와 규범의 결이 서는 해',편관:'책임과 압박이 커지는 해',정재:'차곡한 재물의 해',
+    편재:'판이 커지고 돈이 도는 해',정인:'문서·자격·배움의 해',편인:'깊은 배움과 통찰의 해',
+    식신:'만들어 내놓는 결이 사는 해',상관:'표현과 재주가 드러나는 해',비견:'내 힘과 동료가 붙는 해',겁재:'겨룸과 분배를 조심할 해'};
+  const 세운줄=t=>{const 조=대조(t.간,t.지);
+    let 글=`천간 ${t.간}=${sip(t.간)} · 지지 ${지풀(t.지)}`;
+    let 읽=축[sip(t.간)]||'';
+    if(조.some(x=>x.includes('충')))읽+=' — 다만 '+조.filter(x=>x.includes('충')).join(', ')+'하니 그 자리가 흔들리는 해';
+    if(조.some(x=>x.includes('합')))읽+=(읽?'; ':'')+조.filter(x=>x.includes('합')).join(', ')+'하니 그 글자가 붙들리는 해';
+    return {글,읽:읽+'입니다.'};};
+  // 월운 (오호둔)
+  const 첫월간={甲:'丙',己:'丙',乙:'戊',庚:'戊',丙:'庚',辛:'庚',丁:'壬',壬:'壬',戊:'甲',癸:'甲'};
+  const GAN10=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+  const 월지열=['寅','卯','辰','巳','午','未','申','酉','戌','亥','子','丑'];
+  const 양월=['2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월','1월(익년)'];
+  const 달들=y=>{const 년간=E.seun.연간지(y).천간; let gi=GAN10.indexOf(첫월간[년간]);
+    return 월지열.map((지,i)=>({이름:`${양월[i]} ${GAN10[(gi+i)%10]}${지}월`,간:GAN10[(gi+i)%10],지}));};
+
+  const 생일 = `${입.년}년 ${입.월}월 ${입.일}일` + (입.시모름?' (태어난 시각 모름)':` ${String(입.시).padStart(2,'0')}:${String(입.분).padStart(2,'0')}`);
+  const 음표 = 입.음력?` · 음력 ${입.음력.년}-${입.음력.월}-${입.음력.일}${입.음력.윤달?'(윤)':''}`:'';
+  const 딱지={성격:'짜임이 온전합니다',성중유패:'서긴 했지만 흔드는 글자를 안고 있습니다',
+    패중유성:'흠이 있었지만 구해주는 글자 덕에 다시 섰습니다',패격:'짜임이 깨져 있어 운에서 메워야 합니다',
+    상신미현:'기둥이 될 글자가 아직 드러나지 않았습니다'}[c.성패]||c.성패;
+
+  let H='';
+  // 1. 표지
+  H+=`<div class="쪽 표지"><div class="표제">看 命 書</div><div class="부제">${상품이름[상품]||'간명서'} — 자평진전·궁통보감 두 권으로만 본 풀이</div>
+    <div class="표지명식">${[m.siGan,m.ilGan,m.wolGan,m.yeonGan].map(g=>g||'·').join(' ')}<br>${[m.siJi,m.ilJi,m.wolJi,m.yeonJi].map(g=>g||'·').join(' ')}</div>
+    <div class="표지정보">${esc(입.이름||'이름 없음')} · ${입.성별==='남'?'남':'여'}<br>양력 ${생일}${음표}<br>
+    격국 — <b>${c.격}격</b>${c.상신?` (떠받치는 글자 ${c.상신})`:''} · ${딱지}<br><br>
+    <span class="작게">${올해}년 ${new Date().getMonth()+1}월 ${new Date().getDate()}일 간명 · 본문 ${간명서질문.length}장은 이 명식 하나를 위해 새로 썼습니다 · 신살·수명은 보지 않습니다</span></div></div>`;
+  // 2. 본문 — 개인화 에세이 일곱 장
+  const 실패수 = 에세이들.filter(([,g])=>!g).length;
+  에세이들.forEach(([제목,글],i)=>{
+    H+=`<div class="장"><h2>${제목}</h2>`;
+    H+= 글 ? `<div class="에세이">${꾸밈(esc(글)).replace(/\n/g,'<br>')}</div>`
+           : `<p class="작게">이 장은 지금 서버가 붐벼 쓰지 못했습니다. 앱에서 「${esc(간명서질문[i][1])}」를 물으시면 같은 내용을 보실 수 있습니다.</p>`;
+    H+=`</div>`;
+  });
+  // 3. 부록 — 확정 판정 자료
+  H+=`<div class="장 부록시작"><h2>부록 一. 명식 — 여덟 글자와 그 속</h2>
+    <table><tr><th></th><th>시주</th><th>일주</th><th>월주</th><th>년주</th></tr>
+    <tr><th>천간</th>${[[m.siGan,'시간'],[m.ilGan,'일간'],[m.wolGan,'월간'],[m.yeonGan,'년간']].map(([g])=>`<td>${g?`<b>${g}</b><br><span class="작게">${g===m.ilGan?'나':sip(g)}</span>`:'·'}</td>`).join('')}</tr>
+    <tr><th>지지</th>${[m.siJi,m.ilJi,m.wolJi,m.yeonJi].map(ji=>`<td>${ji?`<b>${ji}</b><br><span class="작게">${sip((JIJANGGAN[ji]||[{gan:ji}]).find(h=>h.wi==='정기').gan)}</span>`:'·'}</td>`).join('')}</tr>
+    <tr><th>지장간</th>${[m.siJi,m.ilJi,m.wolJi,m.yeonJi].map(ji=>`<td class="작게">${ji?(JIJANGGAN[ji]||[]).map(h=>`${h.gan}(${sip(h.gan)})`).join('<br>'):'·'}</td>`).join('')}</tr></table>
+    <h3>대운 — ${행.방향||''} ${행.대운수?`(대운수 ${행.대운수})`:''}</h3>
+    ${대운곡선(대운들, 세는)}
+    <table><tr><th>나이</th><th>대운</th><th>천간</th><th>지지</th><th>판정</th></tr>
+    ${대운들.map(d=>`<tr${지금대운(d)?' class="지금줄"':''}><td>${d.시작나이}~${d.시작나이+9}${지금대운(d)?' ←지금':''}</td><td>${d.간지}</td><td>${d.천간십성}</td><td>${d.지지십성}</td><td class="왼 작게">${esc(d.길흉?.판정||'')}</td></tr>`).join('')}</table>
+    <p class="작게">지금 나이는 세는나이 ${세는}세 기준입니다. 대운은 열 해씩 머무는 큰 계절이고, 아래 해마다의 결은 그 계절 안의 날씨입니다.</p></div>`;
+  // 3. 타고난 그릇
+  H+=`<div class="장"><h2>부록 二. 타고난 그릇 — ${c.격}격</h2>
+    <p>${격별칭(c.격)}${c.격}격으로 태어나셨습니다. ${c.상신?`이 격을 떠받치는 글자는 <b>${c.상신}</b>이고, `:''}판정은 <b>${딱지}</b> — ${esc(c.근거||'')}</p>
+    ${격키워드(c.격)}${격자세히(c.격)}</div>`;
+  // 4. 근거 조문 풀이
+  { const 궁 = 궁통카드(r.명식); if (궁) H+=`<div class="장"><h2>부록 二-1. 궁통보감이 보는 이 달의 밭</h2>${궁}</div>`; }
+  H+=`<div class="장"><h2>부록 三. 판정의 근거 — 원문 조문 풀이</h2>${마크다운(E.해설.render(r))}</div>`;
+  // 5. 열 가지 기운의 지도
+  H+=`<div class="장"><h2>부록 四. 열 가지 기운의 지도 — 이 명식의 십성 실명표</h2>
+    <p>사주의 열 가지 기운(십성)은 사람마다 다른 글자를 씁니다. 아래는 이 명식(일간 ${m.ilGan}) 기준으로 각 기운이 <b>어떤 글자</b>이고, <b>원국 어디에 있으며</b>, <b>앞으로 언제 오는지</b>를 전부 적은 지도입니다.</p>
+    ${순서.map(n=>{const t=표[n]; return `<div class="십성절"><span class="이름">${n} = ${t.글자}</span> <span class="작게">— ${뜻[n]}</span><br>
+      원국에서: ${t.곳.length?t.곳.join(', '):'<b>없음</b> — 운에서 올 때 크게 움직입니다'}<br>
+      <span class="작게">오는 해(${올해}~${올해+15}): ${오는해(t.글자)}</span></div>`;}).join('')}</div>`;
+  // 6. 앞으로 열여섯 해
+  H+=`<div class="장"><h2>부록 五. 앞으로 열여섯 해 — 해마다의 결</h2>${분야곡선판(현재.r, 입.성별)}
+    <p class="작게">각 해의 근거는 그 해의 글자와 원국의 대조(충·합)뿐입니다. 충은 그 자리가 흔들리고 움직이는 것, 합은 그 글자가 붙들리고 맺어지는 것입니다.</p>
+    ${세.map(t=>{const x=세운줄(t);return `<h4>${t.y}년 ${t.간}${t.지} <span class="작게">(세는나이 ${t.y-입.년+1}세)</span></h4><p class="작게">${x.글}</p><p>${x.읽}</p>`;}).join('')}</div>`;
+  // 7. 올해와 내년의 달들
+  H+=`<div class="장"><h2>부록 六. 올해와 내년 — 다달의 결</h2>
+    ${[올해,올해+1].map(y=>`<h3>${y}년 (절기월 — 각 달은 절입일부터)</h3>
+      <table><tr><th>달</th><th>천간</th><th>지지</th><th>원국과의 부딪힘</th></tr>
+      ${달들(y).map(t=>{const 조=대조(t.간,t.지);return `<tr><td>${t.이름}</td><td>${t.간}=${sip(t.간)}</td><td class="작게">${지풀(t.지)}</td><td class="왼 작게">${조.join(', ')||'—'}</td></tr>`;}).join('')}</table>`).join('')}</div>`;
+  // 8. 이 책의 방법 + 맺음
+  H+=`<div class="장"><h2>맺음 — 이 간명이 지키는 선</h2>
+    <p><b>두 권으로만 봅니다.</b> 『자평진전』(격국 — 그릇의 판정)과 『궁통보감』(조후 — 계절의 결), 이 두 원전에 근거가 있는 것만 말했습니다. 근거 조문은 三장에 번호와 함께 있습니다.</p>
+    <p><b>신살은 쓰지 않습니다.</b> 도화살·역마살·삼재 같은 신살은 『자평진전』이 「격국과 상관없다(論星辰無關格局)」고 못박아 이 책의 방법 밖입니다.</p>
+    <p><b>수명과 사건의 유무는 보지 않습니다.</b> 팔자는 타고난 결과 시기의 흐름을 보여줄 뿐, 언제 무슨 일이 일어난다고 못박는 거울이 아닙니다. 이 책의 모든 문장은 「결이 그렇게 흐른다」는 것이지 「그 일이 일어난다」는 것이 아닙니다.</p>
+    <p><b>결정은 늘 사람의 몫입니다.</b> 좋은 해에도 나쁜 선택이 있고 흔들리는 해에도 좋은 선택이 있습니다. 이 간명서는 통보가 아니라, 더 나은 선택을 돕는 재료입니다.</p>
+    <h3>근거로 삼은 책</h3>
+    <p class="작게">『자평진전(子平真詮)』 심효첨, 청 건륭 연간 — 격국의 판정. 조문 114개 전부 원문 대조, 부록 명례 78건으로 검산.<br>
+    『궁통보감(窮通寶鑑)』 여춘태 정리본, 청대 — 조후의 판정. 120칸 조후표를 판본 두 종과 전수 대조.</p>
+    <div class="면책">이 간명서는 고전 명리의 판정을 코드로 계산해 조립한 것입니다. 정해진 앞일이 아니라 짜임을 읽은 것이며, 의료·법률·투자 판단을 대신하지 않습니다.</div></div>`;
+
+  let 칸=document.getElementById('간명서');
+  if(!칸){칸=document.createElement('div');칸.id='간명서';document.body.appendChild(칸);}
+  칸.innerHTML=H;
+  칸.querySelectorAll('details').forEach(d=>d.open=true);
+  단추.disabled=false; 단추.textContent=원래;
+  if (실패수===간명서질문.length && !confirm('지금 서버가 붐벼 본문을 한 장도 쓰지 못했습니다. 부록(판정 자료)만으로라도 인쇄할까요?')) return;
+  window.print();
+}
+
+document.getElementById('시모름').addEventListener('change', e => {
+  for (const id of ['시','분']) document.getElementById(id).disabled = e.target.checked;
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !document.getElementById('화면입력').classList.contains('숨김')
+      && document.activeElement?.id !== '물음칸') 간명();
+});
+// 잠든 서버를 미리 깨운다. 실패해도 앱은 그대로 돌아야 하므로 통째로 감싼다.
+try { if (typeof fetch === 'function') fetch(중계 + '/health').catch(()=>{}); } catch(e){}
+if ('serviceWorker' in navigator)
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
+</script>
+<script src="mundap_ui.js"></script>
+</body>
+</html>
