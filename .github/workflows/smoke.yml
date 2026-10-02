@@ -6,6 +6,8 @@ on:
     branches: [main]
     paths: ['server/**', 'render.yaml']
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   smoke:
     runs-on: ubuntu-latest
@@ -17,3 +19,11 @@ jobs:
         env:
           RELAY_URL: ${{ vars.RELAY_URL || 'https://ganmyeong-relay.onrender.com' }}
         run: node scripts/smoke.js ${{ github.event_name == 'push' && github.sha || '' }}
+      - name: 답을 커밋 댓글로
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -f smoke-answer.md ]; then
+            gh api repos/${{ github.repository }}/commits/${{ github.sha }}/comments -F body=@smoke-answer.md --jq .html_url
+          fi
