@@ -9,6 +9,7 @@
  *   ③ 쉬운 말 층 — 상담 브리프 맨 끝에 규칙이 붙고, 모범 답안이 검사기 두 개를 통과하는가
  *   ④ 루트와 server/engine의 같은 이름 파일이 똑같은가 (Render는 server/ 폴더만 본다)
  *   ⑤ 궁통보감 회귀(verify_gungtong.js)
+ *   ⑨ 운 삼자 관계(scripts/un_check.js, 2026-10-07 9차)
  * 하나라도 틀리면 종료 코드 1.
  */
 const fs = require('fs');
@@ -100,6 +101,12 @@ console.log('⑧ 중계 서버 시험 (scripts/server_check.js — 가짜 Gemini
 시험('server_check', () => {
   const out = execFileSync('node', [path.join(뿌리, 'scripts', 'server_check.js')], { encoding: 'utf8', timeout: 20000 });
   return /전부 통과/.test(out);
+});
+
+console.log('⑨ 운 삼자 관계 (scripts/un_check.js — 대운 두 읽기·세운↔대운 사실 기록·死 key 국별 hit·명례 국 fixture)');
+시험('un_check 900건', () => {
+  const out = execFileSync('node', [path.join(뿌리, 'scripts', 'un_check.js'), '900'], { encoding: 'utf8', timeout: 20000 });
+  return /문제 항목 0/.test(out);
 });
 
 console.log(실패.length ? `\n실패 ${실패.length}건` : '\n전부 통과');
