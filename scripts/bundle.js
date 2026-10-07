@@ -13,7 +13,7 @@ const 뿌리 = path.join(__dirname, '..');
 const 모듈 = ['cheoja','chohu','chwiun','eumryeok','fixtures_zpjz','ganji','gemini','gukmyeong','gyeokguk','haengun',
   'haeseol','hapchung','ingwa','interpret','japgi','jari','jeoul','jijanggan','juje','manse','misonglip','myogo',
   'oegyeok','ohaeng_seosa','ohjeon','sangsin','sangsin_fallback','seonhu','seun','sinsal','sisol','sunjap','tonggeun',
-  'tuchong','unbyeonhwa','unchung','wolun','yongeo','gungtong_jomun','yukchin'];
+  'tuchong','unbyeonhwa','unchung','wolun','yongeo','gungtong_jomun','yukchin','gungtong_un'];
 const 별칭 = { 궁통조문:'gungtong_jomun', 지장간:'jijanggan', 서사:'ohaeng_seosa', 격국:'gyeokguk',
                해설:'haeseol', 만세력:'manse', 음력:'eumryeok' };
 
