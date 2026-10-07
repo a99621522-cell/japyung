@@ -12,6 +12,8 @@
  *             월두법·시두법을 무시하므로 「조건 자체가 모순인가」를 본다.
  * 결과: 조문 표(칸·id·종류·hit·主 두 집합), 한 번도 안 걸린 조문, 걸리되 주판정이 못 되는 판정 조문(+가리는 조문).
  * 흠·완화·바탕은 설계상 주판정이 아니므로 「주판정 0」 목록에서 뺀다.
+ * 2026-10-07 두 번째 통합: 조문 순서는 GJ.정렬조문(특수성 내림차순 → 원문 순), 평주 조문(-P)은 주판정 후보가 아니며 藏↔無 쌍에서도 뺀다.
+ *   반월 조문(上半月/下半月)이 보류로만 남지 않게 현실 전수는 시지 홀짝으로 daysFromJeolip 5/20 을 번갈아 넣고, 무제약 표본은 넣지 않는다(보류).
  */
 const path = require('path');
 const GJ = require(path.join(__dirname, '..', 'gungtong_jomun'));
@@ -34,8 +36,9 @@ let seed = 20261007;
 const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
 const pick = a => a[Math.floor(rnd() * a.length)];
 
+// 2026-10-07: analyze 와 같은 순서(특수성 내림차순 → 원문 순). 평주 조문(층 '평주')은 주판정 후보가 아니다
 function 조문목록(일간, 월지) {
-  return GJ.표[일간][월지].조문.filter(j => !j.월 || j.월 === 월지);
+  return GJ.정렬조문(일간, 월지);
 }
 
 // GJ.analyze와 같은 규칙으로 걸린 조문·주판정을 돌려준다(걸린 id 배열, 주판정 id)
@@ -43,7 +46,7 @@ function 평가(목록, m) {
   const c = GJ._ctx(m);
   const 걸린 = [];
   for (const j of 목록) { let ok = false; try { ok = !!j.조건(c); } catch (e) {} if (ok) 걸린.push(j); }
-  const 주 = 걸린.find(j => j.종류 === '판정') || null;
+  const 주 = 걸린.find(j => j.종류 === '판정' && j.층 !== '평주') || null;
   return { 걸린, 주 };
 }
 
@@ -55,7 +58,7 @@ for (const 일간 of GAN) for (const 월지 of 월지순) {
   const 칸이름 = 일간 + 월지;
   if (ONLY && ONLY !== 칸이름) continue;
   const 목록 = 조문목록(일간, 월지);
-  const 집계 = new Map(목록.map(j => [j.id, { 칸: 칸이름, id: j.id, 종류: j.종류, 판정: j.판정, 원문: j.원문, 현실hit: 0, 현실主: 0, 자유hit: 0, 자유主: 0 }]));
+  const 집계 = new Map(목록.map(j => [j.id, { 칸: 칸이름, id: j.id, 종류: j.종류, 층: j.층, 특수성: j.특수성, 판정: j.판정, 원문: j.원문, 현실hit: 0, 현실主: 0, 자유hit: 0, 자유主: 0 }]));
   const 세기 = (r, 키) => {
     for (const j of r.걸린) 집계.get(j.id)[키 + 'hit']++;
     if (r.주) 집계.get(r.주.id)[키 + '主']++;
@@ -69,7 +72,7 @@ for (const 일간 of GAN) for (const 월지 of 월지순) {
   let 현실n = 0, 현실주없음 = 0, 자유n = 0, 자유주없음 = 0;
   // ① 현실 전수
   for (const 년간 of GAN) for (const 년지 of JI) for (const 일지 of JI) for (const 시지 of JI) {
-    const m = { yeonGan: 년간, yeonJi: 년지, wolGan: 월간of(년간, 월지), wolJi: 월지, ilGan: 일간, ilJi: 일지, siGan: 시간of(일간, 시지), siJi: 시지 };
+    const m = { yeonGan: 년간, yeonJi: 년지, wolGan: 월간of(년간, 월지), wolJi: 월지, ilGan: 일간, ilJi: 일지, siGan: 시간of(일간, 시지), siJi: 시지, daysFromJeolip: JI.indexOf(시지) % 2 ? 20 : 5 };
     const r = 평가(목록, m); 세기(r, '현실'); 현실n++; if (!r.주) 현실주없음++;
   }
   // ② 무제약 표본
@@ -84,13 +87,13 @@ for (const 일간 of GAN) for (const 월지 of 월지순) {
 // ── 보고 ──
 const pad = (s, n) => (s + '').padEnd(n);
 console.log(`조문 ${표.length}개 · 칸 ${칸결과.length} · 현실 전수 17,280/칸 · 무제약 표본 ${FREE.toLocaleString()}/칸`);
-console.log('\n[조문별] 칸 id 종류 판정 | 현실 hit/主 | 자유 hit/主');
-for (const t of 표) console.log(`${pad(t.칸, 3)} ${pad(t.id, 12)} ${pad(t.종류, 3)} ${pad(t.판정, 10)} | ${pad(t.현실hit, 6)}/${pad(t.현실主, 6)} | ${pad(t.자유hit, 6)}/${t.자유主}`);
+console.log('\n[조문별] 칸 id 종류 특수성 판정 | 현실 hit/主 | 자유 hit/主   (순서 = analyze 적용 순: 특수성 내림차순 → 원문 순)');
+for (const t of 표) console.log(`${pad(t.칸, 3)} ${pad(t.id, 12)} ${pad(t.종류, 3)} ${pad(t.특수성, 2)} ${pad(t.판정, 10)} | ${pad(t.현실hit, 6)}/${pad(t.현실主, 6)} | ${pad(t.자유hit, 6)}/${t.자유主}`);
 
-const 안걸림 = 표.filter(t => t.자유hit === 0);
+const 안걸림 = 표.filter(t => t.자유hit === 0 && t.현실hit === 0);   // 반월 조문은 무제약 표본(경과일 없음)에서 보류라 현실 전수까지 본다
 const 현실안걸림 = 표.filter(t => t.자유hit > 0 && t.현실hit === 0);
-const 주못됨 = 표.filter(t => t.종류 === '판정' && t.자유hit > 0 && t.자유主 === 0 && t.현실主 === 0);
-console.log(`\n[한 번도 안 걸림 — 무제약 표본에서도 0] ${안걸림.length}개`);
+const 주못됨 = 표.filter(t => t.종류 === '판정' && t.층 !== '평주' && t.자유hit > 0 && t.자유主 === 0 && t.현실主 === 0);
+console.log(`\n[한 번도 안 걸림 — 무제약 표본·현실 전수 모두 0] ${안걸림.length}개`);
 안걸림.forEach(t => console.log(`  ${t.칸} ${t.id} ${t.종류} 「${t.원문}」`));
 console.log(`\n[무제약에서는 걸리나 현실 전수(월두법·시두법)에서는 0] ${현실안걸림.length}개`);
 현실안걸림.forEach(t => console.log(`  ${t.칸} ${t.id} ${t.종류} 자유hit ${t.자유hit} 「${t.원문}」`));
@@ -104,6 +107,7 @@ const 원문of = Object.fromEntries(표.map(t => [t.id, t.원문]));
 const 충돌쌍 = [];
 for (const [k, n] of Object.entries(동시)) {
   const [a, b] = k.split('|');
+  if (/-P\d+$/.test(a) || /-P\d+$/.test(b)) continue;   // 평주 조문은 원전 無X 조문과 함께 걸리는 것이 설계(庚卯-P1 藏甲 ↔ 庚卯-04 無甲)
   for (const [x, y] of [[a, b], [b, a]]) {
     const 장 = [...(원문of[x].match(/([甲乙丙丁戊己庚辛壬癸])藏|藏([甲乙丙丁戊己庚辛壬癸])/g) || [])].map(s => s.replace('藏', ''));
     for (const g of new Set(장)) if (new RegExp(`(無|乏|不見)[甲乙丙丁戊己庚辛壬癸]{0,2}${g}`).test(원문of[y]) && !new RegExp(`${g}(透|出)`).test(원문of[y])) 충돌쌍.push(`${x}(藏${g}) ↔ ${y}(無${g}) ×${n}`);
