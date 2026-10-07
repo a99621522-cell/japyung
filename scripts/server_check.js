@@ -129,6 +129,16 @@ const 확인 = (이름, 조건, 설명) => { console.log(`  ${조건 ? '통과' 
     확인('통계에 명식 없음', !JSON.stringify(h).includes('辛'));
   }
 
+  console.log('⑦ /판정 JSON API (2026-10-07 PROMPTS 7)');
+  { const r = await 부름('/판정', { 명식: 몸기본.명식, 성별: '남', 출생연도: 1971, 절기날수: 13, 전체: true });
+    확인('/판정 200 · 결론·추적·궁통·대운', r.상태 === 200 && r.d.성공 && r.d.결론 && r.d.결론.격 && Array.isArray(r.d.추적.자평) && r.d.추적.자평.length >= 1 && r.d.추적.자평[0].줄.length >= 1 && Array.isArray(r.d.추적.안걸림) && r.d.궁통 && Array.isArray(r.d.대운) && r.d.대운.length >= 1, JSON.stringify(r.d).slice(0, 200));
+    확인('/판정 표시금지 낱말 없음', !/淫賤|刑夫|剋子|長舌|不生長|疾|瞽|損目|殘病|災病|夭|而亡/.test(JSON.stringify(r.d)));
+    const r2 = await 부름('/판정', { 입력: { 년: 1995, 월: 6, 일: 10, 시: 12, 분: 0, 시모름: true, 성별: '여' }, 성별: '여', 민감도: true });
+    확인('/판정 날짜 입력 + 시각 모름 민감도 12행', r2.상태 === 200 && r2.d.민감도 && r2.d.민감도.행.length === 12 && !r2.d.명식.siJi && r2.d.만세력, JSON.stringify(r2.d.민감도 && r2.d.민감도.갈림));
+    const r3 = await 부름('/판정', { 명식: { ilGan: '甲' } });
+    확인('/판정 모자란 명식 400', r3.상태 === 400);
+  }
+
   서버.close();
   try { fs.rmSync(임시, { recursive: true, force: true }); } catch (e) {}
   console.log(`${실패.length ? '실패 ' + 실패.length + '건: ' + 실패.join(', ') : '전부 통과'} · ${Date.now() - t0}ms`);

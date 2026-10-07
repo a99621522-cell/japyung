@@ -219,6 +219,20 @@ body:not(.층-전문가) .검사줄{display:none}
 .답머리{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
 .이해단추{font-size:11px;color:var(--dim);background:none;border:1px solid var(--border);border-radius:999px;padding:1px 8px;cursor:pointer;white-space:nowrap;font-weight:400}
 .이해단추.보냄{color:var(--gold-dim);border-color:transparent;cursor:default}
+/* 전문가 모드 (2026-10-07, PROMPTS 7) */
+.추적머리{font-weight:700;font-size:13.5px;margin:12px 0 4px;color:#3b3225}
+.추적항{font-size:13px;line-height:1.6;margin:6px 0 8px;padding:6px 10px;background:#fff;border-radius:8px;border:1px solid var(--border)}
+.추적항 code{font-size:11.5px;color:#6b5a38;background:var(--card2);padding:0 4px;border-radius:4px}
+.추적줄{font-size:11.5px;color:var(--dim);margin-left:6px}
+.추적식{font-size:11.5px;color:var(--dim);margin-top:2px}
+.추적조건{font-size:12px;border-collapse:collapse;margin-top:4px}.추적조건 td{padding:2px 6px;border-top:1px dashed rgba(0,0,0,.08);vertical-align:top}
+.추적조건 td.성립{color:#2E7D4F;font-weight:700}.추적조건 td.불성립{color:#B0301C;font-weight:700}.추적조건 td.근거{color:var(--dim)}
+.scroll-x{overflow-x:auto}
+.민감도{font-size:12px;border-collapse:collapse;min-width:100%}.민감도 th,.민감도 td{padding:4px 8px;border-bottom:1px solid rgba(0,0,0,.08);white-space:nowrap;text-align:left}
+.민감도 tr.기준 td{background:var(--card2);font-weight:600}.민감도 td.다름{background:#FBEBD9}
+.비교줄{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted);margin-bottom:10px;flex-wrap:wrap}
+.항 .비교체크{display:flex;align-items:center;margin-right:6px}
+@media print{ #간명서 .card.전문{display:block} }
 .용어상자{margin-top:14px;padding:8px 12px;border:1px solid rgba(0,0,0,.08);border-radius:8px;background:rgba(0,0,0,.025);font-size:14px}
 .용어상자>summary{cursor:pointer;list-style:none;margin:0;border:0}
 .용어상자>summary::-webkit-details-marker{display:none}
@@ -575,7 +589,9 @@ function 저장(){
 function 목록그리기(){
   const a = 읽기(), box = document.getElementById('목록칸');
   if (!a.length){ box.innerHTML = '<div class="빔">아직 저장한 명식이 없습니다.<br>명식을 보신 뒤 위쪽 «저장»을 누르시면 여기 쌓입니다.</div>'; return; }
-  box.innerHTML = a.map((x,i) => `<div class="항">
+  비교선택 = [];
+  box.innerHTML = `<div class="비교줄"><span>두 명식에 표시하고 → </span><button class="btn-line" id="비교단추" onclick="비교하기()" disabled>비교표</button> <small style="color:var(--dim)">판정 사실만 나란히 — 궁합 판정은 하지 않습니다</small></div><div id="비교칸"></div>` + a.map((x,i) => `<div class="항">
+    <label class="비교체크"><input type="checkbox" data-i="${i}" onchange="비교선택토글(${i}, this)"></label>
     <div class="이">${x.이름 || '무명'}
       <small>${x.년}. ${x.월}. ${x.일}. ${x.시모름 ? '시각 모름' : x.시+'시 '+x.분+'분'} · ${x.성별}${x.출생지 ? ' · ' + (x.출생지.이름 || x.출생지.tz) : ''}</small></div>
     <button class="btn-line" onclick="불러(${i})">보기</button>
@@ -771,6 +787,8 @@ function 간명(){
   //   엔진 취운 조문 하나를 출처로 낱말마다 풀어 주는 카드로 바꿨다.
   h += 희기표(r.결론.격, r.결론.상신, m.ilGan, hu);
   h += 궁통카드(m);
+  h += 조문추적카드(r, 입력.성별);                       // 전문가 모드(2026-10-07, PROMPTS 7)
+  if (시모름) h += 민감도카드(m, 입력.성별, 입력.년);   // 시각 모름 — 열두 시주 민감도
   h += 대운곡선(hu.대운, 나이);
   for (const u of hu.대운){
     const 지금 = 나이 >= u.시작나이 && 나이 < u.시작나이 + 10;
@@ -1313,6 +1331,50 @@ function 격설명(격){
 월겁:'스스로 서는 힘을 타고난 분입니다. 월령이 곧 나의 편이라 남의 그늘 없이도 버티는 자립의 그릇인데, 그래서 무엇을 담을지는 정해져 있지 않습니다 — 팔자의 다른 글자에서 재물이든 명예든 스스로 골라 이뤄야 하는 자리입니다. 다만 곁의 힘이 강한 만큼 내 것을 지키는 장치가 함께 필요합니다.'
   }[격] || '';
 }
+// ── 전문가 모드 (2026-10-07, PROMPTS 7): 조문 추적·시각 모름 민감도·명식 비교. 판정은 엔진 그대로, 근거를 꺼내 보이기만 한다 ──
+const esc2 = x => String(x ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function 조문추적카드(r, 성별){
+  const T = (typeof E !== 'undefined') && E.조문추적; if (!T) return '';
+  let t; try { t = T.추적(r, { 성별 }); } catch(e) { return ''; }
+  const 줄말 = (책, z) => z.줄 && z.줄.length ? `<span class="추적줄">${책} ${z.장 ? z.장 + ' ' : ''}${z.줄.length > 3 ? `${z.줄[0]}~${z.줄[z.줄.length-1]}행` : z.줄.map(n => n + '행').join('·')}</span>` : '<span class="추적줄">줄 못 찾음</span>';
+  const 조건표 = 조건 => 조건.length ? `<table class="추적조건">${조건.map(c => `<tr><td class="${c.성립 === true ? '성립' : c.성립 === false ? '불성립' : ''}">${c.성립 === true ? '○' : c.성립 === false ? '×' : '?'}</td><td>${esc2(c.키)}</td><td>${esc2(c.값)}</td><td class="근거">${esc2(c.근거)}</td></tr>`).join('')}</table>` : '';
+  let x = `<div class="card 전문"><div class="card-title"><span class="gold-dot"></span>조문 추적 — 이 판정이 선 원문 자리</div>`;
+  x += `<div class="궁통주" style="margin:0 0 8px">조문 id → 원문(東里書齋 中州本·wikisource 번체)의 줄 번호와, 그 조문이 요구하는 조건 하나하나가 이 명식에서 성립했는지(○·×). 판정은 바뀌지 않고 근거만 펼친 것입니다.</div>`;
+  if (t.자평.length) { x += `<div class="추적머리">자평진전 — ${r.결론.격}격 성패·구응</div>`; for (const z of t.자평) x += `<div class="추적항"><b>${z.판정}</b> <code>${z.id}</code>${z.상신 ? ` · 상신 ${z.상신}` : ''}${z.기본 ? ' · 기본 조문' : ''} ${줄말('자평진전', z)}<div class="궁통원문">「${esc2(z.원문)}」</div>${z.비고 ? `<div class="궁통주">비고: ${esc2(z.비고)}</div>` : ''}${조건표(z.조건)}</div>`; }
+  if (t.취운) { x += `<div class="추적머리">취운(取運) — ${esc2(t.취운.국 || '')} · 희 ${(t.취운.희||[]).join('·') || '-'} · 기 ${(t.취운.기||[]).join('·') || '-'}</div>`; for (const w of t.취운.원문) x += `<div class="추적항">${줄말('자평진전', w)}<div class="궁통원문">「${esc2(w.글)}」</div></div>`; }
+  if (t.궁통 && t.궁통.걸린) { x += `<div class="추적머리">궁통보감 — ${r.명식.ilGan}일간 ${r.명식.wolJi}월 칸에서 걸린 조문 ${t.궁통.걸린.length}건${t.궁통.여명.length ? ` · 여명 ${t.궁통.여명.length}` : ''}${t.궁통.질병수 ? ` · 질병 기록 ${t.궁통.질병수}(원문은 「원문 그대로 보기」)` : ''}</div>`;
+    for (const z of [...t.궁통.걸린, ...t.궁통.여명]) x += `<div class="추적항"><b>${esc2(z.자리)}</b> <code>${z.id}</code>${z.판정어 ? ` · 판정어 「${esc2(z.판정어)}」` : ''} ${줄말('궁통보감', z)}<div class="궁통원문">「${esc2(z.원문)}」</div>${z.조건식 ? `<div class="추적식">조건식 <code>${esc2(z.조건식)}</code></div>` : ''}${z.결 ? `<div class="궁통주">${esc2(z.결)}</div>` : ''}</div>`;
+    if (t.궁통.보류 && t.궁통.보류.length) x += `<div class="궁통주">보류(시주 없음 등): ${t.궁통.보류.map(b => b.id).join(', ')}</div>`;
+    x += `<div class="궁통주">원시 조건: ${esc2(t.궁통.원시)}</div>`; }
+  x += `<div class="궁통주">${esc2(t.안내)} · 같은 자료를 JSON 으로: 서버 <code>POST /판정</code>.</div></div>`;
+  return x;
+}
+function 민감도카드(m, 성별, 출생연도){
+  const T = (typeof E !== 'undefined') && E.조문추적; if (!T) return '';
+  let s; try { s = T.시주민감도({ ...m, siGan: null, siJi: null }, { gender: 성별, 출생연도 }); } catch(e) { return ''; }
+  const 칸 = ['격','상신','성패','최종성패','고저','궁통주판정'];
+  let x = `<div class="card 전문"><div class="card-title"><span class="gold-dot"></span>시각을 모를 때 — 열두 시주 민감도</div>`;
+  x += `<div class="궁통주" style="margin:0 0 8px">시주 없이 본 판정(기준)과 열두 시주를 넣었을 때. 바탕색이 든 칸이 기준과 다른 칸입니다. 갈림 — ${칸.map(k => `${k} ${s.갈림[k]}가지`).join(' · ')}.</div>`;
+  x += `<div class="scroll-x"><table class="민감도"><thead><tr><th>시주</th><th>시각</th>${칸.map(k => `<th>${k}</th>`).join('')}</tr></thead><tbody>`;
+  x += `<tr class="기준"><td>없음</td><td>기준</td>${칸.map(k => `<td>${esc2(s.기준[k] ?? '-')}</td>`).join('')}</tr>`;
+  for (const h of s.행) x += `<tr><td><b>${h.시주}</b></td><td>${h.시각}</td>${칸.map(k => `<td class="${h.다른칸.includes(k) ? '다름' : ''}">${esc2(h[k] ?? '-')}</td>`).join('')}</tr>`;
+  x += `</tbody></table></div><div class="궁통주">${esc2(s.안내)}</div></div>`;
+  return x;
+}
+let 비교선택 = [];
+function 비교선택토글(i, el){ if (el.checked) { 비교선택.push(i); if (비교선택.length > 2) { const 빠짐 = 비교선택.shift(); const 상자 = document.querySelector(`#목록칸 input[data-i="${빠짐}"]`); if (상자) 상자.checked = false; } } else 비교선택 = 비교선택.filter(x => x !== i); const b = document.getElementById('비교단추'); if (b) b.disabled = 비교선택.length !== 2; }
+function 비교하기(){
+  const T = (typeof E !== 'undefined') && E.조문추적; if (!T || 비교선택.length !== 2) return;
+  const a = 읽기(); const [x, y] = 비교선택.map(i => a[i]); if (!x || !y) return;
+  let rA, rB; try { rA = E.interpret.생년월일시로(x); rB = E.interpret.생년월일시로(y); rA.참고 = { 성별: x.성별 }; rB.참고 = { 성별: y.성별 }; } catch(e) { alert('비교할 명식을 다시 계산하지 못했습니다. ' + (e.message || '')); return; }
+  const t = T.비교표(rA, rB);
+  const 이름 = z => z.이름 || `${z.년}.${z.월}.${z.일}`;
+  let h = `<div class="card"><div class="card-title"><span class="gold-dot"></span>명식 비교 — ${esc2(이름(x))} · ${esc2(이름(y))}</div>`;
+  h += `<div class="궁통주" style="margin:0 0 8px">${esc2(t.안내)}</div>`;
+  h += `<div class="scroll-x"><table class="민감도"><thead><tr><th></th><th>${esc2(이름(x))} (${x.성별})</th><th>${esc2(이름(y))} (${y.성별})</th></tr></thead><tbody>${t.행.map(r => `<tr><td><b>${esc2(r.항목)}</b></td><td>${esc2(r.A)}</td><td>${esc2(r.B)}</td></tr>`).join('')}</tbody></table></div>`;
+  h += `<div class="추적머리">두 명식 사이의 글자 관계 (사실만)</div>${t.관계.map(k => `<div class="추적항">${esc2(k)}</div>`).join('')}</div>`;
+  const 칸 = document.getElementById('비교칸'); if (칸) 칸.innerHTML = h;
+}
 function 궁통카드(m){
   // 2026-09-05: 궁통보감 조건절 층 — 원문의 「배합 → 판정」. 판정어는 원문 그대로, 결 번역 병기.
   //   자평진전 격국과 병렬 — 격국은 그릇, 이 층은 이 달의 밭. 조문화 안 된 일간·달은 카드를 안 만든다.
@@ -1797,6 +1859,7 @@ async function 간명서열기(상품 = '종합'){
   // 4. 근거 조문 풀이
   { const 궁 = 궁통카드(r.명식); if (궁) H+=`<div class="장"><h2>부록 二-1. 궁통보감이 보는 이 달의 밭</h2>${궁}</div>`; }
   H+=`<div class="장"><h2>부록 三. 판정의 근거 — 원문 조문 풀이</h2>${마크다운(E.해설.render(r))}</div>`;
+  if (document.body.classList.contains('층-전문가')) { const 추 = 조문추적카드(r, 현재.입력.성별); if (추) H+=`<div class="장"><h2>부록 三-1. 조문 추적 — 원문 줄 번호와 조건 성립</h2>${추}</div>`; if (현재.입력.시모름) { const 민 = 민감도카드(r.명식, 현재.입력.성별, 현재.입력.년); if (민) H+=`<div class="장"><h2>부록 三-2. 시각을 모를 때 — 열두 시주 민감도</h2>${민}</div>`; } }   // 전문가 모드(2026-10-07)
   // 5. 열 가지 기운의 지도
   H+=`<div class="장"><h2>부록 四. 열 가지 기운의 지도 — 이 명식의 십성 실명표</h2>
     <p>사주의 열 가지 기운(십성)은 사람마다 다른 글자를 씁니다. 아래는 이 명식(일간 ${m.ilGan}) 기준으로 각 기운이 <b>어떤 글자</b>이고, <b>원국 어디에 있으며</b>, <b>앞으로 언제 오는지</b>를 전부 적은 지도입니다.</p>
