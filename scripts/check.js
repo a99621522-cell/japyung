@@ -11,6 +11,7 @@
  *   ⑤ 궁통보감 회귀(verify_gungtong.js)
  *   ⑨ 운 삼자 관계(scripts/un_check.js, 2026-10-07 9차)
  *   ⑩ 세계 만세력(scripts/world_check.js, 2026-10-07 11차)
+ *   ⑪ 평가 세트 50건 기준값(scripts/eval_report.js, 2026-10-07 13차)
  * 하나라도 틀리면 종료 코드 1.
  */
 const fs = require('fs');
@@ -128,6 +129,12 @@ console.log('⑩ 세계 만세력 (scripts/world_check.js — 한국 4,000건 �
 시험('world_check', () => {
   const out = execFileSync('node', [path.join(뿌리, 'scripts', 'world_check.js'), '200'], { encoding: 'utf8', timeout: 60000 });
   return /문제 항목 0/.test(out);
+});
+
+console.log('⑪ 평가 세트 50건 (scripts/eval_report.js — docs/eval/baseline.json 과 같아야 한다. 일부러 바꿨으면 --update 로 기준값을 다시 쓰고 PR 에 변화 표를)');
+시험('eval_report 기준값 일치·금지어 0', () => {
+  const out = execFileSync('node', [path.join(뿌리, 'scripts', 'eval_report.js')], { encoding: 'utf8', timeout: 120000 });
+  return /판정 변화 0칸/.test(out) && /금지어 0/.test(out);
 });
 
 console.log(실패.length ? `\n실패 ${실패.length}건` : '\n전부 통과');
