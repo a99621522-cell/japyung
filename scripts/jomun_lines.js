@@ -56,6 +56,14 @@ const GJ = require(path.join(뿌리, 'gungtong_jomun'));
 for (const g of Object.keys(GJ.표)) for (const w of Object.keys(GJ.표[g])) for (const j of GJ.표[g][w].조문) if (!out[j.id]) 넣기(j.id, '궁통보감', j.원문);
 for (const j of GJ.여명조문) 넣기(j.id, '궁통보감', j.근거 || j.원문);
 for (const j of GJ.질병조문) { 넣기(j.id, '궁통보감', j.근거); if (out[j.id] && !out[j.id].줄.length && j.줄) out[j.id].줄 = [j.줄]; }
+// 滴天髓 셋째 층 조문(jeokcheonsu JOMUN, 2026-10-07) — docs/jeokcheonsu_wonmun.txt 에서 찾고, 못 찾으면 모듈에 적힌 줄 번호를 쓴다
+let 적천수수 = 0, 적천수못 = 0;
+try {
+  const 적천 = 색인(path.join(뿌리, 'docs', 'jeokcheonsu_wonmun.txt'), /^## (.+?) \(wiki\//);
+  const JC = require(path.join(뿌리, 'jeokcheonsu'));
+  for (const j of JC.JOMUN) { const r = 찾기(적천, j.원문); out[j.id] = { 책: '적천수', 줄: r ? r.줄 : (j.줄 ? [j.줄] : []), 장: r ? r.장 : (j.장 || null) }; 적천수수++; if (!r) 적천수못++; }
+} catch (e) { console.log('적천수 조문 색인 건너뜀:', e.message); }
+
 // 취운 조문(chwiun CHWIUN 의 취운원문·원문 문자열)은 id 가 없어 정규화한 원문을 키로 둔다 — jomun_trace 가 같은 정규화로 찾는다
 let 취운수 = 0, 취운못 = 0;
 try {
@@ -70,6 +78,6 @@ const 글 = `/** jomun_lines.js — 조문 id → 원문 줄 번호 (자동 생�
 module.exports = ${JSON.stringify(out)};
 `;
 fs.writeFileSync(path.join(뿌리, 'jomun_lines.js'), 글);
-console.log(`자평진전 ${자평수}건(못 찾음 ${자평못}) · 궁통보감 ${궁통수}건(못 찾음 ${궁통못}) · 취운 원문 ${취운수}건(못 찾음 ${취운못}) → jomun_lines.js`);
+console.log(`자평진전 ${자평수}건(못 찾음 ${자평못}) · 궁통보감 ${궁통수}건(못 찾음 ${궁통못}) · 취운 원문 ${취운수}건(못 찾음 ${취운못}) · 적천수 ${적천수수}건(못 찾음 ${적천수못}) → jomun_lines.js`);
 if (자평못) console.log('자평 못 찾음:', Object.entries(out).filter(([, v]) => v.책 === '자평진전' && !v.줄.length).map(([k]) => k).join(' '));
 if (궁통못) console.log('궁통 못 찾음:', Object.entries(out).filter(([, v]) => v.책 === '궁통보감' && !v.줄.length).map(([k]) => k).slice(0, 30).join(' '));

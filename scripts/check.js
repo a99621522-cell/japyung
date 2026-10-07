@@ -12,6 +12,7 @@
  *   ⑨ 운 삼자 관계(scripts/un_check.js, 2026-10-07 9차)
  *   ⑩ 세계 만세력(scripts/world_check.js, 2026-10-07 11차)
  *   ⑪ 평가 세트 50건 기준값(scripts/eval_report.js, 2026-10-07 13차)
+ *   ⑫ 셋째 층 흐름(scripts/jcs_check.js, 2026-10-07 17차)
  * 하나라도 틀리면 종료 코드 1.
  */
 const fs = require('fs');
@@ -135,6 +136,12 @@ console.log('⑪ 평가 세트 50건 (scripts/eval_report.js — docs/eval/basel
 시험('eval_report 기준값 일치·금지어 0', () => {
   const out = execFileSync('node', [path.join(뿌리, 'scripts', 'eval_report.js')], { encoding: 'utf8', timeout: 120000 });
   return /판정 변화 0칸/.test(out) && /금지어 0/.test(out);
+});
+
+console.log('⑫ 셋째 층 「흐름」(滴天髓) (scripts/jcs_check.js — 원문 대조·종화 fixture·세운 戰衝和 규칙·무작위 불변식)');
+시험('jcs_check 600건', () => {
+  const out = execFileSync('node', [path.join(뿌리, 'scripts', 'jcs_check.js'), '600'], { encoding: 'utf8', timeout: 120000 });
+  return /문제 항목 0/.test(out);
 });
 
 console.log(실패.length ? `\n실패 ${실패.length}건` : '\n전부 통과');
