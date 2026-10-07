@@ -111,6 +111,19 @@ for (const [id, m] of Object.entries({
   확인(`${id} 가린 꼴`, x && x.표시금지 && x.원문 === GJ.비공개원문 && (x.판정어 == null || x.판정어 === GJ.비공개판정), JSON.stringify(x));
 }
 
+// ── 10차(2026-10-07) 원문 그대로 보기 — analyze 는 그대로 가리고, 원문보기() 만 원문을 돌려준다 (화면 전문가 토글 전용)
+{
+  const 금 = /疾|瞽|損目|殘病|災病|夭|死無|而亡|淫賤|刑夫|剋子|長舌|不生長/;
+  const m1 = { yeonGan:'庚', yeonJi:'申', wolGan:'甲', wolJi:'申', ilGan:'甲', ilJi:'辰', siGan:'戊', siJi:'辰' };   // 甲秋-04 殘疾
+  const m2 = { yeonGan:'庚', yeonJi:'寅', wolGan:'戊', wolJi:'寅', ilGan:'甲', ilJi:'午', siGan:'甲', siJi:'戌' };   // GT-記-甲春-01
+  const v1 = GJ.원문보기(m1), v2 = GJ.원문보기(m2);
+  확인('원문보기 — 甲秋-04 원문·판정어 그대로', v1.항목.some(z => z.id === 'GT-甲秋-04' && z.원문 === '或庚多無丁，殘疾之人' && z.판정어 === '殘疾' && z.자리 === '함께 걸린 조건'), JSON.stringify(v1.항목));
+  확인('원문보기 — 질병 기록 GT-記-甲春-01 근거 원문·줄', v2.항목.some(z => z.id === 'GT-記-甲春-01' && z.줄 === 44 && 금.test(z.원문) && z.자리 === '질병 기록'), JSON.stringify(v2.항목));
+  확인('원문보기 — 안내문(진단 아님·의료)', /진단이나 예측이 아니|의료 전문가/.test(v1.안내));
+  확인('원문보기 뒤에도 analyze 는 가림', !금.test(JSON.stringify(GJ.analyze(m1))) && !금.test(JSON.stringify(GJ.analyze(m2))) && !금.test(GJ.브리프줄(GJ.analyze(m1)).join('\n')));
+  확인('원문보기 — 표시금지 아닌 조문은 넣지 않음', v1.항목.every(z => z.유형 === '질병' || z.유형 === '수명' || z.유형 === '질병·수명' || z.유형 === '여명'));
+}
+
 console.log(`여명·질병 조문 검사: 통과 ${통과} · 실패 ${실패.length}`);
 실패.forEach(x => console.log('  실패:', x));
 if (실패.length) process.exitCode = 1;
