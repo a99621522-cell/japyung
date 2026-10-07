@@ -152,15 +152,16 @@ function 반복검사(text) {
 /** 검사에 걸린 문장만 덜어낸다. 통째로 버리는 것보다 낫다 */
 function 문제문장제거(text, 문제) {
   const 말 = 문제.flatMap(x => x.검출);
-  // 문장 사이의 줄바꿈을 지킨다 — 전엔 join(' ')으로 문단·▶ 머리말이 한 줄로 뭉개졌다 (2026-10-02)
-  const 조각 = text.split(/(?<=[.!?。])(\s+)/);
-  let out = '';
-  for (let i = 0; i < 조각.length; i += 2) {
-    const 문장 = 조각[i], 사이 = 조각[i + 1] || '';
-    if (말.some(w => 문장.includes(w))) { if (/\n/.test(사이) && !/\n$/.test(out)) out = out.trimEnd() + 사이; continue; }
-    out += 문장 + 사이;
-  }
-  return out.trim();
+  // 줄 단위로 본다 — 문단·▶ 머리말 줄이 보존된다 (2026-10-02 join(' ') 뭉개짐 수정 → 2026-10-07 줄 단위로:
+  //   「▶ 한 줄로 말하면\n도화가 …」처럼 머리말 줄 뒤에 마침표 없이 이어지면 머리말까지 같이 잘려 나갔다)
+  const 줄들 = String(text).split('\n').map(줄 => {
+    if (/^\s*▶/.test(줄) || !말.some(w => 줄.includes(w))) return 줄;
+    const 남김 = 줄.split(/(?<=[.!?。])\s+/).filter(문장 => !말.some(w => 문장.includes(w)));
+    return 남김.join(' ').trim();
+  });
+  // 비게 된 줄은 지운다(원래 빈 줄은 둔다)
+  const 원래줄 = String(text).split('\n');
+  return 줄들.filter((l, i) => l.trim() || !원래줄[i].trim()).join('\n').trim();
 }
 
 /** 재요청 프롬프트 — 무엇이 걸렸는지 알려준다 */
@@ -233,7 +234,110 @@ async function 해석(m, opt = {}) {
            문제: 마지막.v.문제 };
 }
 
-module.exports = { 해석, validate, 지어내기검사, 문제문장제거, toLLMBrief };
+/**
+ * 완성된 브리프를 그대로 모델에 보낸다 (2026-10-07). mundap_route의 모델창구()가 이 이름을 찾는다.
+ * @returns {Promise<string>} 본문(빈 문자열이면 실패)
+ */
+async function 보내기(브리프, opt = {}) {
+  const { apiKey = process.env.GEMINI_API_KEY, model = 'gemini-2.5-flash', 온도 = 0.7, fetchImpl = globalThis.fetch } = opt;
+  if (!apiKey) throw new Error('API 키가 없습니다');
+  const res = await fetchImpl(`${ENDPOINT(model)}?key=${apiKey}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ contents: [{ parts: [{ text: 브리프 }] }], generationConfig: { temperature: 온도 } }),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const j = await res.json();
+  return (j?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') ?? '').trim();
+}
+
+// ── 섹션별 다시 쓰기 (2026-10-07, C16) ─────────────────────────
+//   답이 검사에 걸리면 전에는 브리프 전체(5만 자)에 지적을 붙여 처음부터 다시 쓰게 했다.
+//   이제는 짧은 요청 — 원래 답 + 오류 목록 + 쉬운 말 규칙(swiunmal에서 가져옴) + 허용 간지·연도(dapgeomsa.허용목록) —
+//   으로 걸린 절(▶ 단락)만 고치게 한다. 그 요청이 예외·빈 답으로 실패할 때만 옛 방식으로 돌아간다.
+
+/** 모드에 맞는 쉬운 말 규칙 줄 — swiunmal의 것을 그대로 쓴다(복사하지 않는다) */
+function 규칙줄고르기(모드, opt = {}) {
+  const SW = require('./swiunmal');
+  if (모드 === '궁통') return SW.궁통규칙줄();
+  if (모드 === '설명') return SW.설명규칙줄();
+  if (모드 === '문답') return SW.문답규칙줄();
+  return SW.상담규칙줄({ 주제: opt.주제 });
+}
+
+/**
+ * @param {string} 원답   검사에 걸린 답(자동 교정·보강 전 원문이 좋지만 다듬은 본문이어도 된다)
+ * @param {Array}  오류   dapgeomsa.검사().오류  [{규칙, 내용}]
+ * @param {object} opt    { 브리프, 모드, 주제, 규칙줄 } — 규칙줄을 주면 그것을, 없으면 모드로 고른다
+ */
+function 섹션다시쓰기프롬프트(원답, 오류, opt = {}) {
+  const D = require('./dapgeomsa');
+  const 허용 = D.허용목록(opt.브리프 || '');
+  const 간지 = [...허용.간지].sort();
+  const 연도 = [...허용.연도].map(Number).sort((a, b) => a - b);
+  const 규칙 = opt.규칙줄 || 규칙줄고르기(opt.모드, opt);
+  return [
+    '═══ **[답 고쳐 쓰기 — 걸린 절만]** ═══',
+    '아래 「원래 답」은 서버 검사에서 다음에 걸렸습니다.',
+    ...(오류 || []).map(x => `- (${x.규칙}) ${x.내용}`),
+    '',
+    '**할 일:** 걸린 부분이 든 절(「▶ …」 머리말 아래 한 단락)만 고치고, 걸리지 않은 절은 글자 하나 바꾸지 말고 그대로 옮겨, **답 전체를 같은 ▶ 머리말·같은 차례로** 다시 내 주세요.',
+    '- 새 근거·새 글자·새 연도를 지어내지 마세요. 고칠 때는 내용은 두고 말만 바꾸세요(전문어 → 실제로 무슨 일이 되는지, 긴 문장 → 짧은 문장, 빠진 갈래 → 그 갈래 문단 추가).',
+    '- 답 밖의 말(「고쳤습니다」 같은 설명)은 붙이지 마세요. 머리말은 글자 그대로 두세요.',
+    간지.length ? `- 쓸 수 있는 간지(원국·대운·세운·월운에 있는 것만): ${간지.join(' ')}` : '- 간지는 원래 답에 있는 것만 쓰세요.',
+    연도.length ? `- 쓸 수 있는 연도: ${연도[0]}~${연도[연도.length - 1]} 가운데 원래 답과 운 표에 있는 해만` : '',
+    ...(Array.isArray(규칙) ? 규칙 : [String(규칙)]),
+    '',
+    '─── 원래 답 (여기부터) ───',
+    String(원답 || ''),
+    '─── 원래 답 (여기까지) ───',
+    '위 답을 고쳐 전체를 다시 쓰세요.',
+  ].filter(l => l != null).join('\n');
+}
+
+/**
+ * 검사에 걸린 답을 고쳐 쓴다 — /해설·/문답이 같이 쓴다.
+ *   ① 섹션 다시 쓰기(짧은 요청) → ② 실패(예외·빈 답)면 전체 브리프 재요청(옛 방식)
+ *   돌아온 답마다 validate(신살·흉단·한자·지어내기) → 걸린 문장 덜어내기 → 다듬기(자동교정→검사→보강)
+ *   오류 수가 줄었을 때만 채택한다.
+ * @param {object} a
+ *   원답, 검사(첫 답의 dapgeomsa 결과), 브리프, 모드, 주제, 판정(interpret 결과 — validate용),
+ *   보내기짧게(prompt)→text, 보내기전체()→text, 다듬기(text)→{본문, 보강, 검사}
+ * @returns {{채택:boolean, 방식:string|null, 요청크기:number, 재검사:object, 본문?:string, 검사?:object, 보강?:Array, 가드?:Array}}
+ */
+async function 고쳐쓰기(a) {
+  const 결과 = { 채택: false, 방식: null, 요청크기: 0, 재검사: null, 가드: [] };
+  const 가드 = (t) => {
+    if (!a.판정) return t;
+    const v = validate(t, a.판정);
+    if (v.통과) return t;
+    결과.가드.push(...v.문제.map(p => p.종류));
+    const 정리 = 문제문장제거(t, v.문제);
+    return 정리.length >= 200 ? 정리 : '';
+  };
+  let 둘 = null;
+  // ① 섹션 다시 쓰기
+  try {
+    const p = 섹션다시쓰기프롬프트(a.원답, a.검사.오류, { 브리프: a.브리프, 모드: a.모드, 주제: a.주제, 규칙줄: a.규칙줄 });
+    결과.요청크기 = p.length;
+    let t = await a.보내기짧게(p);
+    t = (t && typeof t === 'string') ? 가드(t.trim()) : '';
+    if (t && t.length >= 5) { 둘 = a.다듬기(t); 결과.방식 = '섹션'; }
+  } catch (e) { 결과.섹션실패 = String(e && e.message || e).slice(0, 80); }
+  // ② 옛 방식 — 섹션 다시 쓰기가 실패했을 때만
+  if (!둘 && typeof a.보내기전체 === 'function') {
+    try {
+      let t = await a.보내기전체();
+      t = (t && typeof t === 'string') ? 가드(t.trim()) : '';
+      if (t && t.length >= 5) { 둘 = a.다듬기(t); 결과.방식 = '전체'; }
+    } catch (e) { 결과.전체실패 = String(e && e.message || e).slice(0, 80); }
+  }
+  if (!둘) { 결과.재검사 = { 통과: false, 실패: '다시 쓴 답이 없음', 오류: [], 경고: [] }; return 결과; }
+  결과.재검사 = { 통과: 둘.검사.통과, 방식: 결과.방식, 오류: 둘.검사.오류.map(x => x.규칙 + ': ' + x.내용), 경고: 둘.검사.경고.map(x => x.규칙 + ': ' + x.내용) };
+  if (둘.검사.오류.length < a.검사.오류.length) { 결과.채택 = true; 결과.본문 = 둘.본문; 결과.검사 = 둘.검사; 결과.보강 = 둘.보강; }
+  return 결과;
+}
+
+module.exports = { 해석, validate, 지어내기검사, 문제문장제거, 재요청프롬프트, 보내기, 섹션다시쓰기프롬프트, 규칙줄고르기, 고쳐쓰기, toLLMBrief };
 
 if (require.main === module) {
   const m = { yeonGan:'甲', yeonJi:'申', wolGan:'壬', wolJi:'申',

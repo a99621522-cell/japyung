@@ -568,7 +568,9 @@ function 불러(i){
   for (const [k,id] of [['이름','이름'],['년','년'],['월','월'],['일','일'],['시','시'],['분','분']])
     document.getElementById(id).value = x[k] ?? '';
   document.getElementById('성').value = x.성별;
-  document.getElementById('시모름').checked = !!x.시모름;
+  const 시모름칸 = document.getElementById('시모름');
+  시모름칸.checked = !!x.시모름;
+  시모름칸.dispatchEvent(new Event('change'));   // 시·분 칸 잠금을 저장 때와 같게 (2026-10-07)
   역법바뀜(); 간명();
 }
 function 지우(i){ const a = 읽기(); a.splice(i,1); 쓰기(a); 목록그리기(); }
@@ -727,9 +729,10 @@ function 간명(){
 
   /* 운 */
   const hu = r.단계11_행운;
-  const 올해 = new Date().getFullYear(), 나이 = 올해 - 입력.년;
+  // 2026-10-07: 「지금」은 세는 나이(올해−출생년+1) — 간명서·대운 시작 나이와 같은 기준. 전에는 연 나이라 대운 경계에서 한 해 어긋났다
+  const 올해 = new Date().getFullYear(), 나이 = 올해 - 입력.년 + 1;
   h += 시간겹HTML(m, r);
-  h += `<div class="card"><div class="card-title"><span class="gold-dot"></span>운 — ${hu.방향} · ${hu.대운수}세부터</div>`;
+  h += `<div class="card"><div class="card-title"><span class="gold-dot"></span>운 — ${hu.방향} · ${hu.대운수}세(세는 나이)부터</div>`;
   // 2026-09-03: 「반기는 것은 실물·내보내는 힘…」 한 줄은 명리를 모르면 무슨 말인지 알 수 없다(실측).
   //   격 카드의 고정표(격만 보고 짠 것, 상신과 모순 나던 것)도 함께 걷어내고,
   //   엔진 취운 조문 하나를 출처로 낱말마다 풀어 주는 카드로 바꿨다.
@@ -998,6 +1001,7 @@ async function 물어보기(주제, 단추, 물음직접){
       }
     } else {
       칸.innerHTML = 머리 + `<p class="기다림">${d.오류 || d.사유 || '답을 만들지 못했습니다'}. 잠시 뒤 다시 눌러 주세요.</p>`;
+      if (d && d.성공 === false && !d.본문) 서버실패알림(d.사유);
     }
   } catch(e) {
     칸.innerHTML = 머리 + (e.name === 'AbortError'
@@ -1403,7 +1407,7 @@ function 시간겹HTML(m, r){
     const 시=GANS[(서두[일[0]]+시지i)%10]+JIS[시지i];
     // 대운
     let 대='', 진행=0;
-    const hu=r&&r.단계11_행운; const 나이=Y-입력.년;
+    const hu=r&&r.단계11_행운; const 나이=Y-입력.년+1;   // 세는 나이
     if(hu&&hu.대운) for(const u of hu.대운) if(나이>=u.시작나이&&나이<u.시작나이+10){대=u.간지;진행=(나이-u.시작나이)/10;break;}
     const 층=[[100,대||'—','대운 '+(대?Math.floor(진행*10)+1+'년째':'')],[79,세,'올해'],[60,월,'이달'],[43,일,'오늘'],[27,시,'지금']];
     const C=115;
@@ -1592,6 +1596,11 @@ const 상품표 = {
 };
 const 상품이름 = { 종합:'종합 간명서', 평생사주:'평생사주', 신년운세:'신년운세',
                    재물운분석:'재물운 분석', 애정운완전정복:'애정운 완전정복', 직업분석:'직업 분석' };
+let 서버실패알린때 = 0;
+function 서버실패알림(사유){   // 같은 사유를 연달아 띄우지 않는다(간명서는 일곱 번 부른다)
+  if (Date.now() - 서버실패알린때 < 15000) return; 서버실패알린때 = Date.now();
+  alert('서버가 답을 만들지 못했습니다' + (사유 ? ' — ' + String(사유).slice(0, 80) : '') + '. 잠시 뒤 다시 눌러 주세요.');
+}
 async function 간명서에세이(물음, 분량글자){
   const m = 현재.r.명식;
   const 몸 = { 명식:{yeonGan:m.yeonGan,yeonJi:m.yeonJi,wolGan:m.wolGan,wolJi:m.wolJi,ilGan:m.ilGan,ilJi:m.ilJi},
@@ -1603,6 +1612,7 @@ async function 간명서에세이(물음, 분량글자){
     const res = await fetch(중계 + '/해설', {method:'POST', signal:그만.signal,
       headers:{'Content-Type':'application/json'}, body: JSON.stringify(몸)});
     const d = await res.json();
+    if (d && d.성공 === false && !d.본문) 서버실패알림(d.사유);   // 400·500 — 짧게 알리고 그 장은 비운다 (2026-10-07)
     return (d && d.성공 && d.본문) ? d.본문 : null;
   }catch(e){ return null; }
   finally{ clearTimeout(t); }
