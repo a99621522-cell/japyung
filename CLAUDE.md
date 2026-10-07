@@ -5,7 +5,8 @@
 
 ## 구조
 - **화면**: Cloudflare Workers 정적 PWA (`index.html` + `engine.bundle.js` + `manseryeok.browser.js` + `mundap_ui.js` + `sw.js`).
-  명식(여덟 글자) 계산은 브라우저가 한다. **화면 소스는 `app/`** (2026-10-02 배포본에서 받아 넣음. `간명-웹앱-v8.zip`은 옛판). 배포는 app/ 폴더를 zip으로 묶어 Cloudflare 「새로운 배치」에 끌어놓는 수작업 — 사용자가 한다. 화면을 고치면 `sw.js`의 캐시판 번호를 올릴 것. 아이콘 등 받지 못한 파일이 있을 수 있으니 zip을 만들 때 빠진 파일은 사용자에게 알린다.
+  명식(여덟 글자) 계산은 브라우저가 한다. **화면 소스는 `app/`** (2026-10-02 배포본에서 받아 넣음. `간명-웹앱-v8.zip`은 옛판). `app/engine.bundle.js`는 **루트 모듈을 `node scripts/bundle.js`로 묶은 생성물**(2026-10-07, 모듈 40개 — 직접 고치지 말 것). 화면을 고치면 `sw.js`의 캐시판 번호를 올릴 것. 아이콘 3개(`icon-192/512/512-maskable.png`)는 배포 사이트에서 받아 app/에 넣었다.
+  배포는 두 길: ① `wrangler.jsonc`(Worker `misty-truth-03b6`, assets=app/) + `.github/workflows/deploy_app.yml` — main에 app/이 바뀌면 Wrangler로 자동 배포(저장소 Secrets `CLOUDFLARE_API_TOKEN`·`CLOUDFLARE_ACCOUNT_ID`가 있어야 하며, 없으면 건너뛰고 안내만 남긴다) ② 수작업 — app/을 zip으로 묶어(`간명-웹앱-v35.zip`처럼 sw 판 번호로 이름) Cloudflare 대시보드 → Workers & Pages → misty-truth-03b6 → 배포 → 「새로운 배치」에 끌어놓기.
 - **서버**: Render `ganmyeong-relay` (https://ganmyeong-relay.onrender.com), Root Directory `server/`, `node server.js`.
   라우트 `/health`(커밋 표시) · `/해설`(=`/interpret`, 상담글) · `/문답`(자유 문답). 판정은 서버가 interpret로 다시 내고 Gemini는 문장만 쓴다.
 - **엔진 파일은 두 벌**: 저장소 루트(원본)와 `server/engine/`(Render가 실제로 쓰는 것). 루트를 고치고 **같은 파일을 `server/engine/`에 복사**한다. `scripts/check.js`가 두 벌이 같은지 본다.
@@ -27,8 +28,8 @@
 - 비용 절감을 이유로 Gemini에게 주는 재료(세운·월운·조문 전체)를 줄이지 않는다(사용자 결정).
 
 ## 작업 순서
-1. 루트 파일을 고친다 → 바뀐 파일을 `server/engine/`에 복사
-2. `node scripts/check.js` — 전부 통과해야 한다
+1. 루트 파일을 고친다 → `node server/sync_engine.js`(server/engine 복사) → `node scripts/bundle.js`(app/engine.bundle.js) → `app/sw.js` 캐시판 번호 올림
+2. `node scripts/check.js` — 전부 통과해야 한다. 격국을 건드렸으면 `node scripts/fixtures_check.js`(명례 78건)도
 3. 브랜치에 커밋 → PR → main 병합. main에 `server/**`가 바뀌면 Render가 배포하고, GitHub Actions 「배포 확인」이 배포를 기다렸다가 `/해설`을 한 번 불러 답 전문을 로그에 남긴다.
    **결과 보기: 답 전문이 그 커밋의 댓글로 올라온다** — `gh api repos/a99621522-cell/japyung/commits/<sha>/comments --jq '.[-1].body'`. 이 작업 공간에서는 Actions 로그 파일 다운로드가 막혀 있으니 댓글로 읽는다.
    손으로 돌리기(서버 코드를 안 바꿨을 때): `gh api -X POST repos/a99621522-cell/japyung/actions/workflows/smoke.yml/dispatches -f ref=main` → main 맨 위 커밋의 댓글로 답이 온다.
@@ -36,5 +37,6 @@
 5. 이 작업 공간의 프록시는 onrender.com·workers.dev로 직접 나가지 못한다. 서버 확인은 위 Actions로 하거나, WebFetch로 `/health`만 본다.
 
 ## 알려진 것
-- `manse.js`는 루트(KST 절입 보정판)와 `server/engine`(옛판)이 다르다 — 맞출지 사용자 결정 대기.
+- `manse.js`는 2026-10-07에 배포본 판(외부 만세력 manseryeok으로 일주·시주, 밤 11시부터 다음 날, 표준시 이력)으로 루트·server/engine을 맞췄고, 절입 시각도 `globalThis.manseryeok`(KASI 절입표 1800~2300)이 있으면 그것을 쓴다(없으면 근사식 — 근사식은 12절의 38%가 5분 이상 어긋난다). 1954~61년 UTC+8:30 이력은 월주 경계에는 아직 반영하지 않는다.
+- 2026-10-07 전문가 검토(격국·조후·운) 결과 고친 것: 구응이 대기(帶忌) 조문도 구제(范太傅 정관-救-03 되살림) · 패중유성은 패격 전부가 구제될 때만 · 기본 조문(`기본:true`)만으로는 패격을 성중유패로 올리지 못함 · 재-成-03 재·인 인접 검사 버그 · 상관 成-02/敗-03에 「印有根」을 넣어 배타로 · 정관-救-04 傷被合 추가 · myogo 累십성은 겁재·상관만 · unbyeonhwa 회국 변격은 오행 묶음으로 견주고 왕지 없는 두 글자는 국으로 안 셈 · 궁통 丙巳 용신에 癸(기신에서 뺌). **되돌린 것**: 잡기월 비겁 투출 → 월겁(16편 「透乙則用月劫」)은 명례 夏閣老(未월 丁 투출, 저자 라벨 상관격)와 어긋나 넣지 않았다. **남긴 것(사람 결정)**: hapchung.resolve의 「충으로 합을 품」이 죽은 코드라 합이 늘 충을 이김 · 궁통 공유 칸(甲 申酉戌, 乙 申酉戌, 甲 亥子丑)의 戌·亥월 용신 · GT-乙申-02 조건↔인용 반대 · gungtong 合去가 일간 합을 제외 · sinsal 등급어 린트 ↔ 궁통 「上格·下格」 인용 충돌 · 임계값(인 2.0/2.5, 식상 1.5, 신강 0.5/0.65) 근거 · 명례 脫脫丞相(편관 라벨, 엔진은 식신) 불일치는 이전부터. 회귀는 `node scripts/fixtures_check.js`(명례 78건 격 일치·패격 없음).
 - 커밋 메시지는 한국어로.

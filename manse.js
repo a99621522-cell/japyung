@@ -106,7 +106,19 @@ function 절입시각(황경, 기준JD) {
 let 절입표 = null;
 function 절입표주입(t) { 절입표 = t; }
 function 표에서(year, 이름) {
-  const v = 절입표?.[year]?.[이름];
+  let v = 절입표?.[year]?.[이름];
+  // 주입된 표가 없으면 화면에 함께 실린 외부 만세력(manseryeok, KASI 절입표 1800~2300)을 쓴다.
+  //   근사식은 1900~2050년 12절 1,661건 중 38%가 5분 이상, 110건이 10~15분 어긋났다(2026-10-07 대조) —
+  //   경계에 선 사람의 월주·대운수를 통째로 바꾸는 폭이라, 표가 있는데 안 쓸 이유가 없다.
+  if (!v) {
+    const MS = (typeof globalThis !== 'undefined' && globalThis.manseryeok) || null;
+    if (MS && typeof MS.getSolarTermsOfYear === 'function') {
+      try {
+        const t = MS.getSolarTermsOfYear(year).find(x => x.name === 이름);
+        v = t?.date ?? null;
+      } catch (e) { v = null; }
+    }
+  }
   if (!v) return null;
   const d = new Date(v);
   if (isNaN(d)) return null;
@@ -169,13 +181,14 @@ function 사주(y, m, d, h = 12, min = 0, opt = {}) {
   // ── 일주 ──
   const 일JD = Math.floor(toJD(y, m, d, 12, 0) + 0.5);
   const di = (일JD + 49) % 60;
-  const 일주 = 천간[di % 10] + 지지[di % 12];
+  let 일주 = 천간[di % 10] + 지지[di % 12];
 
   // ── 시주: 야자시(23시 이후)는 다음 날 일간으로 보는 설이 있으나
   //    자평진전은 그 논의가 없다. 여기서는 일간 그대로 쓰고 경고만 낸다.
   const 실시 = h + (min + 보정) / 60;
   const 시지idx = Math.floor(((실시 + 1) % 24) / 2);
-  const 시주 = 천간[(시두[일주[0]] + 시지idx) % 10] + 지지[시지idx];
+  let 시주 = 천간[(시두[일주[0]] + 시지idx) % 10] + 지지[시지idx];
+  let 보정표시 = `진태양시 ${보정}분`;
 
   // ── 절기 날수 (대운수용) ──
   const 지난날 = jd - 직전.jd;
@@ -201,6 +214,35 @@ function 사주(y, m, d, h = 12, min = 0, opt = {}) {
   const 시경계 = Math.abs(((실시 + 1) % 2) - 1);
   if (시경계 > 0.83) 경고.push('시주가 경계에 가깝다 — 태어난 시각을 한 번 더 확인할 것');
   if (h >= 23 || h < 1) 경고.push('자시(子時)에 났다 — 야자시·조자시를 가르는 설이 있으나 자평진전에는 그 논의가 없다');
+
+  // ── 2026-09-03 외부 만세력(manseryeok, KASI 절입표)으로 일주·시주를 갈아 끼운다 ──
+  //   시중 만세력 관행: -30분·균시차 없음·표준시 이력(1954~61 UTC+8:30, 1955~60·1987~88 서머타임) 반영·
+  //   자시는 밤 11시부터 다음 날(정자시, 원광·천을 관행 — 2026-09-04 조윤선 지적). 외부 엔진이 없으면 자체(-32분) 폴백.
+  const MS = (typeof globalThis !== 'undefined' && globalThis.manseryeok) || null;
+  if (MS && typeof MS.calculateFourPillars === 'function' && opt.진태양시보정 !== false) {
+    try {
+      const 한자 = k => {
+        const g = {갑:'甲',을:'乙',병:'丙',정:'丁',무:'戊',기:'己',경:'庚',신:'辛',임:'壬',계:'癸'}[k[0]];
+        const j = {자:'子',축:'丑',인:'寅',묘:'卯',진:'辰',사:'巳',오:'午',미:'未',신:'申',유:'酉',술:'戌',해:'亥'}[k[1]];
+        return (g && j) ? g + j : null;
+      };
+      const 기준 = { longitude: 127.5, applyEquationOfTime: false, applyHistoricalDst: true };
+      const ext = MS.calculateFourPillars({ year: y, month: m, day: d, hour: h, minute: min, dayBoundary: 'jasi', trueSolarTime: 기준 });
+      const o = ext.toObject();
+      const 일주2 = 한자(o.day), 시주2 = o.hour ? 한자(o.hour) : null;
+      if (일주2 && 시주2) {
+        일주 = 일주2; 시주 = 시주2;
+        보정표시 = '진태양시 -30분 (시중 관행 · 밤 11시부터 다음 날 · 표준시 이력·서머타임 반영)';
+        for (let i = 경고.length - 1; i >= 0; i--) if (경고[i].startsWith('자시(子時)에 났다')) 경고.splice(i, 1);
+        if (h >= 23 || h < 1) 경고.push('자시(子時)에 났다 — 시중 만세력(원광·천을)과 같이 밤 11시부터 다음 날로 보았다. 자정 기준으로 보는 설도 있어 일주가 갈릴 수 있다');
+        for (let i = 경고.length - 1; i >= 0; i--) if (경고[i].startsWith('시주가 경계에 가깝다')) 경고.splice(i, 1);
+        const 민 = MS.calculateFourPillars({ year: y, month: m, day: d, hour: h, minute: min, dayBoundary: 'jasi' });
+        const 민시 = 민.toObject().hour ? 한자(민.toObject().hour) : null;
+        if (민시 && 민시 !== 시주2)
+          경고.push(`시주가 경계에 있다 — 진태양시 보정(-30분)을 하면 ${시주2}, 하지 않으면 ${민시}. 태어난 시각과 출생지를 한 번 더 확인할 것`);
+      }
+    } catch (e) { /* 외부 엔진이 실패하면 자체 계산 그대로 */ }
+  }
 
   // ── 대운에 쓸 날수 ──
   //   순행이면 다음 절입까지, 역행이면 지난 절입 이후다. 둘은 다른 값이고
@@ -229,7 +271,7 @@ function 사주(y, m, d, h = 12, min = 0, opt = {}) {
     사주: `${년주} ${월주} ${일주} ${시주}`,
     절기: { 직전: 직전.이름, 다음: 다음?.이름 ?? null,
             지난날: +지난날.toFixed(2), 남은날: 남은날 != null ? +남은날.toFixed(2) : null },
-    보정: `진태양시 ${보정}분`,
+    보정: 보정표시,
     경고,
   };
 }
@@ -244,3 +286,4 @@ function 대운수(결과, 성별) {
 }
 
 module.exports = { 사주, 대운수, 그해절기, 태양황경, toJD, 절입표주입 };
+

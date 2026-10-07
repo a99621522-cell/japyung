@@ -192,6 +192,10 @@ function chwiyongGyeok(myeongsik) {
   const 후보 = 잡기 ? [...tu, ...yakTuchul(myeongsik)].filter(x => !비겁인가(x.gan))
                     : tu.filter(x => !비겁인가(x.gan));
 
+  // ※ 16편 「透乙則用月劫」(甲 辰월 乙 투출 → 월겁)을 그대로 넣어 봤으나(2026-10-07) 부록 명례 夏閣老 壬寅丁未丙寅壬辰이
+  //   未월 여기 丁(겁재)이 투출했는데도 저자 라벨은 상관격이라 되돌렸다. 비겁 투출은 여기서도 격이 되지 않고 정기로 간다.
+  //   두 원문이 서로 어긋나는 자리이니 사람이 결정할 것.
+
   if (잡기 && 후보.length > 0) {
     picked = 후보[0];
     geunGeo = picked.약투

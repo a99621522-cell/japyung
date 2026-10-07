@@ -1,0 +1,8 @@
+// Cloudflare Workers 설정 — 화면(app/)을 정적 자산으로 올린다.
+// 배포: `npx wrangler deploy` (PC) 또는 GitHub Actions `deploy_app.yml` (main 에 app/ 이 바뀌면 자동).
+// name 은 지금 쓰는 주소 https://misty-truth-03b6.a99621522.workers.dev 의 Worker 이름.
+{
+  "name": "misty-truth-03b6",
+  "compatibility_date": "2026-10-01",
+  "assets": { "directory": "./app" }
+}
