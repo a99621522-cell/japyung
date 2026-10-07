@@ -208,6 +208,12 @@ svg.고리 .나표{font-size:9.5px;fill:var(--gold);text-anchor:middle;font-weig
 .궁통주{font-size:11.5px;color:var(--dim);margin-top:10px;line-height:1.6}
 .상담소제{font-weight:700;font-size:15px;margin:14px 0 4px;color:#3b3225}
 .상담항목{margin:4px 0 4px 10px;padding-left:10px;border-left:2px solid rgba(0,0,0,.1)}
+.답머리{font-size:16px;margin:18px 0 6px;padding-bottom:3px;border-bottom:1px solid rgba(0,0,0,.08)}
+.용어상자{margin-top:14px;padding:8px 12px;border:1px solid rgba(0,0,0,.08);border-radius:8px;background:rgba(0,0,0,.025);font-size:14px}
+.용어상자>summary{cursor:pointer;list-style:none;margin:0;border:0}
+.용어상자>summary::-webkit-details-marker{display:none}
+.용어상자>summary::after{content:' ▾';color:var(--muted,#888);font-weight:400}
+.용어상자:not([open])>summary::after{content:' ▸ 펼치기'}
 .취운카드{background:var(--card2);border:1px solid rgba(0,0,0,.06);border-radius:14px;padding:16px 18px;margin:0 0 14px}
 .취운제목{font-weight:700;font-size:15px;margin-bottom:8px}
 .취운제목 .좋음{color:#2E7D4F}.취운제목 .나쁨{color:#D0301C}
@@ -1516,6 +1522,9 @@ function 꾸밈(x){
   // 2026-09-05: 신년운세 답이 「### 2027년의 성격」처럼 제목 표시를 그대로 드러내던 것을 고침 —
   //   ###/## 줄은 소제목으로, 줄머리 「* 」「- 」는 항목으로 바꾼다. 형광펜(**)은 그대로.
   return x
+    // 쉬운 말 층(2026-10-07): 「▶ 머리말」 줄은 소제목으로, 「▶ 이 답에 나온 말」부터 끝까지는 접었다 펴는 상자로
+    .replace(/^(▶\s*이 답에 나온 말)\s*\n([\s\S]*)$/m, (_,h,b) => `<details class="용어상자" open><summary class="상담소제 답머리">${h}</summary>\n${b.trim()}\n</details>`)
+    .replace(/^▶\s*(.+)$/gm, (_,t) => `<div class="상담소제 답머리">▶ ${t}</div>`)
     .replace(/^#{2,4}\s*(.+)$/gm, (_,t) => `<div class="상담소제">${t}</div>`)
     .replace(/^\s*[\*\-]\s+(.+)$/gm, (_,t) => `<div class="상담항목">${t}</div>`)
     .replace(/\*\*([^*]+)\*\*/g, (_,t) => {
