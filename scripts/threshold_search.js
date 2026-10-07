@@ -1,5 +1,5 @@
 // threshold_search.js — tonggeun.THRESH 임계값 격자 탐색 (2026-10-07)
-//   점수: ① 명례 78건 격·상신·성패·조문 일치 수(합) ② 명례 패격/상신미현 수(적을수록) ③ 무작위 집합 상신미현 수(적을수록) ④ 무작위 패격 수(적을수록)
+//   점수: ① 명례 78건 격·상신·성패·조문 일치 수(합) + 장내 명례(부록 밖 정격) 격·상신·성패 일치 수 ② 명례 패격/상신미현 수(적을수록) ③ 무작위 집합 상신미현 수(적을수록) ④ 무작위 패격 수(적을수록)
 //   방법: 기본값에서 출발해 한 임계값씩 범위를 훑어 점수가 **엄격히** 오르면 바꾸는 좌표 오름을 수렴할 때까지 반복(전체 격자는 12차원이라 불가).
 //   그리고 임계값마다 「명례 점수가 최대로 유지되는 구간」을 민감도 표로 찍는다.
 //   기본값을 바꾸는 일은 사람이 한다 — 이 스크립트는 바꾸지 않고 보고만 한다.
@@ -9,6 +9,8 @@ const { THRESH } = require(path.join(뿌리, 'tonggeun'));
 const { judge } = require(path.join(뿌리, 'gyeokguk'));
 const { FIXTURES } = require(path.join(뿌리, 'fixtures_zpjz'));
 const { EXPECT } = require(path.join(뿌리, 'fixtures_zpjz_expect'));
+const { CHAPTERS } = require(path.join(뿌리, 'fixtures_zpjz_chapters'));   // 2026-10-07: 장내 명례(부록 밖 정격)도 점수에 넣는다
+const 장내 = CHAPTERS.filter(c => !c.부록 && !c.외격);
 const manse = require(path.join(뿌리, 'manse'));
 
 const N = +(process.argv[2] || 600);
@@ -18,7 +20,7 @@ for (let i = 0; i < N; i++) {
   const y = 1950 + Math.floor(rnd()*61), mo = 1+Math.floor(rnd()*12), d = 1+Math.floor(rnd()*28), h = Math.floor(rnd()*24), mi = Math.floor(rnd()*60);
   try { const ms = manse.사주(y, mo, d, h, mi, { 성별: '남' }); 무작위.push({ ...ms.명식, daysFromJeolip: 15 }); } catch {}
 }
-const 같은격 = (기대, 실제) => 기대 === 실제 || (기대 === '재' && /재$/.test(실제)) || (기대 === '인' && /인$/.test(실제)) || (기대 === '건록' && ['건록','월겁'].includes(실제));
+const 같은격 = (기대, 실제) => 기대 === 실제 || (기대 === '재' && /재$/.test(실제)) || (기대 === '인' && /인$/.test(실제)) || (기대 === '칠살' && 실제 === '편관') || (기대 === '건록' && ['건록','월겁'].includes(실제));
 const 목록 = x => x == null ? [null] : Array.isArray(x) ? x : [x];
 
 function 점수() {
@@ -32,12 +34,20 @@ function 점수() {
     if (e.조문.every(id => 전체.has(id))) 일치++;
     if (['패격','상신미현'].includes(r.결론)) 명례패++;
   }
+  for (const c of 장내) {
+    let r; try { r = judge(c.m); } catch { continue; }
+    if (같은격(c.격, r.ctx?.gyeok ?? r.격)) 일치++;
+    if (c.상신 === undefined || 목록(c.상신).includes(r.상신 ?? null)) 일치++;
+    if (c.성패 === undefined || 목록(c.성패).includes(r.결론)) 일치++;
+    if (['패격','상신미현'].includes(r.결론)) 명례패++;
+  }
   let 미현 = 0, 패 = 0;
   for (const m of 무작위) { let r; try { r = judge(m); } catch { 미현++; continue; } if (r.결론 === '상신미현') 미현++; if (r.결론 === '패격') 패++; }
   return { 일치, 명례패, 미현, 패 };
 }
 const 비교 = (a, b) => (a.일치 - b.일치) || (b.명례패 - a.명례패) || (b.미현 - a.미현) || (b.패 - a.패);   // >0 이면 a 가 낫다
-const 표시 = s => `명례 일치 ${s.일치}/312 · 명례 패 ${s.명례패} · 무작위 상신미현 ${s.미현} · 패격 ${s.패}`;
+const 만점 = 312 + 장내.length * 3;
+const 표시 = s => `명례 일치 ${s.일치}/${만점} · 명례 패 ${s.명례패} · 무작위 상신미현 ${s.미현} · 패격 ${s.패}`;
 
 const 범위 = {
   인경:[1.5,1.75,2.0,2.25,2.5], 인중:[2.0,2.25,2.5,2.75,3.0], 식상왕:[1.0,1.25,1.5,1.75,2.0], 관살중:[1.5,1.75,2.0,2.25,2.5],
