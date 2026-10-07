@@ -167,4 +167,4 @@ function 재료줄(a) {
   return L;
 }
 
-module.exports = { 카테고리, 주제표, 고르기, analyze, 재료줄, 어디있나 };
+module.exports = { 카테고리, 주제표, 별칭, 고르기, analyze, 재료줄, 어디있나 };

@@ -102,6 +102,8 @@ function analyze(un, ctx, m, 기본판정) {
     if (!s.ji.includes(un.지지)) continue;
     const 짝 = POS.filter(p => 지[p] && s.ji.includes(지[p]) && 지[p] !== un.지지);
     if (짝.length < 1) continue;
+    // 왕지(子午卯酉)가 운이나 원국에 있어야 국이다 — 생지·고지 둘만으로는 化하지 않는다 (unbyeonhwa·hapchung 과 같은 기준, 2026-10-07)
+    if (un.지지 !== s.wang && !짝.some(p => 지[p] === s.wang)) continue;
     const 생긴십성 = sipseong(m.ilGan, jeonggi(s.wang));
     if (생긴십성 === un.지지십성) continue;
     사건.push({

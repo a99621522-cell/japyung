@@ -131,12 +131,75 @@ function 검사(f) {
 }
 원전.forEach(검사); 평주.forEach(검사);
 
+/* ── ④ 조건절 머리(gungtong_jomun.js) ↔ 표(gungtong.js) 글자 집합 대조 (2026-10-07) ──
+ *    조후표가 두 벌이라(표: 재고조사 / 조문: 조건절) 같은 명식에 다른 용신 목록이 나가면 안 된다.
+ *    120칸 전부: 용 글자 집합이 같고, 기(忌)는 글자(+多)뿐이며 용과 겹치지 않는다. */
+const GJ = require('./gungtong_jomun');
+const 월들 = ['寅','卯','辰','巳','午','未','申','酉','戌','亥','子','丑'];
+let 머리일치 = 0, 머리검사 = 0;
+for (const 일간 of Object.keys(G.표)) for (const 월 of 월들) {
+  머리검사++;
+  const 칸 = GJ.표[일간]?.[월];
+  if (!칸) { 틀.push(`${일간}${월}: 조문 머리 없음`); continue; }
+  const a = [...칸.용].sort().join(''), b = [...G.표[일간][월].용].sort().join('');
+  const 기 = (칸.기 || []).map(g => g.replace(/多$/, ''));
+  const 기형식 = 기.every(g => g.length === 1);
+  const 겹침 = 기.filter(g => 칸.용.includes(g));
+  if (a === b && 기형식 && !겹침.length) 머리일치++;
+  else 틀.push(`${일간}${월}: 조문 머리 용 [${칸.용}] vs 표 [${G.표[일간][월].용}]${기형식 ? '' : ' · 기에 글자 아닌 항목'}${겹침.length ? ' · 기∩용 ' + 겹침 : ''}`);
+}
+
+/* ── ⑤ 조문 fixture — 2026-10-07 점검에서 고친 조문이 실제로 걸리는지 (명식은 조건을 맞추려 지은 것, 실존 인물 아님) ── */
+const 걸린id = r => r && !r.해당없음 ? [r.주판정, ...r.그밖의판정, ...r.바탕, ...r.흠, ...r.완화].filter(Boolean).map(x => x.id) : [];
+const 조문fx = [
+  { 이름:'乙申-02 己·丙 투출 → 上命(이전엔 !透己라 己 쓰는 조문이 己 없음을 요구)',
+    m:{yeonGan:'丙',yeonJi:'子',wolGan:'甲',wolJi:'申',ilGan:'乙',ilJi:'亥',siGan:'己',siJi:'卯'}, 주판정:'GT-乙申-02' },
+  { 이름:'乙申-01 丙 투출+巳 → 科甲(己 요구 제거)',
+    m:{yeonGan:'丙',yeonJi:'寅',wolGan:'甲',wolJi:'申',ilGan:'乙',ilJi:'巳',siGan:'丁',siJi:'亥'}, 주판정:'GT-乙申-01' },
+  { 이름:'乙夏-11 一派戊土·不見比肩 → 富屋貧人(이전엔 비겁 있음을 요구)',
+    m:{yeonGan:'戊',yeonJi:'戌',wolGan:'戊',wolJi:'午',ilGan:'乙',ilJi:'丑',siGan:'己',siJi:'巳'}, 포함:'GT-乙夏-11' },
+  { 이름:'乙午-02 년간 庚 + 시간 癸 → 科甲',
+    m:{yeonGan:'庚',yeonJi:'申',wolGan:'壬',wolJi:'午',ilGan:'乙',ilJi:'未',siGan:'癸',siJi:'未'}, 포함:'GT-乙午-02' },
+  { 이름:'乙午-02 년간 庚인데 시간 癸 없음 → 안 걸림(이전엔 년간만 보고 걸렸다)',
+    m:{yeonGan:'庚',yeonJi:'申',wolGan:'壬',wolJi:'午',ilGan:'乙',ilJi:'未',siGan:'丁',siJi:'丑'}, 불포함:'GT-乙午-02' },
+  { 이름:'辛巳-03 壬癸皆藏·戊己亦藏 → 略富(이전엔 癸가 藏이 아닐 것을 요구)',
+    m:{yeonGan:'甲',yeonJi:'申',wolGan:'丁',wolJi:'巳',ilGan:'辛',ilJi:'亥',siGan:'乙',siJi:'未'}, 포함:'GT-辛巳-03' },
+  { 이름:'辛酉-05 一派辛金·一位壬水·無庚 → 富中取貴(이전엔 壬 투출 0을 요구)',
+    m:{yeonGan:'辛',yeonJi:'丑',wolGan:'丁',wolJi:'酉',ilGan:'辛',ilJi:'卯',siGan:'壬',siJi:'辰'}, 포함:'GT-辛酉-05' },
+  { 이름:'癸申-04 一丁坐午 — 丁 하나가 년간, 午는 시지(이전엔 일지 午만)',
+    m:{yeonGan:'丁',yeonJi:'卯',wolGan:'庚',wolJi:'申',ilGan:'癸',ilJi:'丑',siGan:'乙',siJi:'午'}, 포함:'GT-癸申-04' },
+  { 이름:'戊戌-01 見金·癸丙 투출 → 雲程(이전엔 甲丙癸 삼투를 요구)',
+    m:{yeonGan:'癸',yeonJi:'酉',wolGan:'丙',wolJi:'戌',ilGan:'戊',ilJi:'子',siGan:'辛',siJi:'酉'}, 주판정:'GT-戊戌-01' },
+  { 이름:'庚亥 丁甲 투출+丙 藏+물국 아님 → 桃浪이 주판정(이전엔 -01 一榜에 가려짐)',
+    m:{yeonGan:'丁',yeonJi:'巳',wolGan:'辛',wolJi:'亥',ilGan:'庚',ilJi:'申',siGan:'甲',siJi:'申'}, 주판정:'GT-庚亥-02' },
+  { 이름:'丙卯-07 판정어 없는 조문 — 주판정은 되되 방향 null·결말 문자열',
+    m:{yeonGan:'戊',yeonJi:'辰',wolGan:'戊',wolJi:'卯',ilGan:'丙',ilJi:'戌',siGan:'戊',siJi:'戌'}, 주판정:'GT-丙卯-07', 판정어없음:true },
+  { 이름:'甲巳 머리 — 庚이 용에 있고 기에 없음 (이전엔 기 庚多·용에 庚 없음인데 GT-甲巳-01이 庚透를 요구)',
+    m:{yeonGan:'癸',yeonJi:'卯',wolGan:'丁',wolJi:'巳',ilGan:'甲',ilJi:'子',siGan:'庚',siJi:'午'}, 주판정:'GT-甲巳-01', 용포함:'庚' },
+];
+let fx일치 = 0;
+for (const f of 조문fx) {
+  const r = GJ.analyze(f.m); const ids = 걸린id(r); let ok = true;
+  if (f.주판정 && r.주판정?.id !== f.주판정) { ok = false; 틀.push(`${f.이름}: 주판정 ${r.주판정?.id} (기대 ${f.주판정})`); }
+  if (f.포함 && !ids.includes(f.포함)) { ok = false; 틀.push(`${f.이름}: ${f.포함} 안 걸림 [${ids}]`); }
+  if (f.불포함 && ids.includes(f.불포함)) { ok = false; 틀.push(`${f.이름}: ${f.불포함} 이 걸림`); }
+  if (f.판정어없음 && !(r.주판정 && /원문 판정어 없음/.test(r.주판정.판정어) && r.주판정.방향 === null && typeof r.주판정.결말 === 'string')) { ok = false; 틀.push(`${f.이름}: 판정어/방향/결말 처리 다름`); }
+  if (f.용포함 && !(r.용.includes(f.용포함) && !r.기.some(g => g.replace(/多$/, '') === f.용포함))) { ok = false; 틀.push(`${f.이름}: 용 [${r.용}] 기 [${r.기}]`); }
+  if (ok) fx일치++;
+}
+// 인용문 교체 확인 — 丁午-06 은 「支成火局」 조문이지 「無火局」이 아니다
+{ const j = GJ.표.丁.午.조문.find(x => x.id === 'GT-丁午-06');
+  if (!j || !/支成火局/.test(j.원문) || /無火局/.test(j.원문)) 틀.push('丁午-06: 인용문이 원문 두 문장을 잘못 이은 옛 것'); else fx일치++; }
+const fx검사 = 조문fx.length + 1;
+
 console.log('══════════════════════════════════════════');
 console.log(`궁통보감 — 표 대조 ${G.진행().됨}/120칸 (판본 2종 일치)`);
 console.log(`원전 명례 ${원전.length}건 · 평주 명례 ${평주.length}건`);
 console.log(`  표일치 ${표일치}/${표검사} · 소재판정(透/藏/無) ${소재일치}/${소재검사}`);
+console.log(`  조문 머리↔표 글자 집합 ${머리일치}/${머리검사}칸 · 조문 fixture ${fx일치}/${fx검사}`);
 틀.forEach(x=>console.log('  불일치:', x));
 for (const f of 한계) {
   const r = G.analyze(f.m);
   console.log(`  [한계 기록] ${f.출처}: 갖춤=${r.갖춤} — ${f.평}`);
 }
+if (틀.length) process.exitCode = 1;

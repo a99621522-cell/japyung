@@ -70,10 +70,14 @@ function analyze(r, m) {
     const 파 = p.파괴자;
     if (!파 || 격글자.length === 0) continue;
     const 파글자 = 찾기(m, ilGan, 파);
+    if (파글자.length === 0) continue;
+    // 「壬不能越戊尅丙」 — 파괴자가 치려는 대상 **전부**에 닿지 못해야 因敗得成이다.
+    //   격은 바로 옆에서 치는데 상신까지는 못 미친다는 이유로 패격을 뒤집으면 안 된다. (2026-10-07)
+    const 전부차단 = 파글자.every(a => 격글자.every(b => !!극차단(m, a.자리, b.자리, a.천간)));
+    if (!전부차단) continue;
     for (const a of 파글자) {
       for (const b of 격글자) {
         const blk = 극차단(m, a.자리, b.자리, a.천간);
-        if (!blk) continue;
         역전.push({
           방향: '인패득성', 조문: p.id,
           설명: `${파}(${a.천간}·${a.자리}간)이 ${sipseong(ilGan, b.천간)}(${b.천간}·${b.자리}간)을 치려 하나 사이의 ${blk.막은글자}(${blk.막은자리}간)을 넘지 못한다`,
