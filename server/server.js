@@ -88,7 +88,9 @@ const 통계 = {
   요청: { 해설: 0, 문답: 0 }, 성공: 0, 실패: 0, 예외: 0, 본문초과: 0,
   시도2: 0, 채택둘째: 0, 다시쓰기: { 섹션: 0, 전체: 0, 실패: 0 }, 섹션요청크기합: 0,
   오류규칙: {}, 경고규칙: {}, 보강용어: {}, 가드: {},
+  이해안됨: {},   // 「이해 안 됨」 단추(2026-10-07, PROMPTS 5) — 절 이름만 센다. 명식·본문·IP 없음
 };
+const 이해안됨절 = ['한 줄로 말하면', '쉽게 풀어 보면', '왜 그렇게 보나요', '해 볼 만한 일', '이 답에 나온 말', '전체'];
 const 셈 = (표, k) => { if (k) 표[k] = (표[k] || 0) + 1; };
 const 규칙이름 = (x) => String(x || '').split(':')[0].trim();
 function 통계반영(답) {
@@ -157,6 +159,21 @@ const 서버 = http.createServer(async (req, res) => {
   if (길 === '/health')
     // 커밋 — Render가 넣어 주는 RENDER_GIT_COMMIT. 배포가 끝났는지 밖에서 확인할 때 쓴다(scripts/smoke.js)
     return 보냄(res, 200, { 살아있음: true, 키: !!API_KEY, 모델: MODEL, 커밋: (process.env.RENDER_GIT_COMMIT || '').slice(0, 7) || null, 통계 }, origin);
+
+  // 「이해 안 됨」 — 앱이 절 이름 하나만 보낸다(POST /이해안됨 {절}). 명식·본문·IP 는 받지도 적지도 않는다. (2026-10-07, PROMPTS 5)
+  if (길 === '/이해안됨') {
+    if (req.method !== 'POST') return 보냄(res, 405, { 오류: 'POST로 보내 주세요' }, origin);
+    if (허용출처.length && origin && !허용출처.includes(origin)) return 보냄(res, 403, { 오류: '허용되지 않은 출처입니다' }, origin);
+    let b = '';
+    req.on('data', c => { if (b.length < 2000) b += c; });
+    req.on('end', () => {
+      let 절 = null; try { 절 = String((JSON.parse(b) || {}).절 || '').trim(); } catch { /* 모양이 틀려도 세지만 않는다 */ }
+      if (!이해안됨절.includes(절)) return 보냄(res, 400, { 오류: '절 이름이 아닙니다', 절목록: 이해안됨절 }, origin);
+      셈(통계.이해안됨, 절);
+      return 보냄(res, 200, { 받음: true, 절 }, origin);
+    });
+    return;
+  }
 
   if (길 !== '/해설' && 길 !== '/interpret' && 길 !== '/문답')
     return 보냄(res, 404, { 오류: '없는 주소입니다' }, origin);

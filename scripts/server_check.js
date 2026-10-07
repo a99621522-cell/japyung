@@ -119,6 +119,16 @@ const 확인 = (이름, 조건, 설명) => { console.log(`  ${조건 ? '통과' 
     console.log('     통계', JSON.stringify(s));
   }
 
+  console.log('⑥ /이해안됨 (절 이름만, 2026-10-07 PROMPTS 5)');
+  { const 보내 = async (몸, 메서드 = 'POST') => { const r = await fetch(주소 + '/이해안됨', { method: 메서드, headers: { 'content-type': 'application/json' }, body: 메서드 === 'POST' ? JSON.stringify(몸) : undefined }); return { 상태: r.status, d: await r.json() }; };
+    const a = await 보내({ 절: '왜 그렇게 보나요' }), b = await 보내({ 절: '왜 그렇게 보나요' }), c = await 보내({ 절: '없는 절', 명식: { ilGan: '辛' } }), e = await 보내({}, 'GET');
+    const h = (await (await fetch(주소 + '/health')).json()).통계 || {};
+    확인('절 이름 두 번 → 2', a.상태 === 200 && b.상태 === 200 && h.이해안됨 && h.이해안됨['왜 그렇게 보나요'] === 2, JSON.stringify(h.이해안됨));
+    확인('모르는 절은 400 · 세지 않음', c.상태 === 400 && Object.keys(h.이해안됨 || {}).length === 1, JSON.stringify(c.d));
+    확인('GET 은 405', e.상태 === 405);
+    확인('통계에 명식 없음', !JSON.stringify(h).includes('辛'));
+  }
+
   서버.close();
   try { fs.rmSync(임시, { recursive: true, force: true }); } catch (e) {}
   console.log(`${실패.length ? '실패 ' + 실패.length + '건: ' + 실패.join(', ') : '전부 통과'} · ${Date.now() - t0}ms`);

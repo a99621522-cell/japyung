@@ -1,0 +1,27 @@
+# /health 통계 일별 누적 (2026-10-07, docs/PROMPTS.md 5) — 매일 23:50 KST(14:50 UTC) 서버 통계를 받아 data/stats/health.jsonl 에 쌓고 summary.md 를 다시 써 커밋한다.
+# 명식·본문·IP 는 서버가 세지 않는다. 서버가 잠들어 있으면 /health 가 깨운다(최대 90초).
+name: 통계 누적
+on:
+  schedule:
+    - cron: '50 14 * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: /health 받아 쌓기
+        env:
+          RELAY_URL: ${{ vars.RELAY_URL || 'https://ganmyeong-relay.onrender.com' }}
+        run: node scripts/stats_snapshot.js
+      - name: 커밋
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add data/stats
+          git diff --cached --quiet || git commit -m "통계 스냅샷 $(date -u +%Y-%m-%d)"
+          git push

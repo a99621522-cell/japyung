@@ -73,7 +73,7 @@
     return 몸;
   }
 
-  function 그리기(html){ try { return (typeof 꾸밈 === 'function') ? 꾸밈(html) : (typeof 마크다운 === 'function' ? 마크다운(html) : html); } catch(e){ return html; } }
+  function 그리기(html){ try { const x = (typeof 꾸밈 === 'function') ? 꾸밈(html) : (typeof 마크다운 === 'function' ? 마크다운(html) : html); return (typeof 이해단추 === 'function') ? 이해단추(x) : x; } catch(e){ return html; } }   // 이해 안 됨 단추(2026-10-07)
 
   function 말풍선(로그, 누구, 내용, 추가클래스){
     const el = document.createElement('div');

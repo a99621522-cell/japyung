@@ -65,6 +65,20 @@ console.log('③ 쉬운 말 층');
   const g = G.validate(답, interpret(m, o));
   if (!g.통과) throw new Error('gemini 검사: ' + JSON.stringify(g.문제).slice(0, 120));
 });
+시험('모범 답안 9개 전부 — 오류 0 · 경고 ≤2 (PROMPTS 5, 2026-10-07)', () => {
+  // 분야모범답안 은 haeseol 안의 닫힌 함수라 소스에서 D 를 꺼내 검사한다. 길이 경고(예시는 일부러 짧다)도 경고 수에 넣어 ≤2 를 지킨다
+  const src = fs.readFileSync(path.join(뿌리, 'haeseol.js'), 'utf8');
+  const i = src.indexOf('function 분야모범답안(분야){'); const j = src.indexOf('const D = {', i); const k = src.indexOf('\n  };', j);
+  const D = eval('(' + src.slice(j + 'const D = '.length, k + 4).replace(/;\s*$/, '') + ')');
+  if (Object.keys(D).length !== 9) throw new Error('모범 답안 수 ' + Object.keys(D).length);
+  const [이름, [m, o]] = Object.entries(명식들)[1]; const r = interpret(m, o);
+  const 나쁨 = [];
+  for (const [분야, 답] of Object.entries(D)) {
+    const x = require(path.join(뿌리, 'dapgeomsa')).검사(답, { 브리프: H.toLLMBrief(r, { ...o, 주제: 분야 }), 모드: '상담' });
+    if (x.오류.length || x.경고.length > 2) 나쁨.push(`${분야}: 오류 ${x.오류.map(e => e.규칙).join(',')} 경고 ${x.경고.map(e => e.규칙).join(',')}`);
+  }
+  if (나쁨.length) throw new Error(나쁨.join(' / '));
+});
 시험('옛 말투 답은 걸린다', () => !D.검사('올해 丙午는 丙-辛 합으로 식신 辛을 갈무리합니다. 정리하면 채우는 해입니다.', { 모드: '상담' }).통과);
 시험('문장 덜어내도 줄바꿈 보존', () => G.문제문장제거('▶ 한 줄로 말하면\n가. 도화가 있다.\n\n▶ 쉽게 풀어 보면\n나.', [{ 검출: ['도화'] }]).includes('\n\n▶ 쉽게'));
 
