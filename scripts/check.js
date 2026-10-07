@@ -84,5 +84,17 @@ console.log('⑤ 궁통보감 회귀');
   return /표일치 6\/6/.test(out) && /25\/25/.test(out);
 });
 
+console.log('⑥ 무작위 명식 불변식 (scripts/fuzz_check.js)');
+시험('fuzz_check 600건', () => {
+  const out = execFileSync('node', [path.join(뿌리, 'scripts', 'fuzz_check.js'), '600'], { encoding: 'utf8' });
+  return /문제 항목 0/.test(out);
+});
+
+console.log('⑦ 쉬운 말 층 오탐 재현 (scripts/easy_check.js)');
+시험('easy_check', () => {
+  const out = execFileSync('node', [path.join(뿌리, 'scripts', 'easy_check.js')], { encoding: 'utf8' });
+  return !/^실패/m.test(out);
+});
+
 console.log(실패.length ? `\n실패 ${실패.length}건` : '\n전부 통과');
 process.exit(실패.length ? 1 : 0);
