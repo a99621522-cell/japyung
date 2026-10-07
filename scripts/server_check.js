@@ -139,6 +139,23 @@ const 확인 = (이름, 조건, 설명) => { console.log(`  ${조건 ? '통과' 
     확인('/판정 모자란 명식 400', r3.상태 === 400);
   }
 
+  console.log('⑧ 명식 해시 캐시 · Gemini 일일 상한 (2026-10-07 PROMPTS 8)');
+  { const h0 = (await (await fetch(주소 + '/health')).json()).통계;
+    const 전호출 = h0.gemini.호출;
+    const r = await 부름('/해설', { ...몸기본, 주제: '올해 재물운 어때' });   // ② 와 같은 몸 — 캐시 적중이어야 한다
+    const h1 = (await (await fetch(주소 + '/health')).json()).통계;
+    확인('같은 몸 두 번째 → 캐시 적중 · Gemini 호출 없음', r.상태 === 200 && r.d.캐시 === true && r.d.성공 && h1.gemini.호출 === 전호출 && h1.캐시.적중 >= 1, JSON.stringify({ 캐시: r.d.캐시, 호출: [전호출, h1.gemini.호출], 캐시통계: h1.캐시 }));
+    확인('캐시 답에 명식 글자 키 없음(해시만)', !JSON.stringify(h1.캐시).includes('辛'));
+    process.env.GEMINI_DAILY_CAP = '1';   // 이미 호출이 여럿이라 바로 상한
+    const r2 = await 부름('/해설', { ...몸기본, 주제: '내년 이직은 어때' });
+    확인('일일 상한에 닿으면 Gemini 안 부르고 조문 리포트 폴백 + 사유', r2.상태 === 200 && r2.d.성공 === false && /상한/.test(r2.d.사유 || '') && r2.d.본문 && r2.d.출처 === '조문 리포트(폴백)', JSON.stringify({ 성공: r2.d.성공, 사유: r2.d.사유, 출처: r2.d.출처 }));
+    const h2 = (await (await fetch(주소 + '/health')).json()).통계;
+    확인('/health gemini 막힘 셈·상한 표시', h2.gemini.막힘 >= 1 && h2.gemini.상한 === 1 && h2.gemini.호출 === 전호출, JSON.stringify(h2.gemini));
+    delete process.env.GEMINI_DAILY_CAP;
+    const r3 = await 부름('/해설', { ...몸기본, 주제: '내년 이직은 어때' });
+    확인('상한 풀면 다시 부름(폴백은 캐시에 안 넣었음)', r3.상태 === 200 && r3.d.캐시 !== true && (await (await fetch(주소 + '/health')).json()).통계.gemini.호출 > 전호출);
+  }
+
   서버.close();
   try { fs.rmSync(임시, { recursive: true, force: true }); } catch (e) {}
   console.log(`${실패.length ? '실패 ' + 실패.length + '건: ' + 실패.join(', ') : '전부 통과'} · ${Date.now() - t0}ms`);

@@ -57,7 +57,7 @@ const http = require('http');
   }
 }
 
-const { 해석, 고쳐쓰기 } = require('./engine/gemini');
+const { 해석, 고쳐쓰기, 일일호출통계 } = require('./engine/gemini');
 const { 문답처리 } = require('./engine/mundap_route');   // 문답 모드 (자유 문답 + 47편 외격)
 
 const PORT     = process.env.PORT || 10000;
@@ -89,6 +89,7 @@ const 통계 = {
   시도2: 0, 채택둘째: 0, 다시쓰기: { 섹션: 0, 전체: 0, 실패: 0 }, 섹션요청크기합: 0,
   오류규칙: {}, 경고규칙: {}, 보강용어: {}, 가드: {},
   이해안됨: {},   // 「이해 안 됨」 단추(2026-10-07, PROMPTS 5) — 절 이름만 센다. 명식·본문·IP 없음
+  캐시: { 적중: 0, 비적중: 0 },   // 명식 해시 캐시(2026-10-07, PROMPTS 8)
 };
 const 이해안됨절 = ['한 줄로 말하면', '쉽게 풀어 보면', '왜 그렇게 보나요', '해 볼 만한 일', '이 답에 나온 말', '전체'];
 const 셈 = (표, k) => { if (k) 표[k] = (표[k] || 0) + 1; };
@@ -107,6 +108,17 @@ function 통계반영(답) {
   if (검.재검사 && 검.재검사.오류) for (const x of 검.재검사.오류) 셈(통계.오류규칙, 규칙이름(x));
   for (const w of 검.보강된용어 || []) 셈(통계.보강용어, w);
 }
+
+// ── 명식 해시 캐시 (2026-10-07, PROMPTS 8 운영) ─────────────────────────
+//   같은 명식·성별·출생연도·주제·관법·세운 범위의 /해설 답을 메모리에 CACHE_TTL_H 시간(기본 24, 0 이면 끔) 둔다 — Gemini 요금과 콜드스타트 뒤 첫 답 시간을 줄인다.
+//   키는 sha256 한 값만 쓰고(명식 글자를 키로 두지 않는다), 디스크·로그에는 아무것도 적지 않는다. 재시작하면 빈다. 최대 CACHE_MAX(기본 500)건, 오래된 것부터 지운다.
+const crypto = require('crypto');
+const 캐시 = new Map();
+const 캐시TTL = Math.max(0, Number(process.env.CACHE_TTL_H ?? 24)) * 3600 * 1000;
+const 캐시MAX = Math.max(10, Number(process.env.CACHE_MAX || 500));
+const 캐시키 = (입력, interpretOpt) => crypto.createHash('sha256').update(JSON.stringify([입력.명식 && ['yeonGan','yeonJi','wolGan','wolJi','ilGan','ilJi','siGan','siJi','daysFromJeolip'].map(k => 입력.명식[k] ?? null), interpretOpt.gender, interpretOpt.출생연도 ?? null, interpretOpt.주제 ?? null, interpretOpt.관법 ?? null, interpretOpt.세운시작 ?? null, interpretOpt.세운개수 ?? null, interpretOpt.daysToJeolgi ?? null])).digest('hex');
+function 캐시읽기(k) { if (!캐시TTL) return null; const v = 캐시.get(k); if (!v) return null; if (Date.now() - v.때 > 캐시TTL) { 캐시.delete(k); return null; } return v.응답; }
+function 캐시쓰기(k, 응답) { if (!캐시TTL) return; 캐시.set(k, { 때: Date.now(), 응답 }); if (캐시.size > 캐시MAX) { const 이제 = Date.now(); for (const [kk, v] of 캐시) { if (캐시.size <= 캐시MAX) break; if (이제 - v.때 > 캐시TTL) 캐시.delete(kk); } while (캐시.size > 캐시MAX) 캐시.delete(캐시.keys().next().value); } }
 
 const 필수 = ['yeonGan','yeonJi','wolGan','wolJi','ilGan','ilJi'];
 const 천간 = '甲乙丙丁戊己庚辛壬癸';
@@ -158,7 +170,7 @@ const 서버 = http.createServer(async (req, res) => {
   // 살아 있는지 — Render가 잠들지 않게 앱이 미리 깨울 때도 쓴다
   if (길 === '/health')
     // 커밋 — Render가 넣어 주는 RENDER_GIT_COMMIT. 배포가 끝났는지 밖에서 확인할 때 쓴다(scripts/smoke.js)
-    return 보냄(res, 200, { 살아있음: true, 키: !!API_KEY, 모델: MODEL, 커밋: (process.env.RENDER_GIT_COMMIT || '').slice(0, 7) || null, 통계 }, origin);
+    return 보냄(res, 200, { 살아있음: true, 키: !!API_KEY, 모델: MODEL, 커밋: (process.env.RENDER_GIT_COMMIT || '').slice(0, 7) || null, 통계: { ...통계, 캐시: { ...통계.캐시, 건수: 캐시.size, ttl시간: 캐시TTL / 3600000 }, gemini: 일일호출통계() } }, origin);
 
   // 「이해 안 됨」 — 앱이 절 이름 하나만 보낸다(POST /이해안됨 {절}). 명식·본문·IP 는 받지도 적지도 않는다. (2026-10-07, PROMPTS 5)
   if (길 === '/이해안됨') {
@@ -265,6 +277,11 @@ const 서버 = http.createServer(async (req, res) => {
         세운개수: 입력.세운개수 ?? 3,
         주제: 입력.주제,                  // '직업' 같은 것. 없으면 전체
       };
+      // 캐시 적중이면 Gemini 를 부르지 않는다(검사·보강이 끝난 응답 그대로, 캐시:true 만 붙여서)
+      const 키 = 캐시키(입력, interpretOpt);
+      const 적중 = 캐시읽기(키);
+      if (적중) { 통계.캐시.적중++; 통계반영(적중); return 보냄(res, 200, { ...적중, 캐시: true }, origin); }
+      통계.캐시.비적중++;
       const 부르기 = () => 해석(입력.명식, {
         apiKey: API_KEY, model: MODEL,
         온도: Number(process.env.TEMPERATURE || 0.7),
@@ -329,6 +346,7 @@ const 서버 = http.createServer(async (req, res) => {
         검사: 검사 ? { 통과: 검사.통과, 다시씀: !!검사.다시씀, 시도, 보강된용어, 재검사: 재검사 || undefined, 다시쓰기: 다시쓰기 || undefined, 첫오류: 검사.다시씀 ? 첫오류이름 : undefined, 오류: 검사.오류.map(x => x.규칙 + ': ' + x.내용), 경고: 검사.경고.map(x => x.규칙 + ': ' + x.내용) } : undefined,
       };
       통계반영(응답);
+      if (응답.성공 && 응답.출처 !== '조문 리포트(폴백)') 캐시쓰기(키, 응답);   // 성공한 Gemini 답만 — 폴백·실패는 다음에 다시 시도하게 둔다
       보냄(res, 200, 응답, origin);
     } catch (e) {
       // 예외 — 500 과 사유만(스택 없음). 앱은 짧은 알림을 띄우고 조문 리포트로 넘어간다

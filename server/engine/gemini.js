@@ -177,6 +177,20 @@ function 재요청프롬프트(원프롬프트, 문제) {
  * @param {object} m 명식
  * @param {object} opt { apiKey, model, 온도, 재시도, interpretOpt, fetchImpl }
  */
+// ── Gemini 호출 단위 상한 (2026-10-07, PROMPTS 8 운영) ─────────────────────────
+//   하루(KST) 호출 수가 GEMINI_DAILY_CAP(기본 500, 0 이면 없음)에 닿으면 모델을 부르지 않고 실패로 돌려 폴백(조문 리포트)이 나간다.
+//   해석()·보내기() 두 창구가 다 센다(문답·섹션 다시 쓰기도 보내기를 쓴다). 메모리라 재시작하면 0 — 상한은 요금 방어선이지 정확한 계량이 아니다.
+const 일일 = { 날짜: null, 호출: 0, 막힘: 0 };
+const KST날짜 = () => new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
+function 일일상한() { const v = Number(process.env.GEMINI_DAILY_CAP ?? 500); return Number.isFinite(v) && v > 0 ? v : 0; }
+function 호출허용() {
+  const d = KST날짜(); if (일일.날짜 !== d) { 일일.날짜 = d; 일일.호출 = 0; 일일.막힘 = 0; }
+  const 상한 = 일일상한();
+  if (상한 && 일일.호출 >= 상한) { 일일.막힘++; return false; }
+  일일.호출++; return true;
+}
+function 일일호출통계() { const d = KST날짜(); if (일일.날짜 !== d) { 일일.날짜 = d; 일일.호출 = 0; 일일.막힘 = 0; } return { 날짜: 일일.날짜, 호출: 일일.호출, 막힘: 일일.막힘, 상한: 일일상한() || null }; }
+
 async function 해석(m, opt = {}) {
   const {
     apiKey = process.env.GEMINI_API_KEY,
@@ -202,6 +216,7 @@ async function 해석(m, opt = {}) {
   for (let 회 = 0; 회 <= 재시도; 회++) {
     let text;
     try {
+      if (!호출허용()) throw new Error(`오늘 Gemini 호출 상한(${일일상한()}회)에 닿았습니다 — 조문 리포트로 대신합니다`);
       const res = await fetchImpl(`${ENDPOINT(model)}?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -241,6 +256,7 @@ async function 해석(m, opt = {}) {
 async function 보내기(브리프, opt = {}) {
   const { apiKey = process.env.GEMINI_API_KEY, model = 'gemini-2.5-flash', 온도 = 0.7, fetchImpl = globalThis.fetch } = opt;
   if (!apiKey) throw new Error('API 키가 없습니다');
+  if (!호출허용()) throw new Error(`오늘 Gemini 호출 상한(${일일상한()}회)에 닿았습니다`);
   const res = await fetchImpl(`${ENDPOINT(model)}?key=${apiKey}`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ contents: [{ parts: [{ text: 브리프 }] }], generationConfig: { temperature: 온도 } }),
@@ -337,7 +353,7 @@ async function 고쳐쓰기(a) {
   return 결과;
 }
 
-module.exports = { 해석, validate, 지어내기검사, 문제문장제거, 재요청프롬프트, 보내기, 섹션다시쓰기프롬프트, 규칙줄고르기, 고쳐쓰기, toLLMBrief };
+module.exports = { 해석, validate, 지어내기검사, 문제문장제거, 재요청프롬프트, 보내기, 섹션다시쓰기프롬프트, 규칙줄고르기, 고쳐쓰기, toLLMBrief, 일일호출통계 };
 
 if (require.main === module) {
   const m = { yeonGan:'甲', yeonJi:'申', wolGan:'壬', wolJi:'申',

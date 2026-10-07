@@ -5,9 +5,12 @@ on:
   push:
     branches: [main]
     paths: ['server/**', 'render.yaml']
+  schedule:
+    - cron: '0 0 * * 1'   # 매주 월 09:00 KST — 주간 smoke (2026-10-07, PROMPTS 8). 실패하면 Issue 를 연다
   workflow_dispatch:
 permissions:
   contents: write
+  issues: write
 jobs:
   smoke:
     runs-on: ubuntu-latest
@@ -19,6 +22,23 @@ jobs:
         env:
           RELAY_URL: ${{ vars.RELAY_URL || 'https://ganmyeong-relay.onrender.com' }}
         run: node scripts/smoke.js ${{ github.event_name == 'push' && github.sha || '' }}
+      - name: 실패하면 Issue (주간·수동 실행 때)
+        if: failure() && github.event_name != 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          T="[smoke] 주간 배포 확인 실패 — $(date -u +%Y-%m-%d)"
+          B="주간 smoke(배포 확인)가 실패했습니다. 실행: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          
+          확인할 것: Render 서버가 살아 있는지(/health), GEMINI_API_KEY 가 있는지, 일일 호출 상한(GEMINI_DAILY_CAP)에 닿았는지, 답에 다섯 머리말이 다 있는지."
+          N=$(gh issue list --label smoke --state open --json number --jq 'length')
+          if [ "$N" = "0" ]; then gh label create smoke --color B0301C --description '주간 배포 확인 실패' 2>/dev/null || true; gh issue create --title "$T" --body "$B" --label smoke; else gh issue comment "$(gh issue list --label smoke --state open --json number --jq '.[0].number')" --body "$B"; fi
+      - name: 성공하면 열린 smoke Issue 닫기
+        if: success() && github.event_name != 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for n in $(gh issue list --label smoke --state open --json number --jq '.[].number'); do gh issue close "$n" --comment "주간 smoke 가 다시 통과했습니다 ($(date -u +%Y-%m-%d))."; done
       - name: 답을 커밋 댓글로
         if: always()
         env:
