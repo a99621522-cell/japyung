@@ -7,7 +7,7 @@
  */
 
 const { GAN, JIJANGGAN, jeonggi, sipseong } = require('./jijanggan');
-const { tonggeun } = require('./tonggeun');
+const { tonggeun, THRESH } = require('./tonggeun');
 
 const POS_ORDER = ['년', '월', '일', '시'];
 
@@ -208,8 +208,8 @@ function godo(ctx, 상신, m, opt = {}) {
   const 삼자 = [격힘, 상신힘, 일간힘];
   const 최소 = Math.min(...삼자), 최대 = Math.max(...삼자);
 
-  const 皆備 = 최소 >= 1.0;
-  const 皆均 = 최대 > 0 && 최소 / 최대 >= 0.5;
+  const 皆備 = 최소 >= THRESH.개비;
+  const 皆均 = 최대 > 0 && 최소 / 최대 >= THRESH.개균;
   const 무근 = 최소 < 0.3;
 
   // 원문은 皆備와 皆均을 **각각의 사례**로 든다 —
@@ -244,9 +244,9 @@ function godo(ctx, 상신, m, opt = {}) {
     유정근거.push('상관이 있는 사주에 인수가 놓였다 — 「四柱帶傷，反推佩印」');
 
   // 無情 : 넘치는 것을 더 돕는 배합
-  if (['정인','편인'].includes(ctx.gyeok) && 상신 === '편관' && ctx.신강 && ctx.sery.인 >= 2.5)
+  if (['정인','편인'].includes(ctx.gyeok) && 상신 === '편관' && ctx.신강 && ctx.sery.인 >= THRESH.인중)
     무정근거.push('몸도 인수도 왕한데 칠살로 인수를 더 생한다 — 「身旺不勞印生，印旺何勞煞助」');
-  if (ctx.gyeok === '상관' && 상신 === '정인' && ctx.신강 && ctx.sery.식상 < 1.2 && ctx.sery.인 >= 2.5)
+  if (ctx.gyeok === '상관' && 상신 === '정인' && ctx.신강 && ctx.sery.식상 < 1.2 && ctx.sery.인 >= THRESH.인중)
     무정근거.push('몸이 왕하고 상관은 얕은데 인수가 너무 무겁다 — 「要此重印何用」');
   if (ctx.상신손상)
     무정근거.push('격을 떠받치는 상신이 다쳤다 — 「相神有傷，立敗其格」');

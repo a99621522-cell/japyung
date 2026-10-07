@@ -86,9 +86,10 @@ function 드러남(m, ctx, 십성) {
  * @param {object} m
  * @returns {object|null} { 상신, 근거, 원문, 자리 } 또는 null
  */
-function pick(격, ctx, m) {
+function pick(격, ctx, m, opt = {}) {
   const 표 = 大略[격];
   if (!표) return null;
+  const 제외 = new Set(opt.제외 ?? []);   // 격 자신의 십성·패격 파괴자 — 15편 「別位亦必有相」 (2026-10-07)
 
   // 후보 순서보다 먼저 걸리는 것이 있다 — **천간에 드러난 것이 지지에 숨은 것보다 앞선다.**
   //   27편 「干主天，動而有爲；支主地，靜以待用」
@@ -96,7 +97,7 @@ function pick(격, ctx, m) {
   //   식신은 子 속에 숨어 있고 상관 壬은 천간에 나와 있으니, 순서상 뒤인 상관을 쓴다.
   const 후보목록 = 표.후보
     .map(x => ({ 십성: x, 있음: 드러남(m, ctx, x) }))
-    .filter(x => x.있음 && !x.있음.자격상실 && !표.기?.includes(x.십성));
+    .filter(x => x.있음 && !x.있음.자격상실 && !표.기?.includes(x.십성) && !제외.has(x.십성));
   const 천간것 = 후보목록.filter(x => x.있음.종류 === '천간');
   const 정렬 = [...천간것, ...후보목록.filter(x => x.있음.종류 !== '천간')];
 

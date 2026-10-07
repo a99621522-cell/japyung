@@ -26,6 +26,7 @@
  */
 
 const { GAN, jeonggi, sipseong } = require('./jijanggan');
+const { THRESH } = require('./tonggeun');
 
 // 22편은 「如春木、冬水、土生四季**之類**」라 하여 日與月同을 **예시로** 들 뿐이다.
 // 실질 관문은 47편 論雜格이 준다 —
@@ -48,7 +49,7 @@ function analyze(r, m) {
                   .map(([p, g]) => `${sipseong(m.ilGan, g)}(${g}·${p})`);
   const 간재   = 간.filter(([, g]) => 재.includes(sipseong(m.ilGan, g)))
                   .map(([p, g]) => `${sipseong(m.ilGan, g)}(${g}·${p})`);
-  const 재중   = 간재.length >= 2 || (ctx.sery?.재 ?? 0) >= 2.5;
+  const 재중   = 간재.length >= 2 || (ctx.sery?.재 ?? 0) >= THRESH.재중;
 
   const 막는이유 = [];
 

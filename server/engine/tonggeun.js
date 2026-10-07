@@ -9,6 +9,28 @@
 
 const { GAN, JIJANGGAN, jeonggi } = require('./jijanggan');
 
+// ─────────────────────────────────────────────
+// 임계값 (2026-10-07) — 조문의 「輕·重·旺·强」을 세력 점수로 옮긴 문턱.
+//   원문은 수치를 주지 않으므로 전부 가정값이다. gyeokguk·sunjap·tonggeun 이 여기서 읽고,
+//   scripts/threshold_search.js 가 명례 78건·무작위 집합으로 격자 탐색한다. 값을 바꾸면 그 탐색 결과를 적을 것.
+// ─────────────────────────────────────────────
+const THRESH = {
+  인경: 2.0,     // 印輕 — sery.인 ≤ 인경 (印輕逢煞·印輕逢財)
+  인중: 2.5,     // 印重·印多 — sery.인 ≥ 인중
+  식상왕: 1.5,   // 傷官旺·食太旺 — sery.식상 ≥ 식상왕 (반대는 傷輕)
+  관살중: 2.0,   // 煞重 — sery.관살 ≥ 관살중
+  관살유: 1.5,   // 官煞重而無制伏(건록) — sery.관살 ≥ 관살유
+  신강: 0.5,     // 일간점수 ≥ 신강 → 신강
+  신강강: 0.65,  // 일간점수 ≥ 신강강 → '신강'(아니면 '중화신강')
+  신중: 1.0,     // 身重 — 통근 + 비겁×0.3 ≥ 신중 (인수 제외)
+  우열: 0.6,     // dominates margin — 財輕比重 등 두 세력의 유의미한 차
+  재중: 2.5,     // 財重 — oegyeok 財重 판정 (sery.재 ≥ 재중)
+  설수: 1.0,     // 祿劫透食傷以洩其秀 — sery.식상 ≥ 설수 (건록-成-06)
+  화왕: 2.0,     // 春木火旺見官 — sery.식상 ≥ 화왕 (건록-敗-03)
+  개비: 1.0,     // 三者皆備 — 세 축 최소 ≥ 개비 (sunjap 고저)
+  개균: 0.5,     // 三者皆均 — 최소/최대 ≥ 개균
+};
+
 const SAENG = { 木:'火', 火:'土', 土:'金', 金:'水', 水:'木' };
 const GEUK  = { 木:'土', 土:'水', 水:'火', 火:'金', 金:'木' };
 
@@ -123,14 +145,14 @@ function strength(m) {
     세력: sery,
     아군, 적군,
     일간점수,
-    신강: 일간점수 >= 0.5,
-    판정: 일간점수 >= 0.65 ? '신강' : 일간점수 >= 0.5 ? '중화신강'
+    신강: 일간점수 >= THRESH.신강,
+    판정: 일간점수 >= THRESH.신강강 ? '신강' : 일간점수 >= THRESH.신강 ? '중화신강'
         : 일간점수 >= 0.35 ? '중화신약' : '신약',
   };
 }
 
 /** 두 세력의 우열 — 개수 대신 이걸 쓴다 (margin: 유의미한 차이의 하한) */
-function dominates(sery, a, b, margin = 0.6) {
+function dominates(sery, a, b, margin = THRESH.우열) {
   return sery[a] - sery[b] >= margin;
 }
 
@@ -162,7 +184,7 @@ function selfTest() {
   return pass === cases.length;
 }
 
-module.exports = { wangsang, tonggeun, sipseongGroup, strength, dominates,
+module.exports = { THRESH, wangsang, tonggeun, sipseongGroup, strength, dominates,
                    W_JIJI, W_JANGGAN, W_CHEONGAN, W_WANGSANG, selfTest };
 
 if (require.main === module) selfTest();
