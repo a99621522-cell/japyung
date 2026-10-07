@@ -76,7 +76,7 @@ function 추적(r, opt = {}) {
       const 꼴 = (조문, 자리, 결) => { const 위치 = 줄of(조문.id, 조문.원문); return { id: 조문.id, 자리, 원문: 조문.원문, 줄: 위치 && 위치.줄 && 위치.줄.length ? 위치.줄 : (조문.줄 ? [조문.줄] : []), 장: 위치 ? 위치.장 : null, 결 }; };
       흐름 = { 걸린: [꼴(jc.십간.조문, '십간 성정', jc.십간.결), 꼴(jc.쇠왕.조문, `쇠왕 ${jc.쇠왕.상태}`, jc.쇠왕.결), ...(jc.종화.조문 ? [꼴(jc.종화.조문, `종화 후보 ${jc.종화.후보}`, jc.종화.근거.join(' / '))] : []), 꼴(jc.성정.조문, `성정${jc.성정.편중 ? ' ' + jc.성정.편중 + ' 편중' : ''}`, jc.성정.결)],
         세운: ((r.단계11b_세운 || []).slice(0, 3)).map(x => ({ 연도: x.연도, 간지: x.간지, 판정: x.길흉.판정, 전충화: (x.길흉.전충화 || []).map(e => ({ 종류: e.종류, 꼴: e.꼴, 가감: e.가감, 줄: e.줄, 원문: e.원문 })), 자평읽기: x.길흉.자평읽기 ? x.길흉.자평읽기.판정 : null })),
-        안내: '원문 줄은 docs/jeokcheonsu_wonmun.txt(wikisource 滴天髓輯要). 종·화는 후보일 뿐 자평 격을 바꾸지 않는다' };
+        안내: '원문 줄은 docs/jeokcheonsu_wonmun.txt(wikisource 滴天髓輯要), 출처 闡微 는 docs/chanwei_wonmun.txt(任鐵樵 평, 간체). 종·화는 후보일 뿐 자평 격을 바꾸지 않는다' };
     }
   } catch (e) { 흐름 = { 오류: String(e && e.message || e).slice(0, 120) }; }
   return { 자평, 안걸림, 취운, 궁통, 흐름, 안내: '줄 번호는 docs/japyeong_wonmun.txt(東里書齋 中州本)·docs/gungtong_wonmun.txt(wikisource 번체) 의 것. 조건 성립 여부는 엔진이 쓴 ctx 로 다시 평가한 값이다' };

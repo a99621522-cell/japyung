@@ -61,7 +61,7 @@ let 적천수수 = 0, 적천수못 = 0;
 try {
   const 적천 = 색인(path.join(뿌리, 'docs', 'jeokcheonsu_wonmun.txt'), /^## (.+?) \(wiki\//);
   const JC = require(path.join(뿌리, 'jeokcheonsu'));
-  for (const j of JC.JOMUN) { const r = 찾기(적천, j.원문); out[j.id] = { 책: '적천수', 줄: r ? r.줄 : (j.줄 ? [j.줄] : []), 장: r ? r.장 : (j.장 || null) }; 적천수수++; if (!r) 적천수못++; }
+  for (const j of JC.JOMUN) { const r = 찾기(적천, j.원문); out[j.id] = { 책: j.출처 === '闡微' ? '闡微' : '적천수', 줄: r ? r.줄 : (j.줄 ? [j.줄] : []), 장: r ? r.장 : (j.장 || null) }; 적천수수++; if (!r) 적천수못++; }
 } catch (e) { console.log('적천수 조문 색인 건너뜀:', e.message); }
 
 // 취운 조문(chwiun CHWIUN 의 취운원문·원문 문자열)은 id 가 없어 정규화한 원문을 키로 둔다 — jomun_trace 가 같은 정규화로 찾는다

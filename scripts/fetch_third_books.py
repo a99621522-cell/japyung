@@ -22,6 +22,7 @@ def raw(title):
     time.sleep(1.5); return t
 
 def title_to_file(title):
+    if title == '滴天髓闡微': return 'chanwei_raw.txt'
     if title.startswith('滴天髓/'): return 'dts_' + title.split('/')[1] + '.txt'
     return 'smth_' + title.split('卷')[1] + '.txt'
 
@@ -63,5 +64,7 @@ def build(name, titles, 설명):
 장 = ['通天論','天干論','地支論','形象論','方局論','格局論','從化論－真','從化論－假','歲運論','體用論','精神論','衰旺論','中和論','剛柔論','順逆論','寒暖論','月令論','生時論','源流論','通隔論','清濁論','真假論','隱顯論','眾寡論','奮鬱論','恩怨論','順反論','戰合論','震兌論','坎離論','君臣論','母子論','才德論','性情論','疾病論','閒神論','絆神論','六親論','出身論','地位論','貴賤貧富吉凶壽夭論','貞元論']
 build('jeokcheonsu_wonmun.txt', [f'滴天髓/{i:02d}' for i in range(1, 43)],
       '滴天髓 원문 (wikisource zh 滴天髓/01~42 「滴天髓輯要」 — 劉基 저로 전하는 본문(붉은 구절)과 소주, 2026-10-07 수집, 번체). 장 이름 차례: ' + '·'.join(f'{i+1:02d} {n}' for i, n in enumerate(장)) + '. 조사 보고서 인용은 이 파일의 줄만 쓴다. 任鐵樵 闡微의 명례는 이 판에 없다.')
+build('chanwei_wonmun.txt', ['滴天髓闡微'],
+      '滴天髓闡微 원문 (wikisource zh 滴天髓闡微 한 쪽, 任鐵樵 주석본 — 원문·原注·任氏曰·명례 500여 건, 2026-10-07 수집, **간체**). 셋째 층 「흐름」의 명례(정답 라벨) 창고. 조문 인용은 docs/jeokcheonsu_wonmun.txt(번체 輯要)를 먼저 쓰고, 명례·任氏 평은 이 파일의 줄을 쓴다. 명례 표는 fixtures_chanwei.js(scripts/chanwei_fixtures.js 가 만든다).')
 build('sammyeong_wonmun.txt', ['三命通會/卷' + k for k in '一二三四五六七八九'],
       '三命通會 원문 (wikisource zh 三命通會 卷一~卷九, 萬民英, 2026-10-07 수집, 번체 — 卷十~十二 결락). 납음·신살·격국 목록·육십갑자 성질 등 자평진전이 쓰지 않는 층이 많다. 조사 보고서 인용은 이 파일의 줄만 쓴다.')
