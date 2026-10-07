@@ -274,20 +274,19 @@ function render(r, opt = {}) {
   // ── 궁통보감 조건절 (간명서) ──
   try {
     const gj = require('./gungtong_jomun');
-    const r47 = gj.analyze(r.명식);
+    const r47 = 조문분석(gj, r.명식, r, opt);
     if (r47 && !r47.해당없음) {
       out.push(`\n### 궁통보감이 이 달의 밭을 보는 눈 — ${r47.일간}일간 ${r47.월}월`);
       const 칸 = 칸용기(r47, r.명식);
       out.push(`이 달의 필요 글자는 **${칸.용.join(' → ')}**${칸.보좌.length ? ` (보좌 ${칸.보좌.join('·')})` : ''}${칸.기.length ? `, 꺼리는 글자는 ${칸.기.join('·')}` : ''}입니다. ${마침(칸.요지 || '')}`);
       // 2026-10-07: 표시금지 조문(여명 조문 등)의 원문·판정어는 절대 보이지 않는다 — 결 번역만
       const 주 = r47.주판정;
-      if (주 && 주.유형 === '여명') {
-        out.push(`원문이 여명에 경계를 둔 배합입니다 — 원문은 표시하지 않습니다. ${마침(정화(주.결 || ''))}`);
-      } else if (주 && 조문숨김(주)) {
+      if (주 && 조문숨김(주)) {
         out.push(`${GU ? GU.표시금지대신 : '원문이 경계를 둔 배합 — 원문은 표시하지 않음'}. ${마침(정화(주.결 || ''))}`);
       } else if (주) {
         out.push(`원문 「${정화(주.원문)}」 — 판정어 **「${정화(주.판정어)}」**.`);
         out.push(`${마침(정화(주.결 || ''))} ${마침(정화(주.결말 || ''))}`);
+        if (주.축풀이 && (주.축풀이.부 || 주.축풀이.귀)) out.push(`두 축 — ${[주.축풀이.부 ? `富: ${정화(주.축풀이.부)}` : '', 주.축풀이.귀 ? `貴: ${정화(주.축풀이.귀)}` : ''].filter(Boolean).join(' / ')}`);
       } else {
         out.push('이 명식은 원문이 든 조건절 어디에도 정확히 들어맞지 않습니다. 아래 바탕과 흠으로 읽습니다.');
       }
@@ -1192,7 +1191,7 @@ function toLLMBrief(r, opt = {}) {
   L.push('');
   // ── 궁통보감 조후 층 (2026-08-18 탑재) — 격국과 병렬, 절대 섞지 않는다
   try {
-    const jo = GT && r && r.명식 ? GT.analyze(r.명식) : null;
+    const jo = GT && r && r.명식 ? GT.analyze(r.명식, { 성별: 성별of(r, opt) }) : null;
     // 급소찾기에 넘길 조후 필요 글자 — 궁통보감이 없거나 이 명식의 칸이 비어도 아래 표들은 나가야 한다
     const 조후용 = (jo && jo.칸 && Array.isArray(jo.칸.용)) ? jo.칸.용 : [];
     if (jo) {
@@ -1203,7 +1202,7 @@ function toLLMBrief(r, opt = {}) {
       if (typeof 칸0.원문 === 'string') L.push(`원문 근거: 「${정화(칸0.원문)}」`);
       if (typeof 칸0.요지 === 'string') L.push(`요지: ${칸0.요지}`);
       (Array.isArray(jo.평가) ? jo.평가 : []).forEach(e => L.push(`- ${e.글자}(${e.십성 || ''}): ${e.상태 || ''}${(e.곳 || []).length ? ' — ' + e.곳.map(x=>x.자리).join('·') : ''}`));
-      if (jo.갖춤) L.push(`갖춤: **${jo.갖춤}**${갖춤말[jo.갖춤] ? ` — ${갖춤말[jo.갖춤]}` : ''}`);
+      if (jo.갖춤) L.push(`갖춤: **${jo.갖춤}**${jo.갖춤설명 ? ` — ${정화(jo.갖춤설명)}` : 갖춤말[jo.갖춤] ? ` — ${갖춤말[jo.갖춤]}` : ''}`);
       L.push('**이 층을 말하는 법** — 격국은 그릇(무엇을 다루며 사는 사람인가)을 답하고, 조후는 결(그 삶의 체감온도, 언제 볕이 드는가)을 답합니다. 두 층을 한 문장에 섞지 마세요. 두 층이 같은 글자를 가리키면 그 글자가 이 명식의 급소이니 힘주어 말하고, 두 층의 평가가 갈리면 모순이 아니라 「그릇은 이러한데 결은 이러하다」로 나누어 말하세요. 조후의 근거는 위에 준 궁통보감 원문 구절만 인용하고, 재료에 없는 구절은 만들지 마세요. 갖춤이 「비어 있음」이어도 흉을 단정하지 말고, 없는 글자가 운에서 오는 때를 볕이 드는 시기로 말해 주세요.');
     }
 
@@ -1215,7 +1214,7 @@ function toLLMBrief(r, opt = {}) {
     let 대조표냄 = false;   // 2026-10-07: 조건절이 없는 칸(조문화 전·모듈 오류)에도 운 글자 대조표(조후 칸 포함)는 나가야 한다
     try {
       const gj = require('./gungtong_jomun');
-      const r47 = gj.analyze(m);
+      const r47 = 조문분석(gj, m, r, opt);
       if (r47 && !r47.해당없음) {
         대조표냄 = true;
         L.push('');
@@ -1574,7 +1573,7 @@ function 운글자대조줄(r, m, opt = {}) {
     const 상신글자 = (r.단계15_상신?.글자 || []).map(x => x.글자);
     const 병글자 = (r.단계20_선후?.병 || []).map(x => (String(x).match(/\(([甲乙丙丁戊己庚辛壬癸])/) || [])[1]).filter(Boolean);
     let 용 = [], 기 = [];
-    try { const gj = require('./gungtong_jomun'); const r47 = gj.analyze(m); if (r47 && !r47.해당없음) { 용 = (r47.용 || []).filter(g => g.length === 1); 기 = (r47.기 || []).map(g => g.replace(/多$/, '')).filter(g => g.length === 1); } } catch (e) {}
+    try { const gj = require('./gungtong_jomun'); const r47 = 조문분석(gj, m, r, opt); if (r47 && !r47.해당없음) { 용 = (r47.용 || []).filter(g => g.length === 1); 기 = (r47.기 || []).map(g => g.replace(/多$/, '')).filter(g => g.length === 1); } } catch (e) {}
     if (!용.length && GU) { try { const k = GU.칸찾기(일간, m.wolJi); if (k) { 용 = [...k.용, ...k.보좌]; 기 = k.기; } } catch (e) {} }   // 조문 모듈이 머리(용·기)를 칸()으로 옮겨도 표는 나간다 (2026-10-07)
     // 궁통보감 운 조후 — 취운 점수와 합치지 않는 병렬 칸. 대운은 원문 방위 구절까지, 세운·월운은 짧게
     const 조후말 = (g, j, 길게) => { try { if (!GU) return ''; const c = GU.조후운(일간, m.wolJi, { 천간: g, 지지: j }, m); return c.해당없음 ? '' : ' ‖ ' + (길게 ? c.요약 : c.짧은요약); } catch (e) { return ''; } };
@@ -1663,6 +1662,13 @@ function 운글자대조줄(r, m, opt = {}) {
 //   아직 없으면 조용히 건너뛴다. 표시금지 조문의 원문은 어떤 출력에도 내지 않는다(정화).
 // ═══════════════════════════════════════════════════════════════
 const 정화 = s => (GU ? GU.정화(s) : String(s == null ? '' : s));
+/** 조문 모듈에 넘길 성별 — interpret 의 opt.gender('남'|'여'), r.ctx.gender, opt.성별 어느 꼴이든 '여'/'남'으로 */
+function 성별of(r, opt) {
+  const v = (opt && (opt.gender || opt.성별)) || (r && r.ctx && r.ctx.gender) || (r && r.단계23_육친 && r.단계23_육친.성별) || null;
+  if (!v) return null; const t = String(v).toLowerCase();
+  return /여|f|female|woman/.test(t) ? '여' : /남|m|male|man/.test(t) ? '남' : null;
+}
+const 조문분석 = (gj, m, r, opt) => gj.analyze(m, { 성별: 성별of(r, opt), gender: 성별of(r, opt) });
 const 조문숨김 = x => !!(x && (x.표시금지 || (GU && (GU.표시금지식.test(String(x.원문 || '')) || GU.표시금지식.test(String(x.판정어 || ''))))));
 const 조문원문 = x => 조문숨김(x) ? `「${GU ? GU.표시금지대신 : '원문이 경계를 둔 배합 — 원문은 표시하지 않음'}」` : `「${정화(x.원문)}」`;
 const 갖춤말 = { 온전:'필요 글자가 천간에 드러나 뿌리가 있음', 암장:'필요 글자가 지지 속에만 있음', 손상:'필요 글자가 드러났으나 합·극으로 다침', 없음:'필요 글자가 원국에 없음',
@@ -1717,21 +1723,38 @@ function 궁통확장줄(r47, r, m, opt = {}, 꼴 = '브리프') {
   const L = [];
   if (!r47 || r47.해당없음) return L;
   const P = 꼴 === '간명서' ? '' : '  ';
+  // 용신상태·갖춤·반월·용선택사유는 gungtong.analyze(조후 층)가 단일 출처 (2026-10-07 확정 API)
+  let jo = null; try { jo = GT && m ? GT.analyze(m, { 성별: 성별of(r, opt) }) : null; } catch (e) { jo = null; }
   try {
-    if (r47.갖춤) L.push(`${P}갖춤(궁통): ${r47.갖춤}${갖춤말[r47.갖춤] ? ` — ${갖춤말[r47.갖춤]}` : ''}`);
-    if (Array.isArray(r47.용신상태) && r47.용신상태.length) {
-      L.push(`${P}용신 상태(궁통): ` + r47.용신상태.map(u => {
-        const 손 = (u.손상 || []).map(s => `${s.종류 || ''}${s.상대 ? ` ← ${s.상대}` : ''}`).filter(Boolean).join('·');
-        return `${u.글자}${u.역할 ? `(${u.역할})` : ''} ${u.상태 || ''}${손 ? ` — 손상: ${손}` : ''}`;
+    if (jo && jo.갖춤) L.push(`${P}갖춤(궁통): ${jo.갖춤}${jo.갖춤설명 ? ` — ${정화(jo.갖춤설명)}` : 갖춤말[jo.갖춤] ? ` — ${갖춤말[jo.갖춤]}` : ''}${jo.갖춤구 && jo.갖춤구 !== jo.갖춤 ? ` (옛 네 단계로는 ${jo.갖춤구})` : ''}`);
+    if (jo && jo.용선택사유) L.push(`${P}용신 고른 까닭: ${정화(jo.용선택사유)}`);
+    const 상태들 = (jo && Array.isArray(jo.용신상태) ? jo.용신상태 : (Array.isArray(r47.용신상태) ? r47.용신상태 : []));
+    if (상태들.length) {
+      L.push(`${P}용신 상태(궁통): ` + 상태들.map(u => {
+        const 손 = (u.손상 || []).map(s => `${s.종류 || ''}${s.상대 ? ` ← ${s.상대}` : ''}${s.설명 ? `(${정화(s.설명)})` : ''}`).filter(Boolean).join('·');
+        return `${u.글자}${u.역할 ? `(${u.역할})` : ''} ${u.상태 || ''}${손 ? ` — 손상: ${손}` : ''}${u.비고 ? ` [${정화(u.비고)}]` : ''}`;
       }).join(' / '));
     }
     const 주 = r47.주판정;
     if (주 && (주.유형 === '종격' || 주.유형 === '화격')) L.push(`${P}궁통 주판정 유형: ${주.유형} — 이 달의 글자 배합이 ${주.유형}으로 읽히는 조문에 듦(자평진전의 격과 합치지 않음)`);
-    if (주 && 주.유형 === '여명') L.push(`${P}여명 조문: 원문이 여명에 경계를 둔 배합 — 원문은 표시하지 않음. 결: ${정화(주.결 || '')}`);
-    if (주 && GU) { const 축 = GU.축번역(주.축); if (축) L.push(`${P}${축}`); }
-    if (r47.평주판정) { const 평 = typeof r47.평주판정 === 'object' ? (r47.평주판정.결 || r47.평주판정.판정어 || '') : String(r47.평주판정); if (평) L.push(`${P}평주는 ${정화(평)}로 넓혀 읽음 — 원전 조문이 아니라 서락오 평주의 폭. 원전 판정과 섞지 않음`); }
+    // 여명 조문 — 주판정이 아니라 r47.여명[] 로만 온다. 결만, 원문은 표시금지면 절대 안 냄
+    for (const w of (Array.isArray(r47.여명) ? r47.여명 : [])) {
+      const 숨김 = w.표시금지 || 조문숨김(w) || /원문 비공개/.test(String(w.원문 || ''));
+      L.push(`${P}여명 조문${w.id ? `(${w.id})` : ''}: ${숨김 ? '원문이 여명에 경계를 둔 배합 — 원문은 표시하지 않음' : `「${정화(w.원문)}」`}. 결: ${정화(w.결 || '')}`);
+    }
+    // 두 축 — 조문 모듈이 축풀이(문자열)를 주면 그대로, 없으면 축 기호를 결 번역(축번역)
+    if (주 && 주.축풀이 && (주.축풀이.부 || 주.축풀이.귀)) L.push(`${P}두 축(주판정) — ${[주.축풀이.부 ? `富: ${정화(주.축풀이.부)}` : '', 주.축풀이.귀 ? `貴: ${정화(주.축풀이.귀)}` : ''].filter(Boolean).join(' / ')}`);
+    else if (주 && GU) { const 축 = GU.축번역(주.축); if (축) L.push(`${P}${축}`); }
+    const 평 = r47.평주판정;
+    if (평) {
+      const 글 = typeof 평 === 'object' ? (평.결 || 평.판정어 || '') : String(평);
+      if (글) L.push(`${P}평주는 ${정화(글)}로 넓혀 읽음${평.갈림 ? ` — 원전 판정과 갈림: ${정화(typeof 평.갈림 === 'string' ? 평.갈림 : JSON.stringify(평.갈림))}` : ' — 원전 조문이 아니라 서락오 평주의 폭. 원전 판정과 섞지 않음'}`);
+      if (typeof 평 === 'object' && 평.축풀이 && (평.축풀이.부 || 평.축풀이.귀)) L.push(`${P}두 축(평주) — ${[평.축풀이.부 ? `富: ${정화(평.축풀이.부)}` : '', 평.축풀이.귀 ? `貴: ${정화(평.축풀이.귀)}` : ''].filter(Boolean).join(' / ')}`);
+    }
     if (Array.isArray(r47.보류) && r47.보류.length) L.push(`${P}보류(시간 미상): 태어난 시각을 몰라 시주가 비어 다음 조문은 판정을 보류함 — ` + r47.보류.map(b => `${b.id || ''}${b.사유 ? `(${정화(b.사유)})` : ''}`).join(', '));
-    const 구간 = 절기구간말(r47, m); if (구간) L.push(`${P}절기 구간: ${구간}`);
+    const 반 = (jo && jo.반월) || r47.반월 || null;
+    const 구간 = 반 === '상' ? `상반월${typeof m.daysFromJeolip === 'number' ? `(절입 뒤 ${m.daysFromJeolip}일)` : ''}` : 반 === '하' ? `하반월${typeof m.daysFromJeolip === 'number' ? `(절입 뒤 ${m.daysFromJeolip}일)` : ''}` : 절기구간말(r47, m);
+    if (구간) L.push(`${P}절기 구간: ${구간}`);
     const 병렬 = 종화병렬문(r, r47, m); if (병렬) L.push(`${P}${병렬}`);
   } catch (e) { /* 새 칸이 없거나 모양이 달라도 나머지는 나간다 */ }
   return L;
@@ -1792,7 +1815,7 @@ function 궁통브리프(r, opt = {}) {
                   '  이 한 줄이 글 전체의 축입니다', '**상담글에서는 격의 작동을 말한 뒤', '**이 층을 말하는 법**'];
   // 이 브리프가 조건절·대조표를 제 머리에 다시 싣는가 — 그러면 기본 브리프의 대조표 블록도 걷어낸다(2026-10-07, 2만 자 중복 제거)
   let 머리에조건절 = false;
-  try { const gj0 = require('./gungtong_jomun'); const r0 = gj0.analyze(r.명식); 머리에조건절 = !!(r0 && !r0.해당없음); } catch (e) {}
+  try { const gj0 = require('./gungtong_jomun'); const r0 = 조문분석(gj0, r.명식, r, opt); 머리에조건절 = !!(r0 && !r0.해당없음); } catch (e) {}
   const 재료 = [];
   let 건너뛰기 = 0, 조건절블록 = false, 예시중 = false;
   for (const ln of 기본.split('\n')) {
@@ -1812,7 +1835,7 @@ function 궁통브리프(r, opt = {}) {
   // ② 궁통보감 재료 — 이 달의 밭, 조건절, 필요 글자 소재표, 필요 글자가 오는 해
   const m = r.명식;
   let gj = null, r47 = null;
-  try { gj = require('./gungtong_jomun'); r47 = gj.analyze(m); } catch (e) {}
+  try { gj = require('./gungtong_jomun'); r47 = 조문분석(gj, m, r, opt); } catch (e) {}
   const L = [];
   L.push('═══ 이 답은 **궁통보감(窮通寶鑑)의 관법**으로 씁니다 ═══');
   L.push('자평진전 격국은 이 답에서 부연입니다. 척추는 「이 계절에 이 사물(일간)이 필요로 하는 글자가 있는가 없는가」입니다.');
