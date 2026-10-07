@@ -10,6 +10,7 @@
  *   ④ 루트와 server/engine의 같은 이름 파일이 똑같은가 (Render는 server/ 폴더만 본다)
  *   ⑤ 궁통보감 회귀(verify_gungtong.js)
  *   ⑨ 운 삼자 관계(scripts/un_check.js, 2026-10-07 9차)
+ *   ⑩ 세계 만세력(scripts/world_check.js, 2026-10-07 11차)
  * 하나라도 틀리면 종료 코드 1.
  */
 const fs = require('fs');
@@ -106,6 +107,12 @@ console.log('⑧ 중계 서버 시험 (scripts/server_check.js — 가짜 Gemini
 console.log('⑨ 운 삼자 관계 (scripts/un_check.js — 대운 두 읽기·세운↔대운 사실 기록·死 key 국별 hit·명례 국 fixture)');
 시험('un_check 900건', () => {
   const out = execFileSync('node', [path.join(뿌리, 'scripts', 'un_check.js'), '900'], { encoding: 'utf8', timeout: 20000 });
+  return /문제 항목 0/.test(out);
+});
+
+console.log('⑩ 세계 만세력 (scripts/world_check.js — 한국 4,000건 불일치 0·미일중 각 200건 오프셋/년월주/진태양시 손계산)');
+시험('world_check', () => {
+  const out = execFileSync('node', [path.join(뿌리, 'scripts', 'world_check.js'), '200'], { encoding: 'utf8', timeout: 60000 });
   return /문제 항목 0/.test(out);
 });
 
