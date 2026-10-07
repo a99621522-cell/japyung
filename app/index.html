@@ -412,6 +412,10 @@ footer b{color:var(--muted)}
           <label><input type="checkbox" id="시모름"> 태어난 시각을 모릅니다</label>
           <span style="color:var(--dim)">— 시주 없이 보되, 그만큼 볼 수 있는 것이 줄어듭니다.</span>
         </div>
+        <div class="고름">
+          <label><input type="checkbox" id="원문보기"> 원문 그대로 보기 (전문가용)</label>
+          <span style="color:var(--dim)">— 궁통보감이 질병·수명·여명에 대해 적은 조문의 원문을 가리지 않고 보여 줍니다. 상담 글·문답에는 들어가지 않습니다.</span>
+        </div>
 
         <div class="도움">
           <b>양력·음력 어느 쪽으로 넣으셔도 됩니다.</b> 음력을 고르시면 그 해에 윤달이 있을 때만 윤달 칸이 열립니다. 음력은 1900~2050년까지 옮길 수 있습니다.<br>
@@ -1274,14 +1278,16 @@ function 궁통카드(m){
   // 2026-09-05: 궁통보감 조건절 층 — 원문의 「배합 → 판정」. 판정어는 원문 그대로, 결 번역 병기.
   //   자평진전 격국과 병렬 — 격국은 그릇, 이 층은 이 달의 밭. 조문화 안 된 일간·달은 카드를 안 만든다.
   const G = (typeof E !== 'undefined') && E.궁통조문; if (!G) return '';
-  let r; try { r = G.analyze(m); } catch(e) { return ''; }
+  // 2026-10-07(10차): 성별을 넘겨 여명 조문(결 번역만)이 붙게 했고, 「원문 그대로 보기」가 켜져 있으면 표시금지 조문의 원문을 맨 아래 따로 보인다
+  const 성별옵 = { 성별: (현재 && 현재.입력 && 현재.입력.성별) || undefined };
+  let r; try { r = G.analyze(m, 성별옵); } catch(e) { return ''; }
   if (!r || r.해당없음) return '';
   const 방향말 = {으뜸:'결이 크게 열리는 배합', 좋음:'결이 열리는 배합', 보통:'먹고 사는 데 모자람 없는 배합', 평범:'결이 크지 않은 배합', 막힘:'결이 막히는 배합'};
   const 방향색 = {으뜸:'#2E7D4F', 좋음:'#2E7D4F', 보통:'#8a6d1f', 평범:'#7a6f60', 막힘:'#B0301C'};
   // 물상은 일간마다 다르다 — 己만 밭이다 (2026-09-07 사용자 지적 「그런데 왜 밭이야?」)
   const 물상 = {甲:'큰 나무',乙:'풀과 덩굴',丙:'해',丁:'등불',戊:'큰 산',己:'기름진 밭',庚:'쇠',辛:'보석',壬:'강물',癸:'단비'}[r.일간] || r.일간;
   const 계절 = {寅:'초봄',卯:'봄',辰:'늦봄',巳:'초여름',午:'한여름',未:'늦여름',申:'초가을',酉:'가을',戌:'늦가을',亥:'초겨울',子:'한겨울',丑:'늦겨울'}[r.월] || r.월+'월';
-  let x = `<div class="card"><div class="card-title"><span class="gold-dot"></span>궁통보감이 보는 계절 — ${계절}(${r.월}월)의 ${물상}(${r.일간})</div>`;
+  let x = `<div class="card 궁통카드"><div class="card-title"><span class="gold-dot"></span>궁통보감이 보는 계절 — ${계절}(${r.월}월)의 ${물상}(${r.일간})</div>`;
   x += `<div class="궁통요지">이 달의 필요 글자는 <b>${r.용.join(' → ')}</b>${r.기 && r.기.length ? `, 꺼리는 글자는 <b>${r.기.join('·')}</b>` : ''}입니다. ${r.요지}</div>`;
   if (r.주판정) {
     const p = r.주판정, 색 = 방향색[p.방향] || '#7a6f60';
@@ -1296,7 +1302,30 @@ function 궁통카드(m){
   const 줄 = (라벨, xs, 색) => xs.map(z => `<div class="궁통줄"><span class="궁통라벨" style="color:${색}">${라벨}</span> 「${z.원문}」 — ${z.결}</div>`).join('');
   x += 줄('바탕', r.바탕, '#8a6d1f') + 줄('흠', r.흠, '#B0301C') + 줄('완화', r.완화, '#2E7D4F');
   x += r.그밖의판정.map(z => `<div class="궁통줄"><span class="궁통라벨">함께 걸린 조건</span> 「${z.원문}」 → 「${z.판정어}」 — ${z.결}</div>`).join('');
-  x += `<div class="궁통주">원문의 판정어(科甲·平常·孤苦 등)는 배합에 대한 옛 표현이지 사람에 대한 등급이 아닙니다. 자평진전 격국과는 별개 층 — 격국이 「무엇을 다루며 사는가」를 말하고, 이 층은 「이 달의 밭에 무엇이 갖춰졌는가」를 말합니다. 둘이 갈리면 모순이 아니라 층의 차이입니다.</div></div>`;
+  x += (r.여명 || []).map(z => `<div class="궁통줄"><span class="궁통라벨" style="color:#8a6d1f">여명 조문</span> ${z.표시금지 ? '원문이 여명에 경계를 둔 배합(원문은 아래 「원문 그대로 보기」에서만)' : `「${z.원문}」`} — ${z.결}</div>`).join('');
+  x += `<div class="궁통주">원문의 판정어(科甲·平常·孤苦 등)는 배합에 대한 옛 표현이지 사람에 대한 등급이 아닙니다. 자평진전 격국과는 별개 층 — 격국이 「무엇을 다루며 사는가」를 말하고, 이 층은 「이 달의 밭에 무엇이 갖춰졌는가」를 말합니다. 둘이 갈리면 모순이 아니라 층의 차이입니다.</div>`;
+  x += 원문보기절(m, 성별옵, G);
+  x += `</div>`;
+  return x;
+}
+// 「원문 그대로 보기」(전문가용, 기본 꺼짐, 2026-10-07 10차) — 질병·수명·여명 조문은 analyze 가 늘 가리므로 이 절만 G.원문보기 로 원문을 받는다.
+//   브라우저 안에서만 그린다. 서버로 보내는 몸(명식)과 Gemini 재료에는 들어가지 않는다. 신살은 자평진전 21편이 격국과 무관하다 하여 두지 않는다.
+function 원문보기절(m, 옵, G){
+  const 켜짐 = (() => { try { return localStorage.getItem('원문보기') === '1'; } catch(e) { return false; } })();
+  const 상자 = document.getElementById('원문보기'); if (상자 && 상자.checked !== 켜짐) 상자.checked = 켜짐;
+  if (!G.원문보기) return '';
+  let v; try { v = G.원문보기(m, 옵); } catch(e) { return ''; }
+  const n = (v && v.항목 || []).length;
+  if (!켜짐) return n ? `<div class="궁통주">이 명식에는 원문이 질병·수명·여명에 대해 적은 조문 ${n}건이 더 걸려 있습니다(표시하지 않음). 전문가용 「원문 그대로 보기」를 켜면 원문을 그대로 볼 수 있습니다.</div>` : '';
+  if (!n) return `<div class="궁통주">「원문 그대로 보기」가 켜져 있으나, 이 명식에 걸린 질병·수명·여명 조문은 없습니다.</div>`;
+  const 자리색 = { 주판정:'#B0301C', '함께 걸린 조건':'#7a6f60', 바탕:'#8a6d1f', 흠:'#B0301C', 완화:'#2E7D4F', '여명 조문':'#8a6d1f', '질병 기록':'#7a6f60', 평주:'#7a6f60' };
+  let x = `<details open class="원문보기절" style="margin-top:10px;border-top:1px dashed #d8cfbd;padding-top:8px"><summary style="cursor:pointer;font-size:13px;color:#6b5a38"><b>원문 그대로</b> — 질병·수명·여명 조문 ${n}건 (전문가용)</summary>
+    <div class="궁통주" style="margin-top:6px">${v.안내} 아래 글자는 상담 글·문답·간명서 본문에는 들어가지 않습니다.</div>`;
+  for (const z of v.항목) {
+    x += `<div class="궁통줄"><span class="궁통라벨" style="color:${자리색[z.자리] || '#7a6f60'}">${z.자리}</span><span style="color:var(--dim);font-size:12px"> ${z.id}${z.줄 ? ` · 원문 ${z.줄}행` : ''} · ${z.유형}</span><br>
+      <span class="궁통원문">「${z.원문}」</span>${z.판정어 ? ` <span style="color:var(--dim)">판정어 「${z.판정어}」</span>` : ''}<br><span style="color:#4a4236">${z.결}</span></div>`;
+  }
+  x += `</details>`;
   return x;
 }
 function 희기표(격, 상신, 일간, hu){
@@ -1764,6 +1793,12 @@ async function 간명서열기(상품 = '종합'){
   window.print();
 }
 
+document.getElementById('원문보기').addEventListener('change', e => {
+  try { localStorage.setItem('원문보기', e.target.checked ? '1' : '0'); } catch(err) {}
+  // 이미 그린 결과가 있으면 궁통 카드만 다시 그린다 — 서버 호출 없음 (2026-10-07 10차)
+  if (현재 && 현재.r && 현재.r.명식) { const 상위 = document.querySelector('#결과 .card.궁통카드') || document.querySelector('.card.궁통카드'); if (상위) { const t = document.createElement('div'); t.innerHTML = 궁통카드(현재.r.명식); if (t.firstElementChild) 상위.replaceWith(t.firstElementChild); } }
+});
+try { document.getElementById('원문보기').checked = localStorage.getItem('원문보기') === '1'; } catch(e) {}
 document.getElementById('시모름').addEventListener('change', e => {
   for (const id of ['시','분']) document.getElementById(id).disabled = e.target.checked;
 });
