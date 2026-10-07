@@ -241,7 +241,7 @@ function interpret(m, opt = {}) {
     const 순행 = (년간음양 === '양' && gender === '남') || (년간음양 === '음' && gender === '여');
     return 순행 ? Math.max(1, 30 - d) : d;
   })();
-  const hu = haengun(m, ctx, g.상신, gender, daysToJeolgi, g);
+  const hu = haengun(m, ctx, g.상신, gender, daysToJeolgi, g, { 대운분할: opt.대운분할 });   // '분할'|'통합' — 어느 읽기를 머리로 보일지 (9차)
 
   return {
     // 뒤에서 재료를 다시 뽑는 층(juje.js 등)을 위해 원국과 문맥을 담아 둔다
