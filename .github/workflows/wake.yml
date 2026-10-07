@@ -1,0 +1,25 @@
+# 콜드스타트 미리 깨우기 (2026-10-07, docs/PROMPTS.md 8 운영) — Render 무료 플랜은 15분 놀면 잠들어 첫 답이 50초쯤 늦다.
+# 한국시 07~23시(UTC 22~14시)에 14분마다 /health 를 두드린다. 공개 저장소라 Actions 분 제한이 없다. 끄려면 이 파일을 지우거나 저장소 변수 WAKE=off.
+name: 서버 깨우기
+on:
+  schedule:
+    - cron: '*/14 22,23 * * *'
+    - cron: '*/14 0-14 * * *'
+  workflow_dispatch:
+jobs:
+  wake:
+    if: ${{ vars.WAKE != 'off' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: /health
+        env:
+          RELAY_URL: ${{ vars.RELAY_URL || 'https://ganmyeong-relay.onrender.com' }}
+        run: |
+          for i in 1 2 3; do
+            if curl -fsS --max-time 60 "$RELAY_URL/health" -o /tmp/h.json; then
+              echo "깨어 있음: $(head -c 300 /tmp/h.json)"; exit 0
+            fi
+            echo "시도 $i 실패 — 10초 뒤 다시"; sleep 10
+          done
+          echo "::warning::서버가 응답하지 않습니다 ($RELAY_URL)"

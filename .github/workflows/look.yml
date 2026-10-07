@@ -2,6 +2,8 @@
 # 작업 공간 프록시가 workers.dev를 막아 에이전트가 직접 못 여는 것을 대신한다.
 name: 화면 확인
 on:
+  schedule:
+    - cron: '30 0 * * 1'   # 매주 월 09:30 KST — 주간 화면 캡처 (2026-10-07, PROMPTS 8). 입력은 기본값
   workflow_dispatch:
     inputs:
       url:
@@ -21,7 +23,7 @@ jobs:
         with: { node-version: 22 }
       - name: 화면 파일 받기
         run: |
-          U="${{ inputs.url }}"; mkdir -p out/app
+          U="${{ inputs.url || 'https://misty-truth-03b6.a99621522.workers.dev/' }}"; mkdir -p out/app
           cd out/app
           wget -q -e robots=off --page-requisites --no-host-directories --adjust-extension=off "$U" || true
           for f in index.html engine.bundle.js manseryeok.browser.js mundap_ui.js sw.js manifest.json manifest.webmanifest privacy.html; do
@@ -32,7 +34,7 @@ jobs:
         run: |
           npm i --no-save playwright@1
           npx playwright install --with-deps chromium
-          node scripts/look.js "${{ inputs.url }}" out/look "${{ inputs.question }}"
+          node scripts/look.js "${{ inputs.url || 'https://misty-truth-03b6.a99621522.workers.dev/' }}" out/look "${{ inputs.question || '취업, 결혼, 재물, 건강을 알려주세요' }}"
       - name: 결과 올리기
         if: always()
         run: |
