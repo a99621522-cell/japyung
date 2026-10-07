@@ -10,6 +10,8 @@
  *    소재판정이 같은 것을 읽어내는지 대조한다.
  * ④ 조문 머리 ↔ 표 글자 집합(120칸)  ⑤ 조문 fixture  ⑥ 명례 ↔ 조문 주판정·방향(2026-10-07)  ⑦ 갖춤 ↔ 주판정 모순 조사(기록)
  * ⑧ 두 번째 통합(2026-10-07): 용신 손상·有根·반월·보류·갖춤·두 축·특수성 정렬·평주판정·여명 조문·합거일간포함·소재 통일
+ *    + 8차(2026-10-07, docs/PROMPTS.md 3): 壬戌-01/02·癸丑-02/05 주판정 고정, 설기 정식화(설점수 ≥ 2.5), 음간→양간 극(인접만), 반월 중기 기준, 질병·수명 표시금지, 1523행 女命 명례
+ * ⑨ gungtong_un 원문 방위 구절 ↔ docs/gungtong_wonmun.txt 글자 대조(8차)
  *    조문 도달성(안 걸리는 조문·가려지는 조문)은 scripts/gungtong_reach.js.
  */
 const G = require('./gungtong');
@@ -34,6 +36,13 @@ const 원전 = [
   { 출처: '三月癸水', 평: '辛卯壬辰癸未丙辰 上半月 用丙顯達',
     m:{yeonGan:'辛',yeonJi:'卯',wolGan:'壬',wolJi:'辰',ilGan:'癸',ilJi:'未',siGan:'丙',siJi:'辰'},
     원문용신:['丙','辛','甲'], 글자:'丙', 기대:'천간에 드러남' },
+];
+/* 8차: 十二月庚金 명례 표(1523행)의 「女命」 꼬리표 명조 — 표(時日月年 / 癸庚己庚 / 未戌丑辰) → 庚辰년 己丑월 庚戌일 癸未시. 판정 글은 없고 「女命」 표시뿐.
+ *   丙丁甲 가운데 천간에 드러난 것이 없고(丁은 戌 중기에 藏) 여명 조문(女命 줄 7곳)에 해당하는 배합도 아니다 — ⑥에서 「주판정 없음·여명 없음·갖춤 없음」으로 기록.
+ *   ①의 표일치 6/6·소재 25/25 수치는 scripts/check.js 가 그대로 보므로 ① 검사 목록에는 넣지 않는다 */
+const 기록 = [
+  { 출처: '十二月庚金', 평: '癸未庚戌己丑庚辰 女命 — 판정 글 없음(1523행 꼬리표)', 성별: '여',
+    m:{yeonGan:'庚',yeonJi:'辰',wolGan:'己',wolJi:'丑',ilGan:'庚',ilJi:'戌',siGan:'癸',siJi:'未'}, 원문용신:['丙','丁','甲'] },
 ];
 
 /* ── ② 평주 명례 — 국학전적망 수록 造化元鑰評註에서 채록 ── */
@@ -262,18 +271,23 @@ const 명례판정 = [
   { 명례:'癸酉乙丑庚寅丙子', 근거:'張載陽 — 丙火通根於寅(투출), 성장', 기대:'열림', 조문없음:'十二月庚金 「有丙無丁甲者，富中取貴」는 無甲을 요구하나 寅 정기가 甲이다' },
   // 한계
   { 명례:'癸丑辛酉庚子丁亥', 근거:'刑克孤貧 — 癸가 丁을 상함', 기대:'닫힘', 조문없음:'八月庚金 원문에 癸傷丁 조문이 없다(한계 기록)' },
+  // 8차: 1523행 女命 명례 — 판정 글이 없으니 기대 없음. 주판정 없음(丙丁甲 조문 어디에도 안 듦)·여명 조문 없음·갖춤 없음을 기록
+  { 명례:'庚辰己丑庚戌癸未', 근거:'女命 꼬리표만, 판정 글 없음(1523행)', 기대:null, 기록조문:null, 성별:'여', 여명없음:true, 갖춤:'없음' },
 ];
-const 전체명례 = [...원전, ...평주, ...한계];
+const 전체명례 = [...원전, ...평주, ...한계, ...기록];
 const 명조문자 = m => m.yeonGan + m.yeonJi + m.wolGan + m.wolJi + m.ilGan + m.ilJi + m.siGan + m.siJi;
 let 명례일치 = 0, 명례간극 = 0, 명례조문없음 = 0, 명례기록 = 0;
 for (const e of 명례판정) {
   const f = 전체명례.find(x => 명조문자(x.m) === e.명례);
   if (!f) { 틀.push(`명례 ${e.명례}: ①②③ 목록에 없음`); continue; }
-  const r = GJ.analyze(f.m); const 주 = r.주판정; const g = 주 ? 군(주.방향) : null;
+  const r = GJ.analyze(f.m, e.성별 ? { 성별: e.성별 } : {}); const 주 = r.주판정; const g = 주 ? 군(주.방향) : null;
   const 설명 = 주 ? `${주.id} 「${주.판정어}」 ${주.방향 || '방향 없음'}` : '주판정 없음';
   if (e.조문없음) { if (주) 틀.push(`명례 ${e.명례}(${e.근거}): 조문 없음이 맞는데 ${설명} — ${e.조문없음}`); else 명례조문없음++; continue; }
   if (e.간극) { if (주?.id === e.간극) 명례간극++; else 틀.push(`명례 ${e.명례}(${e.근거}): 간극 기록 ${e.간극} 이었는데 ${설명} — 기록을 고칠 것`); continue; }
-  if (e.기대 === null) { if (주?.id === e.기록조문) 명례기록++; else 틀.push(`명례 ${e.명례}(${e.근거}): 기록 ${e.기록조문} 이었는데 ${설명}`); continue; }
+  if (e.기대 === null) {
+    const 여명ok = !e.여명없음 || (Array.isArray(r.여명) && r.여명.length === 0);
+    const 갖춤ok = (!e.갖춤 || G.analyze(f.m).갖춤 === e.갖춤) && (!f.원문용신 || JSON.stringify(G.analyze(f.m).칸.용) === JSON.stringify(f.원문용신));
+    if ((주?.id ?? null) === e.기록조문 && 여명ok && 갖춤ok) 명례기록++; else 틀.push(`명례 ${e.명례}(${e.근거}): 기록 ${e.기록조문} 이었는데 ${설명}${여명ok ? '' : ' · 여명 조문이 걸림'}${갖춤ok ? '' : ' · 갖춤 ' + G.analyze(f.m).갖춤}`); continue; }
   if (!주) { 틀.push(`명례 ${e.명례}(${e.근거}): 기대 ${e.기대}${e.기대조문 ? ' ' + e.기대조문 : ''}인데 주판정 없음`); continue; }
   if (e.기대조문 && 주.id !== e.기대조문) { 틀.push(`명례 ${e.명례}(${e.근거}): 기대조문 ${e.기대조문}인데 ${설명}`); continue; }
   if (g !== e.기대) { 틀.push(`명례 ${e.명례}(${e.근거}): 기대 ${e.기대}인데 ${설명}`); continue; }
@@ -372,6 +386,74 @@ const 검 = (이름, ok, 설명) => { if (ok) 통합.push(이름); else 틀.push
 { // 머리 단일 출처 — 두 모듈의 칸()이 같은 객체를 돌려준다
   검('칸() 단일 출처', G.칸('甲','寅') === GJ.칸('甲','寅') && GJ.표.甲.寅.용 === G.표.甲.寅.용 && Array.isArray(G.칸('甲','寅').보좌) && typeof G.칸('甲','寅').조문요지 === 'string');
 }
+/* ── 8차 (2026-10-07, docs/PROMPTS.md 3 「궁통보감 남은 것」) ── */
+{ // 1. 壬戌-01 ↔ -02: 一派壬水(多오행 水 또는 水局) / 一派戊土(一派) — 다른 배합, 각자 주판정 (1915·1917행)
+  const 물 = GJ.analyze({ yeonGan:'丙', yeonJi:'申', wolGan:'戊', wolJi:'戌', ilGan:'壬', ilJi:'子', siGan:'甲', siJi:'辰' });   // 申子辰 水局 · 甲戊 투출 · 丙 투출 (월두·시두법에 맞는 명식)
+  const 흙 = GJ.analyze({ yeonGan:'戊', yeonJi:'辰', wolGan:'壬', wolJi:'戌', ilGan:'壬', ilJi:'丑', siGan:'甲', siJi:'辰' });   // 戊·戌·丑·辰 흙 넷 · 己庚 없음 · 甲辰시
+  검('壬戌-01 一派壬水 清貴極矣 (水局·甲戊丙)', 물.주판정 && 물.주판정.id === 'GT-壬戌-01' && !걸린id(물).includes('GT-壬戌-02'), `${물.주판정 && 물.주판정.id} [${걸린id(물)}]`);
+  검('壬戌-02 一派戊土 玉堂 (時干甲)', 흙.주판정 && 흙.주판정.id === 'GT-壬戌-02' && !걸린id(흙).includes('GT-壬戌-01'), `${흙.주판정 && 흙.주판정.id} [${걸린id(흙)}]`);
+  // 2. 癸丑-05 「即有丙透，不能解凍」 는 丙透 조문의 예외절 — 함께 걸리면 -05 가 주판정 (2150행)
+  const 자 = GJ.analyze({ yeonGan:'丙', yeonJi:'子', wolGan:'辛', wolJi:'丑', ilGan:'癸', ilJi:'卯', siGan:'壬', siJi:'子' });   // 丙 년간·壬 시간·子 — 戊 적음(-02) + 비겁 壬 출간(-05)
+  검('癸丑-05 即有丙透 예외절이 -02 異途 앞', 자.주판정 && 자.주판정.id === 'GT-癸丑-05' && 자.그밖의판정.some(x => x.id === 'GT-癸丑-02'), `${자.주판정 && 자.주판정.id} [${걸린id(자)}]`);
+}
+{ // 3. 설기 정식화 — 설점수 = 낳는 오행 천간 수 + 통근 점수 ≥ 2.5
+  const 장 = G.analyze(평주.find(x => 명조문자(x.m) === '乙亥己卯庚辰丁丑').m);   // 張作霖 專用丁火 — 옛 근사(己 천간 + 辰·丑 정기 = 3)는 설기로 읽어 「손상」
+  const 丁 = 장.용신상태.find(x => x.글자 === '丁');
+  검('설기 — 張作霖 丁(설점수 2.32 < 2.5) 온전', 장.갖춤 === '온전' && 丁 && !丁.손상.some(x => x.종류 === '설기') && Math.abs(丁.설점수 - 2.32) < 0.01 && G.설기문턱 === 2.5, `${장.갖춤} ${JSON.stringify(丁 && [丁.설점수, 丁.손상])}`);
+  const 현 = G.analyze(원전.find(x => 명조문자(x.m) === '辛卯壬辰癸未丙辰').m); const 丙 = 현.용신상태.find(x => x.글자 === '丙');
+  검('설기 — 三月癸水 顯達 명례 丙(뿌리만 2.2) 설기 아님', 丙 && !丙.손상.some(x => x.종류 === '설기') && Math.abs(丙.설점수 - 2.2) < 0.01, JSON.stringify(丙 && [丙.설점수, 丙.손상]));
+  const 설 = G.analyze({ yeonGan:'甲', yeonJi:'寅', wolGan:'壬', wolJi:'午', ilGan:'丙', ilJi:'寅', siGan:'乙', siJi:'卯' }); const 壬 = 설.용신상태.find(x => x.글자 === '壬');   // 壬이 낳는 木: 甲·乙 천간 2 + 寅寅卯 뿌리 1.6 = 3.6
+  검('설기 — 천간 2 + 뿌리 1.6 = 3.6 ≥ 2.5 설기', 壬 && 壬.손상.some(x => x.종류 === '설기' && x.설점수 >= 2.5) && 설.갖춤 === '손상', JSON.stringify(壬 && 壬.손상));
+  // 4. 극 — 음간→양간(癸→丙)은 인접만, 격위는 비고 (원문 「癸制丙」「丁破庚」「乙破戊」 / 평주 명례 張載陽·상서는 격위에서 열림)
+  // 乙 일간 子월 — 용 丙, 기 癸·壬 (乙寅은 癸가 용이라 극으로 안 센다)
+  const 인접 = G.analyze({ yeonGan:'癸', yeonJi:'亥', wolGan:'丙', wolJi:'子', ilGan:'乙', ilJi:'卯', siGan:'戊', siJi:'寅' }); const 丙a = 인접.용신상태.find(x => x.글자 === '丙');
+  const 격위 = G.analyze({ yeonGan:'癸', yeonJi:'亥', wolGan:'甲', wolJi:'子', ilGan:'乙', ilJi:'卯', siGan:'丙', siJi:'子' }); const 丙b = 격위.용신상태.find(x => x.글자 === '丙');
+  검('극 — 癸→丙 인접은 손상, 격위는 비고만', 丙a.손상.some(x => x.종류 === '극' && x.상대 === '癸' && x.인접) && 인접.갖춤 === '손상' && !丙b.손상.some(x => x.종류 === '극') && /격위라 손상으로 치지 않음/.test(丙b.비고 || ''), JSON.stringify([丙a.손상, 丙b.손상, 丙b.비고]));
+  const 載陽 = G.analyze(평주.find(x => 명조문자(x.m) === '癸酉乙丑庚寅丙子').m), 상서 = G.analyze(평주.find(x => 명조문자(x.m) === '辛酉戊戌庚申甲申').m);
+  검('극 — 張載陽(癸…丙)·상서(辛…甲) 격위라 온전 그대로', 載陽.갖춤 === '온전' && 상서.갖춤 === '온전', `${載陽.갖춤} ${상서.갖춤}`);
+  검('극 — 극글자들', JSON.stringify(G.극글자들('丙')) === JSON.stringify([{ 글자:'壬', 격위허용:true }, { 글자:'癸', 격위허용:false }]) && JSON.stringify(G.극글자들('丁')) === JSON.stringify([{ 글자:'癸', 격위허용:true }]), JSON.stringify([G.극글자들('丙'), G.극글자들('丁')]));
+}
+{ // 5. 반월 — 중기(中氣) 기준. 경계 사례 2건: 15일 폴백과 갈리는 날
+  const 진 = { yeonGan:'辛', yeonJi:'卯', wolGan:'壬', wolJi:'辰', ilGan:'癸', ilJi:'未', siGan:'丙', siJi:'辰' };
+  const a = G.반월계산({ y:2026, m:4, d:20, h:8, min:0 }), b = G.반월계산({ y:2026, m:4, d:20, h:14, min:0 });   // 2026 청명 4/5 → 곡우 4/20 낮(근사식) — 아침은 곡우 전
+  검('반월 중기 — 청명→곡우 경계(2026-04-20 아침 상·오후 하, 15일 폴백은 둘 다 하)', a && a.반월 === '상' && a.절 === '청명' && a.중기 === '곡우' && a.지난날 > 15 && b && b.반월 === '하' && G.반월of({ ...진, daysFromJeolip: 15 }) === '하' && G.반월of({ ...진, 생시: { y:2026, m:4, d:20, h:8, min:0 }, daysFromJeolip: 15 }) === '상', JSON.stringify([a, b]));
+  const c = G.반월계산({ y:2026, m:9, d:22, h:12, min:0 }), d = G.반월계산({ y:2026, m:9, d:23, h:12, min:0 });   // 백로 9/7 → 추분 9/23 — 9/22 는 절입 뒤 15일 가까이 지났어도 추분 전
+  검('반월 중기 — 백로→추분 경계(2026-09-22 상·09-23 하)', c && c.반월 === '상' && c.절 === '백로' && c.중기 === '추분' && d && d.반월 === '하' && G.반월of({ daysFromJeolip: Math.round(c.지난날) }) === '하', JSON.stringify([c, d]));
+  const 유 = { yeonGan:'壬', yeonJi:'午', wolGan:'己', wolJi:'酉', ilGan:'乙', ilJi:'巳', siGan:'丙', siJi:'戌' };
+  const r상 = GJ.analyze({ ...유, 생시: { y:2026, m:9, d:22, h:12, min:0 } }), r하 = GJ.analyze({ ...유, 생시: { y:2026, m:9, d:23, h:12, min:0 } }), r지 = GJ.analyze({ ...유, 반월: '하', daysFromJeolip: 3 });
+  검('반월 중기 — 乙酉 上半月 조문·용선택이 생시로 갈리고 m.반월 지정이 우선', 걸린id(r상).includes('GT-乙酉-16') && !걸린id(r하).includes('GT-乙酉-16') && r지.반월 === '하' && /중기 기준/.test(G.analyze({ ...유, 생시: { y:2026, m:9, d:22, h:12, min:0 } }).용선택사유 || '') && /15일 폴백/.test(G.analyze({ ...유, daysFromJeolip: 3 }).용선택사유 || ''), `${걸린id(r상)} / ${걸린id(r하)} / ${r지.반월}`);
+}
+{ // 6. 질병·수명 표시금지 — 칸 조문은 가려지고, 질병조문은 `질병[]` 로만, 브리프줄에는 없다
+  const 금 = /疾|瞽|損目|殘病|災病|夭|死無|而亡/;
+  const r = GJ.analyze({ yeonGan:'庚', yeonJi:'申', wolGan:'甲', wolJi:'申', ilGan:'甲', ilJi:'辰', siGan:'戊', siJi:'辰' });   // 甲秋-04 「庚多無丁，殘疾之人」 이 함께 걸림
+  const x = r.그밖의판정.find(j => j.id === 'GT-甲秋-04');
+  검('표시금지 — 甲秋-04 원문·판정어 가림, 방향·결은 유지', x && x.표시금지 && x.유형 === '질병' && x.원문 === GJ.비공개원문 && x.판정어 === GJ.비공개판정 && x.방향 === '막힘' && !금.test(JSON.stringify(r)) && !금.test(GJ.브리프줄(r).join('\n')), JSON.stringify(x));
+  const 화 = GJ.analyze({ yeonGan:'庚', yeonJi:'寅', wolGan:'戊', wolJi:'寅', ilGan:'甲', ilJi:'午', siGan:'甲', siJi:'戌' });   // 甲寅 火局 → 질병조문 疾-甲春-01
+  검('질병조문 — 걸리면 질병[] 에만, 원문 비공개, 브리프줄에 없음', 화.질병.some(j => j.id === 'GT-記-甲春-01' && j.표시금지 && j.원문 === GJ.비공개원문) && !금.test(JSON.stringify(화)) && !/질병|疾/.test(GJ.브리프줄(화).join('\n')) && !걸린id(화).some(id => id.startsWith('GT-記')), JSON.stringify(화.질병));
+  검('표시금지유형 — 死處逢生·死金·癸為病은 가리지 않음', GJ.표시금지유형({ 원문:'名死處逢生' }) === null && GJ.표시금지유형({ 원문:'死金嫌蓋頂之泥' }) === null && GJ.표시금지유형({ 원문:'癸為病' }) === null && GJ.표시금지유형({ 원문:'必主殘疾' }) === '질병' && GJ.표시금지유형({ 원문:'此人殘疾，無癸必夭' }) === '질병·수명');
+}
+
+/* ── ⑨ gungtong_un 원문 방위 구절 ↔ docs/gungtong_wonmun.txt 글자 대조 (8차) ──
+ *    scripts/wonmun_check.js(자평용)와 같은 방식: 구두점·공백을 떼고 이체자(為/爲·幹/干·兇/凶·醜/丑…)를 맞춘 뒤, 「…」 로 나뉜 조각을 그 줄 안에서 차례로 찾는다.
+ *    전자판 오자 隹(75행 「爲隹」 — 문맥상 佳)는 wonmun_check 의 製/才/塡 처럼 비교 때만 맞춘다. */
+const GU = require('./gungtong_un');
+const 운대조 = (() => {
+  const fs = require('fs'), path = require('path');
+  let 줄들; try { 줄들 = fs.readFileSync(path.join(__dirname, 'docs', 'gungtong_wonmun.txt'), 'utf8').split('\n'); } catch (e) { return null; }
+  const 이체 = { '為':'爲','幹':'干','兇':'凶','醜':'丑','製':'制','才':'財','髮':'發','卻':'却','裏':'裡','並':'并','強':'强','殺':'煞','剋':'尅','克':'尅','衝':'沖','灾':'災','於':'于','隹':'佳' };
+  const 구두 = /[\s，。、；：！？「」『』（）()《》〈〉【】\[\]…·—\-－＿_\*＊~～'"‘’“”,.;:!?<>|│{}]/g;
+  const 정규 = t => t.replace(구두, '').replace(/./gu, ch => 이체[ch] ?? ch);
+  const out = { 검사: 0, 일치: 0, 불일치: [] }; const 본 = new Set();
+  for (const 일간 of Object.keys(GU.운원문)) for (const 월 of Object.keys(GU.운원문[일간])) for (const e of GU.운원문[일간][월]) {
+    const k = e.구절 + '@' + e.줄; if (본.has(k)) continue; 본.add(k); out.검사++;
+    const 줄 = 정규(줄들[e.줄 - 1] || ''); let pos = 0, ok = true;
+    for (const 조각 of e.구절.split('…')) { const q = 정규(조각); const i = q ? 줄.indexOf(q, pos) : pos; if (i < 0) { ok = false; break; } pos = i + q.length; }
+    if (ok) out.일치++; else out.불일치.push(`${일간}${월} ${e.줄}행 「${e.구절}」`);
+  }
+  return out;
+})();
+if (!운대조) 틀.push('⑨ docs/gungtong_wonmun.txt 를 읽지 못함');
+else if (운대조.불일치.length) 운대조.불일치.forEach(x => 틀.push(`⑨ 운 원문 구절 불일치: ${x}`));
 
 console.log('══════════════════════════════════════════');
 console.log(`궁통보감 — 표 대조 ${G.진행().됨}/120칸 (판본 2종 일치)`);
@@ -382,10 +464,11 @@ console.log(`  명례↔주판정 ${명례판정.length}건: 방향 일치 ${명
 console.log(`  갖춤↔주판정 대조(현실 명식 ${갖춤대조.n}건에 주판정 있음): 온전인데 막힘 ${갖춤대조.온전막힘.length} · 온전인데 「無 첫용신」 조문 ${갖춤대조.온전無용신.length} · 비어 있음인데 으뜸 ${갖춤대조.빈으뜸.length} (기록만)`);
 for (const k of ['온전막힘', '온전無용신', '빈으뜸']) 갖춤대조[k].slice(0, 2).forEach(x => console.log(`    [${k}] ${x}`));
 틀.forEach(x=>console.log('  불일치:', x));
-console.log(`  두 번째 통합(⑧) ${통합.length}/${통합.length + 틀.filter(x => x.startsWith('⑧')).length}`);
+console.log(`  두 번째 통합·8차(⑧) ${통합.length}/${통합.length + 틀.filter(x => x.startsWith('⑧')).length}`);
+if (운대조) console.log(`  운 원문 방위 구절 ↔ 원문 창고 글자 대조(⑨) ${운대조.일치}/${운대조.검사}`);
 for (const f of 한계) {
   const r = G.analyze(f.m);
   console.log(`  [옛 한계 → 손상] ${f.출처}: 갖춤=${r.갖춤}(갖춤구 ${r.갖춤구}) — ${f.평}`);
 }
-console.log('  [기록] 十二月庚金 명례 표 「女命」 癸未庚戌己丑庚辰(docs/gungtong_wonmun.txt 1523행)은 판정 글이 없어 조문 없음 — 여명 조문은 scripts/gungtong_women_check.js');
+console.log('  [기록] 十二月庚金 명례 표 「女命」 癸未庚戌己丑庚辰(docs/gungtong_wonmun.txt 1523행)은 판정 글이 없어 ⑥ 기록 fixture(주판정 없음·여명 없음·갖춤 없음) — 여명·질병 조문 검사는 scripts/gungtong_women_check.js');
 if (틀.length) process.exitCode = 1;
