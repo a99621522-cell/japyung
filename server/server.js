@@ -175,7 +175,7 @@ const 서버 = http.createServer(async (req, res) => {
     return;
   }
 
-  if (길 !== '/해설' && 길 !== '/interpret' && 길 !== '/문답')
+  if (길 !== '/해설' && 길 !== '/interpret' && 길 !== '/문답' && 길 !== '/판정')
     return 보냄(res, 404, { 오류: '없는 주소입니다' }, origin);
   if (req.method !== 'POST')
     return 보냄(res, 405, { 오류: 'POST로 보내 주세요' }, origin);
@@ -204,6 +204,30 @@ const 서버 = http.createServer(async (req, res) => {
     let 입력;
     try { 입력 = JSON.parse(몸); }
     catch { return 보냄(res, 400, { 오류: '읽을 수 없는 형식입니다' }, origin); }
+
+    // ── /판정 JSON API (2026-10-07, PROMPTS 7 전문가 모드) — Gemini 없이 엔진 판정과 조문 추적만 JSON 으로 ──────────
+    //   몸: { 명식 } 또는 { 입력:{년,월,일,시,분,성별,시모름,출생지,야자시,균시차} }, 성별, 출생연도, 절기날수, 전체(안 걸린 조문까지), 민감도(시주 없을 때 열두 시주 표)
+    //   답: { 명식, 결론, 추적, 궁통, 대운, 만세력, 민감도 } — 표시금지 조문 원문은 여기서도 가린다. 통계 요청.판정 만 센다
+    if (길 === '/판정') {
+      통계.요청.판정 = (통계.요청.판정 || 0) + 1;
+      try {
+        const T = require('./engine/jomun_trace');
+        const { interpret, 생년월일시로 } = require('./engine/interpret');
+        const GJ = require('./engine/gungtong_jomun');
+        const 성별 = 입력.성별 === '여' ? '여' : '남';
+        let r;
+        if (입력.입력 && 입력.입력.년) r = 생년월일시로({ ...입력.입력, 성별 });
+        else { const 탈 = 명식검사(입력.명식); if (탈) return 보냄(res, 400, { 오류: 탈 }, origin); r = interpret(입력.명식, { gender: 성별, 출생연도: 입력.출생연도, daysToJeolgi: 입력.절기날수 }); }
+        const 추 = T.추적(r, { 성별, 전체: !!입력.전체 });
+        let 궁 = null; try { 궁 = GJ.analyze(r.명식, { 성별 }); } catch (e) {}
+        const 대운 = ((r.단계11_행운 || {}).대운 || []).map(u => ({ 간지: u.간지, 시작나이: u.시작나이, 판정: u.길흉 && u.길흉.판정, 두읽기: u.읽기 && u.읽기.분할 ? { 천간5: u.읽기.분할.천간5 && u.읽기.분할.천간5.판정, 지지5: u.읽기.분할.지지5 && u.읽기.분할.지지5.판정 } : null }));
+        const 민감도 = (입력.민감도 && !r.명식.siJi) ? T.시주민감도(r.명식, { gender: 성별, 출생연도: 입력.출생연도 }) : null;
+        return 보냄(res, 200, { 성공: true, 명식: r.명식, 결론: r.결론, 추적: 추, 궁통: 궁, 대운, 만세력: r.만세력 || null, 민감도, 안내: '판정은 코드가 낸 것이고 문장(상담)은 /해설 로. 표시금지 조문 원문은 내지 않는다' }, origin);
+      } catch (e) {
+        통계.예외++;
+        return 보냄(res, 500, { 성공: false, 사유: String(e && e.message || '판정을 만들지 못했습니다').slice(0, 200) }, origin);
+      }
+    }
 
     const 탈 = 명식검사(입력.명식);
     if (탈) return 보냄(res, 400, { 오류: 탈 }, origin);
