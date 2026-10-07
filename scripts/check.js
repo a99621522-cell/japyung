@@ -96,5 +96,11 @@ console.log('⑦ 쉬운 말 층 오탐 재현 (scripts/easy_check.js)');
   return !/^실패/m.test(out);
 });
 
+console.log('⑧ 중계 서버 시험 (scripts/server_check.js — 가짜 Gemini, 본문 초과·500·섹션 다시 쓰기·통계)');
+시험('server_check', () => {
+  const out = execFileSync('node', [path.join(뿌리, 'scripts', 'server_check.js')], { encoding: 'utf8', timeout: 20000 });
+  return /전부 통과/.test(out);
+});
+
 console.log(실패.length ? `\n실패 ${실패.length}건` : '\n전부 통과');
 process.exit(실패.length ? 1 : 0);

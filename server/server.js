@@ -57,7 +57,7 @@ const http = require('http');
   }
 }
 
-const { 해석 } = require('./engine/gemini');
+const { 해석, 고쳐쓰기 } = require('./engine/gemini');
 const { 문답처리 } = require('./engine/mundap_route');   // 문답 모드 (자유 문답 + 47편 외격)
 
 const PORT     = process.env.PORT || 10000;
@@ -79,6 +79,31 @@ function 넘었나(ip) {
   a.push(이제); 기록.set(ip, a);
   if (기록.size > 5000) for (const [k, v] of 기록) if (!v.length || 이제 - v[v.length-1] > 창) 기록.delete(k);
   return false;
+}
+
+// ── 재시도 기록 (2026-10-07, C14) ───────────────
+// 메모리 안 셈만. 명식·본문·IP는 넣지 않는다. GET /health 의 `통계` 로 보인다(재시작하면 0부터).
+const 통계 = {
+  시작: new Date().toISOString(),
+  요청: { 해설: 0, 문답: 0 }, 성공: 0, 실패: 0, 예외: 0, 본문초과: 0,
+  시도2: 0, 채택둘째: 0, 다시쓰기: { 섹션: 0, 전체: 0, 실패: 0 }, 섹션요청크기합: 0,
+  오류규칙: {}, 경고규칙: {}, 보강용어: {}, 가드: {},
+};
+const 셈 = (표, k) => { if (k) 표[k] = (표[k] || 0) + 1; };
+const 규칙이름 = (x) => String(x || '').split(':')[0].trim();
+function 통계반영(답) {
+  if (!답) return;
+  답.성공 ? 통계.성공++ : 통계.실패++;
+  for (const k of 답.가드 || []) 셈(통계.가드, k);
+  const 검 = 답.검사; if (!검) return;
+  if ((검.시도 || 1) >= 2) 통계.시도2++;
+  if (검.다시씀) 통계.채택둘째++;
+  if (검.다시쓰기) { 셈(통계.다시쓰기, 검.다시쓰기.방식 || '실패'); 통계.섹션요청크기합 += 검.다시쓰기.요청크기 || 0; }
+  // 규칙별 횟수는 첫 답 기준(다시 쓴 답을 채택했으면 재검사도 더한다)
+  for (const x of 검.첫오류 || 검.오류 || []) 셈(통계.오류규칙, 규칙이름(x));   // 첫 답의 오류(다시 썼으면 첫오류에 따로 담겨 온다)
+  for (const x of 검.경고 || []) 셈(통계.경고규칙, 규칙이름(x));
+  if (검.재검사 && 검.재검사.오류) for (const x of 검.재검사.오류) 셈(통계.오류규칙, 규칙이름(x));
+  for (const w of 검.보강된용어 || []) 셈(통계.보강용어, w);
 }
 
 const 필수 = ['yeonGan','yeonJi','wolGan','wolJi','ilGan','ilJi'];
@@ -131,7 +156,7 @@ const 서버 = http.createServer(async (req, res) => {
   // 살아 있는지 — Render가 잠들지 않게 앱이 미리 깨울 때도 쓴다
   if (길 === '/health')
     // 커밋 — Render가 넣어 주는 RENDER_GIT_COMMIT. 배포가 끝났는지 밖에서 확인할 때 쓴다(scripts/smoke.js)
-    return 보냄(res, 200, { 살아있음: true, 키: !!API_KEY, 모델: MODEL, 커밋: (process.env.RENDER_GIT_COMMIT || '').slice(0, 7) || null }, origin);
+    return 보냄(res, 200, { 살아있음: true, 키: !!API_KEY, 모델: MODEL, 커밋: (process.env.RENDER_GIT_COMMIT || '').slice(0, 7) || null, 통계 }, origin);
 
   if (길 !== '/해설' && 길 !== '/interpret' && 길 !== '/문답')
     return 보냄(res, 404, { 오류: '없는 주소입니다' }, origin);
@@ -150,8 +175,15 @@ const 서버 = http.createServer(async (req, res) => {
   let 몸 = '';
   // 문답은 대화 이력을 함께 보내므로 20KB로는 모자란다
   const 몸한도 = (길 === '/문답') ? 200000 : 20000;
-  req.on('data', c => { 몸 += c; if (몸.length > 몸한도) req.destroy(); });
+  // 2026-10-07: 한도를 넘으면 끊지(req.destroy) 않고 400 JSON 으로 답한다 — 앱이 사유를 보여 줄 수 있게
+  let 넘침 = false;
+  req.on('data', c => {
+    if (넘침) return;
+    몸 += c;
+    if (몸.length > 몸한도) { 넘침 = true; 몸 = ''; 통계.본문초과++; 보냄(res, 400, { 성공: false, 사유: '본문이 너무 큽니다', 본문: null }, origin); req.resume(); }
+  });
   req.on('end', async () => {
+    if (넘침) return;
     let 입력;
     try { 입력 = JSON.parse(몸); }
     catch { return 보냄(res, 400, { 오류: '읽을 수 없는 형식입니다' }, origin); }
@@ -163,16 +195,24 @@ const 서버 = http.createServer(async (req, res) => {
     // 첫 물음은 「묻는다」와 똑같은 상담글, 두 번째부터 소스 전체를 연 자유 문답.
     // 그 갈림은 mundap_route가 이력 길이로 스스로 판단한다.
     if (길 === '/문답') {
+      통계.요청.문답++;
       try {
         const 답 = await 문답처리(입력, {
           apiKey: API_KEY, model: MODEL,
           온도: Number(process.env.TEMPERATURE || 0.7),
         });
+        if (답 && 답.오류) {   // 문답처리 안에서 예외가 났다 — 500, 사유만(스택 없음)
+          통계.예외++; console.log(`[문답] 예외 — ${답.사유}`);
+          return 보냄(res, 500, { 성공: false, 사유: 답.사유 || '답을 만들지 못했습니다', 본문: null }, origin);
+        }
+        통계반영(답);
         return 보냄(res, 200, 답, origin);
       } catch (e) {
-        return 보냄(res, 200, { 성공: false, 사유: '답을 만들지 못했습니다', 본문: null }, origin);
+        통계.예외++; console.log(`[문답] 예외 — ${String(e && e.message || e).slice(0, 120)}`);
+        return 보냄(res, 500, { 성공: false, 사유: String(e && e.message || '답을 만들지 못했습니다').slice(0, 200), 본문: null }, origin);
       }
     }
+    통계.요청.해설++;
 
     try {
       const interpretOpt = {
@@ -194,7 +234,7 @@ const 서버 = http.createServer(async (req, res) => {
       //   2026-10-07: ① 글자 치환으로 끝나는 오류(「100%」)는 자동 교정 ② 빠진 용어 풀이는 엔진 사전으로 자동 보강 —
       //   둘 다 Gemini를 다시 부르지 않는다 ③ 그래도 오류면 한 번 다시 쓰게 하되, 재검사는 지적을 붙이기 전 브리프로
       //   ④ 재검사 결과·보강된 용어·시도 횟수를 응답에 넣는다(전에는 다시 쓴 답이 왜 버려졌는지 알 길이 없었다)
-      let 검사 = null, 보강된용어 = [], 재검사 = null, 시도 = 1;
+      let 검사 = null, 보강된용어 = [], 재검사 = null, 시도 = 1, 다시쓰기 = null, 가드 = [], 첫오류이름 = [];
       try {
         const D = require('./engine/dapgeomsa');
         const SW = require('./engine/swiunmal');
@@ -205,11 +245,11 @@ const 서버 = http.createServer(async (req, res) => {
         const 원브리프 = interpretOpt.__브리프;   // 검사지적이 붙기 전 — 재검사도 이것으로(지적 안의 간지·연도가 허용 목록에 새지 않게)
         const 검사ctx = { 브리프: 원브리프, 모드, 궁통있음: /\[궁통보감 조건절 —/.test(원브리프 || ''), 질문: 입력.주제 };
         // 답 하나를 다듬어 검사한다: 자동 교정 → 용어 보강 → 검사
-        const 다듬기 = (답) => {
-          const 교정 = D.자동교정 ? D.자동교정(답.본문).본문 : 답.본문;
+        const 다듬기 = (글) => {
+          const 교정 = D.자동교정 ? D.자동교정(글).본문 : 글;
           const 검사 = D.검사(교정, 검사ctx);   // 보강 **전** 본문으로 — 서버가 덧붙인 「속에 숨은 壬」이 「표 밖 간지」로 잡히면 고칠 수 없는 재호출이 된다
           let 본문 = 교정, 보강 = [];
-          try { const b = SW.용어보강(교정, 답.판정); 본문 = b.본문; 보강 = b.보강; } catch (e) {}
+          try { const b = SW.용어보강(교정, r.판정); 본문 = b.본문; 보강 = b.보강; } catch (e) {}
           if (보강.length && SW.안풀린목록) {   // 용어 풀이 경고만 최종 본문 기준으로 다시 센다
             검사.경고 = 검사.경고.filter(x => x.규칙 !== '용어 풀이');
             const 남은 = SW.안풀린목록(본문);
@@ -217,44 +257,54 @@ const 서버 = http.createServer(async (req, res) => {
           }
           return { 본문, 보강, 검사 };
         };
+        if (r.제거사유) 가드.push(...r.제거사유.map(p => p.종류));   // 해석() 안 validate 가 걸려 문장을 덜어낸 경우
         if (r.성공 && r.본문) {
-          const 첫 = 다듬기(r);
-          r.본문 = 첫.본문; 검사 = 첫.검사; 보강된용어 = 첫.보강;
+          const 원답 = r.본문;
+          const 첫 = 다듬기(r.본문);
+          r.본문 = 첫.본문; 검사 = 첫.검사; 보강된용어 = 첫.보강; 첫오류이름 = 첫.검사.오류.map(x => x.규칙);
           if (!검사.통과) {
-            interpretOpt.검사지적 = 검사.다시쓰기지시;
-            const r2 = await 부르기();
             시도 = 2;
-            if (r2.성공 && r2.본문) {
-              const 둘 = 다듬기(r2);
-              재검사 = { 통과: 둘.검사.통과, 오류: 둘.검사.오류.map(x => x.규칙 + ': ' + x.내용), 경고: 둘.검사.경고.map(x => x.규칙 + ': ' + x.내용) };
-              // 다시 쓴 것이 더 낫으면 바꾼다(오류 수가 줄었을 때). 같거나 나쁘면 첫 답 유지
-              if (둘.검사.오류.length < 검사.오류.length) { r2.본문 = 둘.본문; r = r2; 검사 = 둘.검사; 검사.다시씀 = true; 보강된용어 = 둘.보강; }
-            } else {
-              재검사 = { 통과: false, 실패: r2.사유 || '다시 쓴 답이 없음', 오류: [], 경고: [] };
-            }
+            // C16: 걸린 절만 짧은 요청으로 고쳐 쓰게 한다. 그 요청이 실패하면만 옛 방식(브리프 전체 + 지적)
+            const { 보내기 } = require('./engine/gemini');
+            const g = await 고쳐쓰기({
+              원답, 검사, 브리프: 원브리프, 모드, 주제: 입력.주제, 판정: r.판정,
+              보내기짧게: (p) => 보내기(p, { apiKey: API_KEY, model: MODEL, 온도: Number(process.env.TEMPERATURE || 0.7) }),
+              보내기전체: async () => { interpretOpt.검사지적 = 검사.다시쓰기지시; const r2 = await 부르기(); return (r2.성공 && r2.본문) ? r2.본문 : ''; },
+              다듬기,
+            });
+            재검사 = g.재검사; 가드.push(...(g.가드 || []));
+            다시쓰기 = { 방식: g.방식, 요청크기: g.요청크기, 채택: g.채택 };
+            if (g.채택) { r.본문 = g.본문; 검사 = g.검사; 검사.다시씀 = true; 보강된용어 = g.보강; }
             // 로그에는 규칙 이름만 — 명식·본문은 남기지 않는다
-            console.log(`[검사] 첫 답 오류 ${검사.오류.map(x => x.규칙).join('·') || '없음'} / 다시 쓴 답 ${재검사 && 재검사.오류 ? (재검사.오류.length ? 재검사.오류.map(x => x.split(':')[0]).join('·') : '오류 없음') : '실패'} / 채택 ${검사.다시씀 ? '둘째' : '첫째'}`);
+            console.log(`[검사] 첫 답 오류 ${첫.검사.오류.map(x => x.규칙).join('·') || '없음'} / 다시 쓴 답(${g.방식 || '실패'}·요청 ${g.요청크기}자) ${재검사 && 재검사.오류 ? (재검사.오류.length ? 재검사.오류.map(x => x.split(':')[0]).join('·') : '오류 없음') : '실패'} / 채택 ${검사.다시씀 ? '둘째' : '첫째'}`);
           }
         }
       } catch (e) { /* 검사기가 없어도 답은 나가야 한다 */ }
       // 판정 전체를 돌려주지 않는다 — 앱이 이미 갖고 있고, 그만큼 응답이 가벼워진다
-      보냄(res, 200, {
+      const 응답 = {
         성공: r.성공, 본문: r.본문, 출처: r.출처,
         격: r.판정?.결론?.격, 상신: r.판정?.결론?.상신, 성패: r.판정?.결론?.성패,
-        사유: r.사유,
-        검사: 검사 ? { 통과: 검사.통과, 다시씀: !!검사.다시씀, 시도, 보강된용어, 재검사: 재검사 || undefined, 오류: 검사.오류.map(x => x.규칙 + ': ' + x.내용), 경고: 검사.경고.map(x => x.규칙 + ': ' + x.내용) } : undefined,
-      }, origin);
+        사유: r.사유, 가드: 가드.length ? 가드 : undefined,
+        검사: 검사 ? { 통과: 검사.통과, 다시씀: !!검사.다시씀, 시도, 보강된용어, 재검사: 재검사 || undefined, 다시쓰기: 다시쓰기 || undefined, 첫오류: 검사.다시씀 ? 첫오류이름 : undefined, 오류: 검사.오류.map(x => x.규칙 + ': ' + x.내용), 경고: 검사.경고.map(x => x.규칙 + ': ' + x.내용) } : undefined,
+      };
+      통계반영(응답);
+      보냄(res, 200, 응답, origin);
     } catch (e) {
-      // 무엇이 터졌든 앱은 조문 리포트로 넘어갈 수 있어야 한다
-      보냄(res, 200, { 성공: false, 사유: '해설을 만들지 못했습니다',
+      // 예외 — 500 과 사유만(스택 없음). 앱은 짧은 알림을 띄우고 조문 리포트로 넘어간다
+      통계.예외++; console.log(`[해설] 예외 — ${String(e && e.message || e).slice(0, 120)}`);
+      보냄(res, 500, { 성공: false, 사유: '해설을 만들지 못했습니다: ' + String(e && e.message || e).slice(0, 160),
                       본문: null, 출처: '실패' }, origin);
     }
   });
 });
 
-서버.listen(PORT, () => {
-  console.log(`간명 해설 중계 — 포트 ${PORT}`);
-  console.log(`  모델 ${MODEL} · 키 ${API_KEY ? '있음' : '없음(조문 리포트로 대체됨)'}`);
-  console.log(`  허용 출처 ${허용출처.length ? 허용출처.join(', ') : '전부(시험용)'}`);
-  console.log(`  한도 IP당 한 시간 ${한도}번`);
-});
+if (require.main === module) {
+  서버.listen(PORT, () => {
+    console.log(`간명 해설 중계 — 포트 ${PORT}`);
+    console.log(`  모델 ${MODEL} · 키 ${API_KEY ? '있음' : '없음(조문 리포트로 대체됨)'}`);
+    console.log(`  허용 출처 ${허용출처.length ? 허용출처.join(', ') : '전부(시험용)'}`);
+    console.log(`  한도 IP당 한 시간 ${한도}번`);
+  });
+}
+// 시험(scripts/server_check.js)이 포트 없이 불러 쓴다
+module.exports = { 서버, 통계 };
