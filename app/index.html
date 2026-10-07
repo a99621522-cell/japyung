@@ -413,6 +413,13 @@ footer b{color:var(--muted)}
           <span style="color:var(--dim)">— 시주 없이 보되, 그만큼 볼 수 있는 것이 줄어듭니다.</span>
         </div>
         <div class="고름">
+          <label>출생지 <select id="출생지"></select></label>
+          <span id="출생지직접" class="숨김"><input id="출생지tz" placeholder="시간대 ID (예: Europe/Rome)" style="width:170px"> <input id="출생지경도" type="number" step="0.1" placeholder="경도(동경+ 서경−)" style="width:120px"></span>
+          <label>자시 <select id="야자시"><option value="밤11시">밤 11시부터 다음 날 (시중 관행)</option><option value="자정">자정에 날짜 바뀜</option></select></label>
+          <label><input type="checkbox" id="균시차"> 균시차 반영</label>
+          <span style="color:var(--dim)">— 한국 밖에서 나셨으면 출생지를 고르세요. 그 지역 표준시·서머타임 이력으로 UTC 를 구해 절입과 견주고, 시주는 출생지 진태양시로 세웁니다.</span>
+        </div>
+        <div class="고름">
           <label><input type="checkbox" id="원문보기"> 원문 그대로 보기 (전문가용)</label>
           <span style="color:var(--dim)">— 궁통보감이 질병·수명·여명에 대해 적은 조문의 원문을 가리지 않고 보여 줍니다. 상담 글·문답에는 들어가지 않습니다.</span>
         </div>
@@ -561,7 +568,7 @@ function 목록그리기(){
   if (!a.length){ box.innerHTML = '<div class="빔">아직 저장한 명식이 없습니다.<br>명식을 보신 뒤 위쪽 «저장»을 누르시면 여기 쌓입니다.</div>'; return; }
   box.innerHTML = a.map((x,i) => `<div class="항">
     <div class="이">${x.이름 || '무명'}
-      <small>${x.년}. ${x.월}. ${x.일}. ${x.시모름 ? '시각 모름' : x.시+'시 '+x.분+'분'} · ${x.성별}</small></div>
+      <small>${x.년}. ${x.월}. ${x.일}. ${x.시모름 ? '시각 모름' : x.시+'시 '+x.분+'분'} · ${x.성별}${x.출생지 ? ' · ' + (x.출생지.이름 || x.출생지.tz) : ''}</small></div>
     <button class="btn-line" onclick="불러(${i})">보기</button>
     <button class="btn-line" onclick="지우(${i})">지움</button>
   </div>`).join('');
@@ -572,6 +579,14 @@ function 불러(i){
   for (const [k,id] of [['이름','이름'],['년','년'],['월','월'],['일','일'],['시','시'],['분','분']])
     document.getElementById(id).value = x[k] ?? '';
   document.getElementById('성').value = x.성별;
+  { // 출생지·야자시·균시차 (세계 만세력, 2026-10-07) — 저장 전 명식은 한국
+    const sel = document.getElementById('출생지');
+    sel.value = x.출생지 && x.출생지.key ? x.출생지.key : 'KR';
+    if (x.출생지 && x.출생지.key === 'ETC') { document.getElementById('출생지tz').value = x.출생지.tz || ''; document.getElementById('출생지경도').value = x.출생지.경도 ?? ''; }
+    sel.dispatchEvent(new Event('change'));
+    document.getElementById('야자시').value = x.야자시 || '밤11시';
+    document.getElementById('균시차').checked = !!x.균시차;
+  }
   const 시모름칸 = document.getElementById('시모름');
   시모름칸.checked = !!x.시모름;
   시모름칸.dispatchEvent(new Event('change'));   // 시·분 칸 잠금을 저장 때와 같게 (2026-10-07)
@@ -641,9 +656,12 @@ function 간명(){
     if (!양) { alert(음력탈(년,월,일,윤)); return; }
     년=양.년; 월=양.월; 일=양.일;
   }
+  const 출생지 = 출생지읽기();
+  if (document.getElementById('출생지').value === 'ETC' && !출생지) { alert('출생지를 직접 넣으시려면 시간대 ID(예: Europe/Rome)를 적어 주세요.'); return; }
   const 입력 = {이름:v('이름').trim(), 년, 월, 일,
                 시:시모름?12:n('시'), 분:시모름?0:n('분'), 성별:v('성'), 시모름,
-                음력: 음 ? {년:n('년'), 월:n('월'), 일:n('일'), 윤달:윤} : null};
+                음력: 음 ? {년:n('년'), 월:n('월'), 일:n('일'), 윤달:윤} : null,
+                출생지, 야자시: v('야자시'), 균시차: document.getElementById('균시차').checked};   // 세계 만세력(2026-10-07)
 
   let r;
   try { r = E.interpret.생년월일시로({...입력, 성별:입력.성별}); }
@@ -767,7 +785,7 @@ function 간명(){
   /* 시지 경계 30분 안 — 시주가 갈릴 수 있음을 알린다 */
   // 엔진 쪽에서 이미 「보정하면 ○○, 하지 않으면 ○○」 경고를 냈으면(외부 만세력) 여기 계산은 겹치니 건너뛴다
   const 엔진이경계경고냄 = 알.some(t => String(t).includes('시주가 경계에 있다'));
-  if (!시모름 && !엔진이경계경고냄) {
+  if (!시모름 && !엔진이경계경고냄 && !입력.출생지) {   // 한국 밖 출생은 진태양시 경고를 엔진이 낸다
     const 보정분 = (typeof manseryeok !== 'undefined') ? 30 : 32;   // 2026-09-03: 외부 만세력이면 -30분(시중 관행)
     const 실시 = 입력.시 + (입력.분 - 보정분) / 60;         // 진태양시 보정 후 시각
     const 경계 = Math.round((실시 - 1) / 2) * 2 + 1;       // 가장 가까운 시지 경계(홀수 시)
@@ -805,7 +823,16 @@ function 간명(){
       <b>양력 ${입력.년}년 ${입력.월}월 ${입력.일}일</b>로 옮겨 보았습니다.</div>`;
   }
   const 절 = r.만세력?.절기;
-  if (절) h += `<div class="알림 조용">절기 기준 — ${절.직전} 지나 ${절.지난날}일째${절.다음?`, 다음 ${절.다음}까지 ${절.남은날}일`:''}.
+  const 시각 = r.만세력?.시각;
+  const 두자리 = x => String(x).padStart(2,'0');
+  const 때 = t => t ? `${t.y}. ${t.m}. ${t.d}. ${두자리(t.h)}:${두자리(t.min)}` : '';
+  if (절 && 시각 && 시각.출생지 && 시각.출생지.tz !== 'Asia/Seoul') {
+    // 세계 만세력(2026-10-07): 시계 → UTC → 한국시(절입 견줌) → 출생지 진태양시(시주)
+    const 부호 = v => (v >= 0 ? '+' : '−') + 두자리(Math.floor(Math.abs(v)/60)) + ':' + 두자리(Math.abs(v)%60);
+    h += `<div class="알림 조용">출생지 <b>${시각.출생지.이름 || 시각.출생지.tz}</b> 시계 ${때(시각.시계)} (UTC${부호(시각.오프셋분)}, ${시각.근거}) = 세계시 ${때(시각.UTC)} = 한국시 ${때(시각.KST)}.
+      절기 기준 — ${절.직전} 지나 ${절.지난날}일째${절.다음?`, 다음 ${절.다음}까지 ${절.남은날}일`:''} (절입과는 같은 순간끼리 견주었습니다).
+      일주·시주는 출생지 진태양시 <b>${때(시각.진태양시)}</b>(시계보다 ${시각.진태양시 && 시각.진태양시.시계와차이 >= 0 ? '+' : ''}${시각.진태양시 ? 시각.진태양시.시계와차이 : '?'}분${시각.균시차 ? ', 균시차 포함' : ''}, ${시각.야자시 === '자정' ? '자정에 날짜 바뀜' : '밤 11시부터 다음 날'})로 세웠습니다.</div>`;
+  } else if (절) h += `<div class="알림 조용">절기 기준 — ${절.직전} 지나 ${절.지난날}일째${절.다음?`, 다음 ${절.다음}까지 ${절.남은날}일`:''}.
     태어난 시각은 ${r.만세력?.보정 ? r.만세력.보정.replace('진태양시 ','진태양시로 ').replace('-','') + '당겨' : '진태양시로 32분 당겨'} 계산했습니다.</div>`;
 
   document.getElementById('화면결과').innerHTML = h;
@@ -1793,6 +1820,49 @@ async function 간명서열기(상품 = '종합'){
   window.print();
 }
 
+// ── 세계 만세력 출생지 목록 (2026-10-07, docs/PROMPTS.md 4) — IANA 시간대 ID 와 대표 도시 경도(동경 +, 서경 −). 한국은 전부터 쓰던 표·관행(-30분) 그대로.
+const 출생지목록 = [
+  ['KR','한국 (서울·전국)','Asia/Seoul',127.5], ['KP','북한 (평양)','Asia/Pyongyang',125.8],
+  ['JP','일본 (도쿄)','Asia/Tokyo',139.7], ['JP-OSA','일본 (오사카)','Asia/Tokyo',135.5],
+  ['CN-BJ','중국 (베이징)','Asia/Shanghai',116.4], ['CN-SH','중국 (상하이)','Asia/Shanghai',121.5], ['CN-GZ','중국 (광저우)','Asia/Shanghai',113.3], ['CN-SY','중국 (선양)','Asia/Shanghai',123.4], ['CN-UR','중국 (우루무치)','Asia/Shanghai',87.6],
+  ['TW','대만 (타이베이)','Asia/Taipei',121.5], ['HK','홍콩','Asia/Hong_Kong',114.2], ['MN','몽골 (울란바토르)','Asia/Ulaanbaatar',106.9],
+  ['VN-HAN','베트남 (하노이)','Asia/Ho_Chi_Minh',105.8], ['VN-SGN','베트남 (호찌민)','Asia/Ho_Chi_Minh',106.7], ['TH','태국 (방콕)','Asia/Bangkok',100.5], ['PH','필리핀 (마닐라)','Asia/Manila',121.0],
+  ['ID','인도네시아 (자카르타)','Asia/Jakarta',106.8], ['MY','말레이시아 (쿠알라룸푸르)','Asia/Kuala_Lumpur',101.7], ['SG','싱가포르','Asia/Singapore',103.8], ['IN','인도 (뉴델리)','Asia/Kolkata',77.2], ['NP','네팔 (카트만두)','Asia/Kathmandu',85.3],
+  ['KZ','카자흐스탄 (알마티)','Asia/Almaty',76.9], ['UZ','우즈베키스탄 (타슈켄트)','Asia/Tashkent',69.2], ['AE','아랍에미리트 (두바이)','Asia/Dubai',55.3], ['TR','튀르키예 (이스탄불)','Europe/Istanbul',29.0],
+  ['RU-MOW','러시아 (모스크바)','Europe/Moscow',37.6], ['RU-VVO','러시아 (블라디보스토크)','Asia/Vladivostok',131.9],
+  ['GB','영국 (런던)','Europe/London',-0.1], ['FR','프랑스 (파리)','Europe/Paris',2.4], ['DE','독일 (베를린)','Europe/Berlin',13.4], ['DE-FRA','독일 (프랑크푸르트)','Europe/Berlin',8.7], ['IT','이탈리아 (로마)','Europe/Rome',12.5], ['ES','스페인 (마드리드)','Europe/Madrid',-3.7], ['NL','네덜란드 (암스테르담)','Europe/Amsterdam',4.9],
+  ['US-NYC','미국 (뉴욕)','America/New_York',-74.0], ['US-DC','미국 (워싱턴 DC)','America/New_York',-77.0], ['US-ATL','미국 (애틀랜타)','America/New_York',-84.4], ['US-CHI','미국 (시카고)','America/Chicago',-87.6], ['US-DAL','미국 (댈러스)','America/Chicago',-96.8], ['US-DEN','미국 (덴버)','America/Denver',-105.0], ['US-PHX','미국 (피닉스)','America/Phoenix',-112.1],
+  ['US-LA','미국 (로스앤젤레스)','America/Los_Angeles',-118.2], ['US-SF','미국 (샌프란시스코)','America/Los_Angeles',-122.4], ['US-SEA','미국 (시애틀)','America/Los_Angeles',-122.3], ['US-HNL','미국 (호놀룰루)','Pacific/Honolulu',-157.9], ['US-ANC','미국 (앵커리지)','America/Anchorage',-149.9],
+  ['CA-TOR','캐나다 (토론토)','America/Toronto',-79.4], ['CA-VAN','캐나다 (밴쿠버)','America/Vancouver',-123.1], ['MX','멕시코 (멕시코시티)','America/Mexico_City',-99.1], ['BR','브라질 (상파울루)','America/Sao_Paulo',-46.6], ['AR','아르헨티나 (부에노스아이레스)','America/Argentina/Buenos_Aires',-58.4],
+  ['AU-SYD','호주 (시드니)','Australia/Sydney',151.2], ['AU-MEL','호주 (멜버른)','Australia/Melbourne',145.0], ['AU-BNE','호주 (브리즈번)','Australia/Brisbane',153.0], ['AU-PER','호주 (퍼스)','Australia/Perth',115.9], ['NZ','뉴질랜드 (오클랜드)','Pacific/Auckland',174.8],
+  ['ZA','남아공 (요하네스버그)','Africa/Johannesburg',28.0], ['EG','이집트 (카이로)','Africa/Cairo',31.2],
+  ['ETC','직접 입력 (시간대 ID·경도)',null,null],
+];
+(function 출생지초기화(){
+  const sel = document.getElementById('출생지');
+  sel.innerHTML = 출생지목록.map(([k,n]) => `<option value="${k}">${n}</option>`).join('');
+  const 보임 = () => document.getElementById('출생지직접').classList.toggle('숨김', sel.value !== 'ETC');
+  sel.addEventListener('change', () => { 보임(); try { localStorage.setItem('출생지', sel.value); } catch(e) {} });
+  try { const v = localStorage.getItem('출생지'); if (v && 출생지목록.some(x => x[0] === v)) sel.value = v; } catch(e) {}
+  for (const id of ['야자시','균시차']) {
+    const el = document.getElementById(id);
+    try { const v = localStorage.getItem(id); if (v != null) { if (el.type === 'checkbox') el.checked = v === '1'; else el.value = v; } } catch(e) {}
+    el.addEventListener('change', () => { try { localStorage.setItem(id, el.type === 'checkbox' ? (el.checked ? '1' : '0') : el.value); } catch(e) {} });
+  }
+  보임();
+})();
+/** 입력란의 출생지 → {tz, 경도, 이름} (한국이면 null — 엔진이 전부터 쓰던 길) */
+function 출생지읽기(){
+  const k = document.getElementById('출생지').value;
+  if (k === 'ETC') {
+    const tz = document.getElementById('출생지tz').value.trim(), 경 = document.getElementById('출생지경도').value.trim();
+    if (!tz) return null;
+    return { key: 'ETC', tz, 경도: 경 === '' ? null : +경, 이름: tz };
+  }
+  const x = 출생지목록.find(r => r[0] === k);
+  if (!x || !x[2] || x[2] === 'Asia/Seoul') return null;
+  return { key: k, tz: x[2], 경도: x[3], 이름: x[1] };
+}
 document.getElementById('원문보기').addEventListener('change', e => {
   try { localStorage.setItem('원문보기', e.target.checked ? '1' : '0'); } catch(err) {}
   // 이미 그린 결과가 있으면 궁통 카드만 다시 그린다 — 서버 호출 없음 (2026-10-07 10차)
