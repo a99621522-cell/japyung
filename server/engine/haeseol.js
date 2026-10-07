@@ -544,7 +544,7 @@ function toLLMBrief(r, opt = {}) {
   L.push('말투는 차분하고 단정적이지 않되, 짚을 것은 분명히 짚습니다. 존댓말로 쓰세요.');
   L.push('');
   L.push('─── 아래는 이 사람의 판정입니다 ───');
-  L.push(`[여덟 글자] ${m.yeonGan}${m.yeonJi} ${m.wolGan}${m.wolJi} ${m.ilGan}${m.ilJi} ${m.siGan}${m.siJi}`);
+  L.push(`[여덟 글자] ${m.yeonGan}${m.yeonJi} ${m.wolGan}${m.wolJi} ${m.ilGan}${m.ilJi} ${(m.siGan && m.siJi) ? m.siGan + m.siJi : '(시주 없음 — 태어난 시각 미상)'}`);
   L.push(`[나 자신] ${m.ilGan} — 이 글자가 일간이고, 모든 십성은 이 글자와의 관계로 정해진다`);
   L.push('[지지 속에 든 글자와 드러남] — 격이 어떻게 잡혔는지 보여줄 재료');
   for (const [자리, j] of [['년', m.yeonJi], ['월', m.wolJi], ['일', m.ilJi], ['시', m.siJi]]) {
