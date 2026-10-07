@@ -9,6 +9,7 @@
  *    명조 + 서락오의 透/藏/無 진술만 가져와, 우리 analyze의
  *    소재판정이 같은 것을 읽어내는지 대조한다.
  * ④ 조문 머리 ↔ 표 글자 집합(120칸)  ⑤ 조문 fixture  ⑥ 명례 ↔ 조문 주판정·방향(2026-10-07)  ⑦ 갖춤 ↔ 주판정 모순 조사(기록)
+ * ⑧ 두 번째 통합(2026-10-07): 용신 손상·有根·반월·보류·갖춤·두 축·특수성 정렬·평주판정·여명 조문·합거일간포함·소재 통일
  *    조문 도달성(안 걸리는 조문·가려지는 조문)은 scripts/gungtong_reach.js.
  */
 const G = require('./gungtong');
@@ -107,10 +108,10 @@ const 평주 = [
     글자:'丙', 기대:'천간에 드러남' },
 ];
 
-/* ③ 존재 판정의 한계를 보여주는 평주 명례 — 통과 여부와 무관하게 기록 */
+/* ③ 존재 판정의 한계를 보여주던 평주 명례 — 2026-10-07 용신 손상(용신상태)으로 읽게 됐다(⑧에서 검사) */
 const 한계 = [
   { 출처:'八月庚金', 평:'癸丑辛酉庚子丁亥 — 丁이 떠 있으나 癸가 상해 刑克孤貧. ' +
-    '존재로는 「온전」이지만 용신 손상(癸傷丁) 규칙이 아직 없어 이 흉을 못 읽는다.',
+    '존재로는 「온전」(갖춤구)이지만 용신 손상(년간 癸가 시간 丁을 극, 격위)으로 갖춤=손상.',
     m:{yeonGan:'癸',yeonJi:'丑',wolGan:'辛',wolJi:'酉',ilGan:'庚',ilJi:'子',siGan:'丁',siJi:'亥'} },
 ];
 
@@ -291,13 +292,86 @@ const 갖춤대조 = (() => {
     const 년간 = pick(GAN), 월지 = pick(월순), 일간 = pick(GAN), 시지 = pick(JI);
     const m = { yeonGan: 년간, yeonJi: pick(JI), wolGan: GAN[((GAN.indexOf(년간) % 5) * 2 + 2 + 월순.indexOf(월지)) % 10], wolJi: 월지, ilGan: 일간, ilJi: pick(JI), siGan: GAN[((GAN.indexOf(일간) % 5) * 2 + JI.indexOf(시지)) % 10], siJi: 시지 };
     const a = G.analyze(m), r = GJ.analyze(m); if (!a || !r || r.해당없음 || !r.주판정) continue;
-    out.n++; const 첫 = a.칸.용[0], 주 = r.주판정, tag = `${명조문자(m)} 갖춤=${a.갖춤} ${주.id}「${주.판정어}」`;
-    if (a.갖춤 === '온전' && 주.방향 === '막힘') out.온전막힘.push(tag);
-    if (a.갖춤 === '온전' && new RegExp(`(無|乏|不見)[甲乙丙丁戊己庚辛壬癸]{0,2}${첫}`).test(주.원문)) out.온전無용신.push(tag);
-    if (a.갖춤 === '비어 있음' && 주.방향 === '으뜸') out.빈으뜸.push(tag);
+    out.n++; const 첫 = a.칸.용[0], 주 = r.주판정, tag = `${명조문자(m)} 갖춤구=${a.갖춤구} ${주.id}「${주.판정어}」`;
+    if (a.갖춤구 === '온전' && 주.방향 === '막힘') out.온전막힘.push(tag);
+    if (a.갖춤구 === '온전' && new RegExp(`(無|乏|不見)[甲乙丙丁戊己庚辛壬癸]{0,2}${첫}`).test(주.원문)) out.온전無용신.push(tag);
+    if (a.갖춤구 === '비어 있음' && 주.방향 === '으뜸') out.빈으뜸.push(tag);
   }
   return out;
 })();
+
+/* ── ⑧ 두 번째 통합 검사 (2026-10-07) ── */
+const 통합 = [];
+const 검 = (이름, ok, 설명) => { if (ok) 통합.push(이름); else 틀.push(`⑧ ${이름}: ${설명 || '실패'}`); };
+{ // 용신 손상 — 한계 명례
+  const r = G.analyze(한계[0].m); const 丁 = r.용신상태.find(x => x.글자 === '丁');
+  검('용신 손상 癸傷丁', r.갖춤 === '손상' && 丁 && 丁.상태 === '투출무근' && 丁.손상.some(x => x.종류 === '극' && x.상대 === '癸' && x.인접 === false) && r.갖춤구 === '온전', `갖춤 ${r.갖춤} 손상 ${JSON.stringify(丁 && 丁.손상)}`);
+  // 丁 일간 卯월 — 甲은 卯 여기뿐이라 「없음」(소재 통일), 곳에는 위:'여기' 기록
+  const r2 = G.analyze({ yeonGan:'庚', yeonJi:'子', wolGan:'己', wolJi:'卯', ilGan:'丁', ilJi:'未', siGan:'辛', siJi:'丑' });
+  const 甲 = r2.평가.find(x => x.글자 === '甲');
+  검('소재 통일 — 여기(餘氣)는 藏이 아님', 甲.상태 === '없음' && 甲.곳.some(x => x.위 === '여기'), JSON.stringify(甲));
+  검('갖춤 새 라벨', ['온전','암장','손상','없음'].includes(r.갖춤) && ['온전','절반','보조만','비어 있음'].includes(r.갖춤구) && typeof r.갖춤설명 === 'string');
+  // 합거 — 기본은 일간 합 제외, 옵션이면 포함 (辛 일간 亥월 壬丙: 시간 丙이 일간 辛과 합)
+  const m3 = { yeonGan:'壬', yeonJi:'子', wolGan:'己', wolJi:'亥', ilGan:'辛', ilJi:'卯', siGan:'丙', siJi:'申' };
+  const a3 = G.analyze(m3), b3 = G.analyze(m3, { 합거일간포함: true });
+  const 丙a = a3.용신상태.find(x => x.글자 === '丙'), 丙b = b3.용신상태.find(x => x.글자 === '丙');
+  검('합거 — 일간 합은 옵션', !丙a.손상.some(x => x.종류 === '합거') && /일간 辛과 합/.test(丙a.비고 || '') && 丙b.손상.some(x => x.종류 === '합거' && x.자리 === '일간'), JSON.stringify([丙a.손상, 丙a.비고, 丙b.손상]));
+}
+{ // 有根/無根 — 庚寅 火局 壬透: 子(癸)가 있으면 有根(통근), 없으면 無根
+  const 유 = GJ.analyze({ yeonGan:'壬', yeonJi:'子', wolGan:'戊', wolJi:'寅', ilGan:'庚', ilJi:'午', siGan:'丙', siJi:'戌' });
+  const 무 = GJ.analyze({ yeonGan:'壬', yeonJi:'午', wolGan:'戊', wolJi:'寅', ilGan:'庚', ilJi:'午', siGan:'丙', siJi:'戌' });
+  검('有根(통근)·無根 — 庚寅-07/08', 걸린id(유).includes('GT-庚寅-07') && !걸린id(유).includes('GT-庚寅-08') && 걸린id(무).includes('GT-庚寅-08') && !걸린id(무).includes('GT-庚寅-07'), `${걸린id(유)} / ${걸린id(무)}`);
+  const { 有根, 透無根 } = GJ._원시; const c = GJ._ctx({ yeonGan:'壬', yeonJi:'午', wolGan:'戊', wolJi:'寅', ilGan:'庚', ilJi:'午', siGan:'丙', siJi:'戌' });
+  검('透無根(虛浮) 연산', 透無根(c, '壬') && !有根(c, '壬') && 有根(c, '戊'));
+}
+{ // 반월·용 선택·보류
+  const base = { yeonGan:'辛', yeonJi:'卯', wolGan:'壬', wolJi:'辰', ilGan:'癸', ilJi:'未', siGan:'丙', siJi:'辰' };
+  const 상 = G.analyze({ ...base, daysFromJeolip: 5 }), 하 = G.analyze({ ...base, daysFromJeolip: 20 }), 없 = G.analyze(base);
+  검('반월 — 癸辰 清明/穀雨', 상.반월 === '상' && 상.용역할.辛 === '참작' && 하.반월 === '하' && 하.용역할.辛 === '보좌' && 없.반월 === null && /경과일.*없음/.test(없.용선택사유) && JSON.stringify(상.칸.용) === JSON.stringify(['丙','辛','甲']), JSON.stringify([상.용역할, 하.용역할, 없.용선택사유]));
+  const 병 = G.analyze({ yeonGan:'甲', yeonJi:'寅', wolGan:'乙', wolJi:'亥', ilGan:'丙', ilJi:'寅', siGan:'庚', siJi:'寅' });
+  검('隨宜酌用 — 丙亥 木旺宜庚', 병.용순서[0] === '庚' && /木旺宜庚/.test(병.용선택사유), 병.용선택사유);
+  const 오 = G.analyze({ yeonGan:'庚', yeonJi:'申', wolGan:'壬', wolJi:'午', ilGan:'乙', ilJi:'未', siGan:'癸', siJi:'未', daysFromJeolip: 20 });
+  검('반월 — 乙午 下半月 丙癸齊用', 오.용역할.丙 === '용' && 오.용역할.癸 === '용', JSON.stringify(오.용역할));
+  const r1 = GJ.analyze({ yeonGan:'癸', yeonJi:'卯', wolGan:'辛', wolJi:'酉', ilGan:'乙', ilJi:'巳', siGan:null, siJi:null });
+  검('보류 — 시주 없으면 時 조문 보류', r1.보류.some(x => x.id === 'GT-乙酉-14' && x.사유 === '시간 미상') && r1.보류.some(x => x.id === 'GT-乙酉-16' && x.사유 === '절입 경과일 없음'), JSON.stringify(r1.보류));
+  const r2 = GJ.analyze({ yeonGan:'壬', yeonJi:'午', wolGan:'己', wolJi:'酉', ilGan:'乙', ilJi:'巳', siGan:'丙', siJi:'戌', daysFromJeolip: 3 });
+  검('上半月 조문 乙酉-16 姑用壬水', 걸린id(r2).includes('GT-乙酉-16') && !r2.보류.length, `${걸린id(r2)} 보류 ${JSON.stringify(r2.보류)}`);
+}
+{ // 두 축
+  const 축 = GJ.축찾기; const eq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  검('富·貴 두 축 사전', eq(축('富貴雙全'), {부:'+',귀:'+'}) && eq(축('有富無貴'), {부:'+',귀:'0'}) && eq(축('富屋貧人'), {부:'-',귀:null}) && eq(축('平常'), {부:null,귀:'0'}) && eq(축('貧而且夭'), {부:'-',귀:null}) && eq(축('科甲'), {부:null,귀:'+'}) && eq(축('不富自貴'), {부:'0',귀:'+'}) && eq(축('夭'), {부:null,귀:null}) && eq(축('(원문 판정어 없음)'), {부:null,귀:null}),
+    JSON.stringify([축('富貴雙全'), 축('有富無貴'), 축('富屋貧人'), 축('平常'), 축('不富自貴')]));
+  const r = GJ.analyze(원전[0].m);
+  검('주판정에 축·축풀이·층', r.주판정 && r.주판정.축 && r.주판정.축풀이 && r.주판정.층 === '원전' && !/상격|귀격|천격/.test(JSON.stringify(r.주판정.축풀이)), JSON.stringify(r.주판정 && r.주판정.축));
+}
+{ // 특수성 정렬 — 칸마다 내림차순, 같으면 원문 순
+  let ok = true;
+  for (const 일간 of Object.keys(G.표)) for (const 월 of 월들) { const L = GJ.정렬조문(일간, 월); for (let i = 1; i < L.length; i++) if (L[i-1].특수성 < L[i].특수성 || (L[i-1].특수성 === L[i].특수성 && L[i-1].원순 > L[i].원순)) ok = false; }
+  검('특수성 정렬 불변식', ok);
+}
+{ // 평주판정 — 원전-평주 간극 명례 4건
+  const 기대 = { '丙寅庚寅庚戌乙酉':'GT-庚寅-P1', '庚申己卯庚寅丁丑':'GT-庚卯-P1', '甲申己巳庚午戊寅':'GT-庚巳-P1', '壬午乙巳庚戌辛巳':'GT-庚巳-P1' };
+  for (const [명, id] of Object.entries(기대)) {
+    const f = 평주.find(x => 명조문자(x.m) === 명); const r = GJ.analyze(f.m);
+    검(`평주판정 ${명}`, r.평주판정 && r.평주판정.id === id && r.평주판정.층 === '평주' && r.평주판정.갈림 === true && r.주판정 && r.주판정.층 === '원전', JSON.stringify([r.주판정 && r.주판정.id, r.평주판정 && r.평주판정.id]));
+  }
+  검('평주 조문은 주판정이 되지 않는다', !GJ.analyze(평주.find(x => 명조문자(x.m) === '丙寅庚寅庚戌乙酉').m).주판정.id.includes('-P'));
+}
+{ // 합거일간포함 — 己卯 忌合
+  const 월간甲 = GJ.analyze({ yeonGan:'癸', yeonJi:'亥', wolGan:'甲', wolJi:'卯', ilGan:'己', ilJi:'丑', siGan:'丙', siJi:'寅' });
+  const 년간甲 = GJ.analyze({ yeonGan:'甲', yeonJi:'子', wolGan:'丁', wolJi:'卯', ilGan:'己', ilJi:'丑', siGan:'癸', siJi:'酉' });
+  검('己卯 忌合 — 월간 甲은 일간 己와 합', 걸린id(월간甲).includes('GT-己卯-03') && !걸린id(월간甲).includes('GT-己卯-01'), `${걸린id(월간甲)}`);
+  검('己卯 — 년간 甲은 忌合 아님', !걸린id(년간甲).includes('GT-己卯-03') && 년간甲.주판정 && 년간甲.주판정.id === 'GT-己卯-02', `${걸린id(년간甲)}`);
+}
+{ // 여명 조문 — 성별 여에서만, 표시금지 글자는 출력에 없음 (자세한 것은 scripts/gungtong_women_check.js)
+  const m = { yeonGan:'辛', yeonJi:'亥', wolGan:'庚', wolJi:'寅', ilGan:'丙', ilJi:'子', siGan:'辛', siJi:'卯' };
+  const 여 = GJ.analyze(m, { 성별:'여' }), 남 = GJ.analyze(m, { 성별:'남' });
+  const 출력 = JSON.stringify(여.여명) + GJ.브리프줄(여).filter(l => /여명 조문/.test(l)).join('\n');   // 원전 조문 丙寅-06 「酒色之徒」 인용은 기존 정책(인용+결 번역) — 여명 줄만 본다
+  검('여명 조문 丙寅 辛年辛時', 여.여명.some(x => x.id === 'GT-女-丙寅-04' && x.표시금지) && !남.여명.length && !/淫|賤|酒色|長舌|刑夫|剋子|不生長/.test(출력), JSON.stringify(여.여명));
+}
+{ // 머리 단일 출처 — 두 모듈의 칸()이 같은 객체를 돌려준다
+  검('칸() 단일 출처', G.칸('甲','寅') === GJ.칸('甲','寅') && GJ.표.甲.寅.용 === G.표.甲.寅.용 && Array.isArray(G.칸('甲','寅').보좌) && typeof G.칸('甲','寅').조문요지 === 'string');
+}
 
 console.log('══════════════════════════════════════════');
 console.log(`궁통보감 — 표 대조 ${G.진행().됨}/120칸 (판본 2종 일치)`);
@@ -308,8 +382,10 @@ console.log(`  명례↔주판정 ${명례판정.length}건: 방향 일치 ${명
 console.log(`  갖춤↔주판정 대조(현실 명식 ${갖춤대조.n}건에 주판정 있음): 온전인데 막힘 ${갖춤대조.온전막힘.length} · 온전인데 「無 첫용신」 조문 ${갖춤대조.온전無용신.length} · 비어 있음인데 으뜸 ${갖춤대조.빈으뜸.length} (기록만)`);
 for (const k of ['온전막힘', '온전無용신', '빈으뜸']) 갖춤대조[k].slice(0, 2).forEach(x => console.log(`    [${k}] ${x}`));
 틀.forEach(x=>console.log('  불일치:', x));
+console.log(`  두 번째 통합(⑧) ${통합.length}/${통합.length + 틀.filter(x => x.startsWith('⑧')).length}`);
 for (const f of 한계) {
   const r = G.analyze(f.m);
-  console.log(`  [한계 기록] ${f.출처}: 갖춤=${r.갖춤} — ${f.평}`);
+  console.log(`  [옛 한계 → 손상] ${f.출처}: 갖춤=${r.갖춤}(갖춤구 ${r.갖춤구}) — ${f.평}`);
 }
+console.log('  [기록] 十二月庚金 명례 표 「女命」 癸未庚戌己丑庚辰(docs/gungtong_wonmun.txt 1523행)은 판정 글이 없어 조문 없음 — 여명 조문은 scripts/gungtong_women_check.js');
 if (틀.length) process.exitCode = 1;
