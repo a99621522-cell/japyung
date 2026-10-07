@@ -1,0 +1,29 @@
+# 평가 세트 판정 변화 표 (2026-10-07, docs/PROMPTS.md 6) — 엔진 파일이 바뀐 PR 에 main 기준값과 견준 50건 변화 표를 댓글로 단다.
+name: 평가 세트 변화
+on:
+  pull_request:
+    paths: ['*.js', 'server/engine/**', 'docs/eval/**', 'scripts/eval_report.js']
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  diff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: main 기준값과 견주기
+        run: |
+          git show origin/${{ github.base_ref }}:docs/eval/baseline.json > base-baseline.json || cp docs/eval/baseline.json base-baseline.json
+          node scripts/eval_report.js --baseline base-baseline.json --md eval-diff.md --no-fail
+      - name: PR 댓글(같은 댓글 갱신)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          MARK='<!-- eval-diff -->'
+          printf '%s\n' "$MARK" > body.md; cat eval-diff.md >> body.md
+          ID=$(gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments --jq ".[] | select(.body | startswith(\"$MARK\")) | .id" | head -1)
+          if [ -n "$ID" ]; then gh api -X PATCH repos/${{ github.repository }}/issues/comments/$ID -F body=@body.md --jq .html_url
+          else gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments -F body=@body.md --jq .html_url; fi
