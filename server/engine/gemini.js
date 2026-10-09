@@ -206,10 +206,17 @@ async function 해석(m, opt = {}) {
   // 주제·성별·출생연도는 interpretOpt 안에 있다. 여기를 opt로 두면 주제가 통째로 새고,
   // 「금년 직장운」을 물어도 브리프에 그 말이 안 실려 엉뚱한 글이 나온다.
   const 프롬프트 = toLLMBrief(r, interpretOpt);
+  // 2026-10-10(31차, 사용자 「언제 결혼 가능할까라고 물으면 그에 맞는 답을 해야지」): Gemini 가 답하지 못하면(호출 실패·상한·HTTP 402 등)
+  //   물음과 상관없는 조문 리포트 전체 대신, 코드가 물음에 맞춰 쓴 짧은 답(mureum.엔진답 — 엔진 세운 판정·그 일의 글자가 오는 해)을 낸다.
+  //   궁통보감 관법이거나 물음이 없으면 예전대로 조문 리포트.
+  const 폴백 = (사유, 덧) => {
+    let 본 = null;
+    try { if (interpretOpt.주제 && interpretOpt.관법 !== '궁통보감') 본 = require('./mureum').엔진답(r, interpretOpt.주제, { 성별: interpretOpt.gender }); } catch (e) {}
+    return 본 ? { 성공: false, 사유, 판정: r, 본문: 본, 출처: '엔진 답', ...덧 } : { 성공: false, 사유, 판정: r, 본문: render(r, interpretOpt), 출처: '조문 리포트(폴백)', ...덧 };
+  };
 
   if (!apiKey) {
-    return { 성공: false, 사유: 'API 키 없음', 판정: r,
-             본문: render(r, interpretOpt), 출처: '조문 리포트(폴백)' };
+    return 폴백('API 키 없음');
   }
 
   let 현재프롬프트 = 프롬프트, 마지막 = null;
@@ -229,8 +236,7 @@ async function 해석(m, opt = {}) {
       const j = await res.json();
       text = j?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') ?? '';
     } catch (e) {
-      return { 성공: false, 사유: `호출 실패: ${e.message}`, 판정: r,
-               본문: render(r, interpretOpt), 출처: '조문 리포트(폴백)' };
+      return 폴백(`호출 실패: ${e.message}${/HTTP 402/.test(e.message) ? ' (Gemini 결제·크레딧 확인 필요)' : ''}`);
     }
 
     const v = validate(text, r);
@@ -244,9 +250,7 @@ async function 해석(m, opt = {}) {
   if (정리.length >= 200)
     return { 성공: true, 판정: r, 본문: 정리, 출처: 'Gemini(일부 문장 제거)',
              제거사유: 마지막.v.문제 };
-  return { 성공: false, 사유: '검사를 통과하지 못함', 판정: r,
-           본문: render(r, interpretOpt), 출처: '조문 리포트(폴백)',
-           문제: 마지막.v.문제 };
+  return 폴백('검사를 통과하지 못함', { 문제: 마지막.v.문제 });
 }
 
 /**
