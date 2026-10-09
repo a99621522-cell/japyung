@@ -79,6 +79,16 @@ for (const [이름, 기대] of Object.entries(국기대)) {
   const r = judge(f.m); const rule = chwiun.lookup(r.ctx.gyeok, r.상신, r.ctx);
   if ((rule?.국키 ?? null) !== 기대) 문제.국fixture.push(`${이름} ${f.명식} 기대 ${기대 ?? 'null'} → ${rule?.국키 ?? 'null'} (${r.ctx.gyeok}/${r.상신})`);
 }
+// g) 지나온 해(34차) — 과거 해 판정은 올해를 내는 함수와 같은 길이어야 한다: 지나온해 를 올해까지 늘려 낸 판정 = interpret 세운
+문제.지나온해 = [];
+{ const { 생년월일시로 } = require('../interpret'); const seun = require('../seun');
+  for (const [y, mo, d, h] of [[1971, 9, 21, 21], [1984, 1, 25, 10], [1990, 6, 3, 4], [1958, 12, 30, 23]]) {
+    const r = 생년월일시로({ 년: y, 월: mo, 일: d, 시: h, 분: 0, 성별: '남' });
+    const 앞 = seun.지나온해(r, y, { 올해: 2031, 최대: 5 }).filter(s => s.연도 >= 2026), 지금 = (r.단계11b_세운 || []).filter(s => s.연도 < 2031);
+    if (앞.length !== 지금.length || 앞.some((s, i) => s.길흉.판정 !== 지금[i].길흉.판정 || s.길흉.자평읽기.판정 !== 지금[i].길흉.자평읽기.판정)) 문제.지나온해.push(`${y}-${mo}-${d} ${h}시 지나온해 ↔ 세운 판정 다름`);
+    const 과거 = seun.지나온해(r, y, { 올해: 2026 });
+    if (!과거.length || 과거.some(s => s.나이 < 16 || s.연도 >= 2026 || s.거리 !== 2026 - s.연도)) 문제.지나온해.push(`${y} 범위·나이·거리`);
+  } }
 let 실패 = 0;
 for (const [k, v] of Object.entries(문제)) { console.log(`  ${v.length ? '실패' : '통과'}  ${k} ${v.length}건${v.length ? ' — ' + v.slice(0,3).join(' / ') : ''}`); if (v.length) 실패++; }
 console.log(`  [두 읽기 뒤집힘 표 — 사실 보고] 대운 ${표.대운수}개: 천간5↔지지5 갈림 ${표.갈림} · 통합↔천간5 어긋남 ${표.통합vs천간5} · 통합↔지지5 어긋남 ${표.통합vs지지5} · 모두 같은 결 ${표.모두같음} · 갈림이 하나라도 있는 명식 ${표.갈린명식}/${N - 예외} · 판정 보류(상신 미지정) 대운 ${표.보류}`);
