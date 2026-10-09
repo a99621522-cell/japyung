@@ -296,6 +296,8 @@ function toMundapBrief(r, opt = {}) {
   L.push(...지식창고(r));
   // 31차: 이어 묻는 물음에도 물음에 맞춘 해(그 일의 글자가 오는 해 × 적천수 판정)
   try { const 줄 = require('./mureum').브리프줄(r, 질문, { 성별: opt.성별 }); if (줄) L.push(줄); } catch (e) {}
+  // 32차: 형·해를 직접 물으면 적천수 地支論 사실 기록(점수 없음)
+  try { const jc = r.단계_흐름; if (jc && jc.형해 && require('./swiunmal').형해물음(질문)) { const 해들 = (r.단계11b_세운 || []).slice(0, 7).filter(s => (s.형해 || []).length).map(s => `${s.연도}: ${s.형해.map(f => f.말).join('·')}`); L.push(`[형·해 — 적천수 地支論 사실 기록, 점수 없음] 원국: ${jc.형해.사실.map(f => f.말).join(' · ') || '없음'} / 해마다: ${해들.join(' / ') || '없음'} — 「${jc.형해.조문.원문}」. 이 사실만 옮기고 좋다·나쁘다·사건으로 옮기지 말 것`); } } catch (e) {}
   L.push(...이력줄(opt.이력));
   L.push(...문답규칙(질문, opt.이력));
   return L.join('\n');
