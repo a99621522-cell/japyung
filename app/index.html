@@ -1365,13 +1365,18 @@ function 흐름카드(r){
       : `가운데에 놓여 어느 쪽으로도 크게 기울지 않습니다 — 운에서 오는 글자가 그대로 드러납니다.`;
     x += `<div class="궁통요지" style="margin-top:8px">${말}</div>`; }
   // 해마다 — 적천수 歲運論 판정 (세운의 머리 판정)
-  { const se = (r.단계11b_세운 || []).slice(0, 7);
+  { const 전 = (r.단계11b_세운 || []); const se = 전.slice(0, 7);
     if (se.length) {
       const 사건말 = e => { const 종 = {戰:'대운 글자와 위에서 부딪힘', 衝:'대운 글자와 아래에서 흔들림', 和:'대운 글자와 붙음'}[e.종류] || e.종류; return 종 + (e.가감 > 0 ? '(돕는 쪽)' : e.가감 < 0 ? '(누르는 쪽)' : ''); };
       const 줄들 = se.map(s => { const 첫 = 판정첫말[s.길흉.판정] || s.길흉.판정; const 자 = s.길흉.자평읽기 && 판정첫말[s.길흉.자평읽기.판정];
         const 사 = (s.길흉.전충화 || []).map(사건말).join(', ');
         return `<tr><td style="white-space:nowrap">${s.연도}년(${s.간지})</td><td><b style="color:${판정색(첫)}">${첫}</b>${사 ? `<div style="font-size:12px;color:var(--dim)">${사}</div>` : ''}${자 && 자 !== 첫 ? `<div style="font-size:12px;color:var(--dim)">자평진전으로는 「${자}」 — 책마다 눈이 달라 갈립니다</div>` : ''}</td></tr>`; }).join('');
       x += `<div style="margin-top:10px;font-weight:600;font-size:14px">해마다 — 적천수가 보는 한 해</div><table class="답표"><thead><tr><th>해</th><th>적천수 판정</th></tr></thead><tbody>${줄들}</tbody></table>`;
+      // 2070년까지 (2026-10-09 사용자 지시) — 나머지 해는 접어서
+      if (전.length > se.length) {
+        const 나머지 = 전.slice(se.length).map(s => { const 첫 = 판정첫말[s.길흉.판정] || s.길흉.판정; return `<tr><td style="white-space:nowrap">${s.연도}년(${s.간지})</td><td><b style="color:${판정색(첫)}">${첫}</b></td></tr>`; }).join('');
+        x += `<details style="margin-top:4px"><summary style="cursor:pointer;font-size:13px;color:#6b5a38">${전[se.length].연도}~${전[전.length-1].연도}년 더 보기</summary><table class="답표"><tbody>${나머지}</tbody></table></details>`;
+      }
       x += `<div class="궁통주">한 해의 위 글자를 아래 글자보다 무겁게 봅니다(「太歲…重天干」). 그 해 글자가 지금 대운 글자와 부딪히거나 붙으면 그만큼 더하고 뺍니다.</div>`;
     } }
   x += `<div class="궁통주">${esc(jc.병렬문)}. 한 해 운(세운)의 판정도 이 책의 歲運論으로 냅니다 — 운 카드의 해마다 보기에 戰·衝·和가 붙습니다. 질병·귀천 장은 쓰지 않습니다.</div></div>`;
@@ -1447,10 +1452,11 @@ function 궁통카드(m){
     쉬 += 필요.map(u => `이 명식에 ${그림말(u.글자)}${은는(u.글자)} ${상태말(u)}${u.손상 && u.손상.length ? ' (다른 글자에 눌려 있음)' : ''}.`).join(' ');
     if (꺼림.length) 쉬 += ` 꺼리는 ${꺼림.map(u => 그림말(u.글자)).join('·')}${은는(꺼림[꺼림.length-1].글자)} 이 명식에 있습니다.`;
     const 오는해 = [], 꺼리는해 = [];
-    if (GU) for (const y of 올해들(10)) { const g = 연간지(y); let z; try { z = GU.조후운(r.일간, r.월, { 천간: g.천간, 지지: g.지지 }); } catch(e) { continue; }
+    if (GU) for (const y of 올해들(Math.max(10, 2070 - new Date().getFullYear() + 1))) { const g = 연간지(y); let z; try { z = GU.조후운(r.일간, r.월, { 천간: g.천간, 지지: g.지지 }); } catch(e) { continue; }
       if (!z || z.해당없음) continue; const 필 = [z.천간, z.지지].some(t => t && /필요/.test(t.판정 || '')); const 꺼 = [z.천간, z.지지].some(t => t && /꺼림/.test(t.판정 || ''));
       if (필) 오는해.push(y); else if (꺼) 꺼리는해.push(y); }
-    x += `<div class="궁통요지"><b>쉽게 말하면</b> — ${쉬}${오는해.length ? ` 필요한 글자가 운에서 오는 해는 <b style="color:#2E7D4F">${오는해.join('·')}년</b>입니다.` : ''}${꺼리는해.length ? ` 꺼리는 글자만 오는 해는 ${꺼리는해.join('·')}년입니다.` : ''} 필요한 글자가 오는 해에 일이 윤택해지고, 없을 때는 그 빈자리를 사람·배움·생활로 메웁니다.</div>`;
+    const 몇해 = (ys, n) => ys.length <= n ? ys.join('·') + '년' : ys.slice(0, n).join('·') + `년 등 2070년까지 ${ys.length}해`;
+    x += `<div class="궁통요지"><b>쉽게 말하면</b> — ${쉬}${오는해.length ? ` 필요한 글자가 운에서 오는 해는 <b style="color:#2E7D4F">${몇해(오는해, 6)}</b>입니다.` : ''}${꺼리는해.length ? ` 꺼리는 글자만 오는 해는 ${몇해(꺼리는해, 6)}입니다.` : ''} 필요한 글자가 오는 해에 일이 윤택해지고, 없을 때는 그 빈자리를 사람·배움·생활로 메웁니다.</div>`;
   } catch(e) { if (typeof console !== 'undefined') console.warn('궁통 쉽게 말하면', e); }
   const 자세히열림 = document.body.classList.contains('층-전문가') ? ' open' : '';
   x += `<details class="궁통자세히"${자세히열림}><summary style="cursor:pointer;font-size:13px;color:#6b5a38;margin:6px 0">원문 조문 자세히</summary>`;
