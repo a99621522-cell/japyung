@@ -927,6 +927,7 @@ function 간명(){
     태어난 시각은 ${r.만세력?.보정 ? r.만세력.보정.replace('진태양시 ','진태양시로 ').replace('-','') + '당겨' : '진태양시로 32분 당겨'} 계산했습니다.</div>`;
 
   document.getElementById('화면결과').innerHTML = h;
+  적중줄채우기(); 기억줄채우기();   // 37차 — 먼저 볼 것의 적중 줄·기억 줄
   접기적용(document.getElementById('화면결과'));   // 29차-5: 먼저 볼 것·명식·그릇 밖의 카드는 접어 둔다(첫 레이아웃이 가벼워진다)
   if (!E.__덧붙임) (window.requestIdleCallback || (f => setTimeout(f, 1200)))(() => 덧붙임().then(덧카드채우기, () => {}));
   층바꾸기(document.body.classList.contains('층-전문가') ? '전문가' : '일반인');
@@ -1031,6 +1032,7 @@ async function 물어보기(주제, 단추, 물음직접){
       : 물음;   // 밭의 눈 답은 같은 물음을 처음부터 다시 보는 것이라 이어묻기로 포장하지 않는다
   }
   if (!현재.입력.시모름) { 몸.명식.siGan = m.siGan; 몸.명식.siJi = m.siJi; }
+  if (관법 !== '궁통보감') { const 기 = 기억모음r(현재.r); if (기) 몸.기억 = 기; }   // 37차 — 지난 물음·지나온 해 확인
   // 대운수는 순행이면 남은날, 역행이면 지난날이다. 엔진이 갈라 준 값을 그대로 보낸다.
   const 대 = 현재.r.만세력?.대운;
   if (대 && 대.날수 != null) 몸.절기날수 = 대.날수;
@@ -1069,6 +1071,7 @@ async function 물어보기(주제, 단추, 물음직접){
       if (d.성공 && 관법 !== '궁통보감') {   // 밭의 눈 답은 나란히 보는 것 — 이어묻기·문답 이력에 넣지 않는다
         const 맺 = (d.본문.match(/정리하면[^\n]*/g)||[]).pop()
                  || d.본문.split('\n').filter(x=>x.trim())[0] || '';
+        기억적기r(현재.r, 물음, d.본문);   // 37차 기억 — 문답 창(mundap_ui)에서 물은 것은 그쪽이 적는다
         마지막문답 = { 질문: String(물음).slice(0,200),
                        맺음: 맺.replace(/\*\*/g,'').slice(0,400) };
         // 이력 반영 — 문답으로 갔으면 이어 붙이고, 칩(상담글)이면 그 상담글을 새 바닥으로 삼는다
@@ -1579,9 +1582,62 @@ async function 확인누름(b, 연도, a){
   확인쓰기(r, 답);
   b.parentElement.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(답[연도] === x.textContent)));
   const 셈칸 = b.closest('.지나온카드').querySelector('.확인셈'); if (셈칸) 셈칸.innerHTML = 확인셈말(r);
+  적중줄채우기(); 기억줄채우기();
   if (전 === a) return;   // 거둔 것은 보내지 않는다(서버는 더하기만)
   const s = (현재.지나온 || []).find(x => x.연도 === 연도); if (!s) return;
   try { await fetch(중계 + '/확인', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ 층: '흐름', 첫말: 판정첫말[s.길흉.판정] || s.길흉.판정, 거리: s.거리, 답: a, 자리: s.자리.length > 0 }) }); } catch(e) { /* 못 보내도 조용히 */ }
+}
+
+// ── 기억 (2026-10-09, 37차) — 이 명식으로 물은 것을 이 기기에만 적어 두고, 다음 물음에 지나온 해 확인과 함께 보낸다(서버는 저장하지 않는다) ──
+function 기억키(r){ return '기억:' + 확인키(r).slice('지나온확인:'.length); }
+function 기억읽기(r){ try { return JSON.parse(localStorage.getItem(기억키(r))) || { 물음: [] }; } catch(e) { return { 물음: [] }; } }
+function 기억적기r(r, 물음, 본문){
+  try {
+    const 한 = (String(본문 || '').split(/▶\s*한 줄로 말하면/)[1] || String(본문 || '')).split('\n').map(x => x.trim()).filter(Boolean)[0] || '';
+    const 지금 = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+    const g = 기억읽기(r); g.물음 = (g.물음 || []).filter(x => x.물음 !== String(물음).slice(0, 120));
+    g.물음.push({ 날짜: 지금, 물음: String(물음).slice(0, 120), 한줄: 한.replace(/\*\*/g, '').slice(0, 160) });
+    g.물음 = g.물음.slice(-8);
+    localStorage.setItem(기억키(r), JSON.stringify(g));
+    기억줄채우기();
+  } catch(e) {}
+}
+function 기억모음r(r){
+  const g = 기억읽기(r), 답 = 확인읽기(r);
+  const 확인 = { 맞음: Object.keys(답).filter(y => 답[y] === '맞음').map(Number), 아님: Object.keys(답).filter(y => 답[y] === '아님').map(Number) };
+  if (!(g.물음 || []).length && !확인.맞음.length && !확인.아님.length) return undefined;
+  return { 지난물음: (g.물음 || []).slice(-5), 확인 };
+}
+window.기억모음 = () => (현재 && 현재.r) ? 기억모음r(현재.r) : undefined;
+window.기억적기 = (물음, 본문) => { if (현재 && 현재.r) 기억적기r(현재.r, 물음, 본문); };
+function 기억지우기(){
+  if (!현재 || !현재.r || !confirm('이 명식으로 물은 기록과 지나온 해 확인을 이 기기에서 지울까요?')) return;
+  try { localStorage.removeItem(기억키(현재.r)); localStorage.removeItem(확인키(현재.r)); } catch(e) {}
+  document.querySelectorAll('.지나온카드 .확인단추 button').forEach(b => b.setAttribute('aria-pressed', 'false'));
+  const 셈 = document.querySelector('.지나온카드 .확인셈'); if (셈) 셈.innerHTML = 확인셈말(현재.r);
+  기억줄채우기(); 적중줄채우기();
+}
+function 기억줄채우기(){
+  const 칸 = document.getElementById('기억줄'); if (!칸 || !현재 || !현재.r) return;
+  const g = 기억읽기(현재.r), 답 = 확인읽기(현재.r), n = (g.물음 || []).length, k = Object.keys(답).length;
+  if (!n && !k) { 칸.innerHTML = '물으신 것과 지나온 해 확인을 이 기기에 기억해 두었다가 다음 답이 이어 받습니다.'; return; }
+  칸.innerHTML = `기억해 둔 것 — 지난 물음 ${n}개${k ? ` · 확인한 해 ${k}해` : ''}. 다음 답이 이어 받습니다(이 기기에만 저장).`
+    + (n ? `<details style="margin-top:2px"><summary style="cursor:pointer">지난 물음 보기</summary>${(g.물음 || []).slice().reverse().map(x => `<div>${esc2(x.날짜)} 「${esc2(x.물음)}」${x.한줄 ? ` — ${esc2(x.한줄)}` : ''}</div>`).join('')}</details>` : '')
+    + ` <button type="button" class="더보기" onclick="기억지우기()">지우기</button>`;
+}
+// ── 첫 화면 적중 줄 (37차-1) — 점수 대신, 지나온 해 판정이 이 사람에게 얼마나 맞았는지(이 기기)와 모든 이용자 확인 적중률(서버 셈, 30건 이상일 때만) ──
+let 전체확인 = null;
+function 전체확인셈(d){
+  const t = d && d.통계 && d.통계.확인 && d.통계.확인.첫말; if (!t) return null;
+  let 맞 = 0, 아 = 0; for (const [k, v] of Object.entries(t)) { if (/\|맞음$/.test(k)) 맞 += v; else if (/\|아님$/.test(k)) 아 += v; }
+  return 맞 + 아 >= 30 ? { 맞, 아 } : null;
+}
+function 적중줄채우기(){
+  const 칸 = document.getElementById('적중줄'); if (!칸 || !현재 || !현재.r) return;
+  const 답 = 확인읽기(현재.r), v = Object.values(답), 맞 = v.filter(a => a === '맞음').length, 아 = v.filter(a => a === '아님').length;
+  const 내 = 맞 + 아 ? `지나온 해 판정이 <b>${맞 + 아}해 가운데 ${맞}해 맞았다</b>고 확인하셨습니다.` : `판정을 믿기 전에 <b>지나온 해 몇 개가 맞는지</b> 먼저 확인해 보세요.`;
+  const 모두 = 전체확인 ? ` <span class="먼저작은" style="display:inline">모든 이용자가 확인한 ${전체확인.맞 + 전체확인.아}해 기준 적중 ${(100 * 전체확인.맞 / (전체확인.맞 + 전체확인.아)).toFixed(0)}%(서버가 다시 시작하면 처음부터 셈).</span>` : '';
+  칸.innerHTML = 내 + 모두;
 }
 // ── 먼저 볼 것 (2026-10-09, 29차-5) — 결과 맨 위 한 화면: 그릇 한 줄 · 올해와 내년(흐름) · 오늘과 이번 주(일진). 자세한 것은 아래 카드를 펼쳐 본다
 function 먼저볼것카드(r, 입력, 시모름){
@@ -1593,20 +1649,21 @@ function 먼저볼것카드(r, 입력, 시모름){
     const 딱 = {성격:'짜임이 온전합니다', 성중유패:'서긴 했지만 흔드는 글자를 안고 있습니다', 패중유성:'흠이 있었지만 구해 주는 글자 덕에 다시 섰습니다', 패격:'짜임이 깨져 있어 운에서 메워야 합니다', 상신미현:'기둥이 될 글자가 아직 드러나지 않았습니다'}[c.성패] || '';
     const 물 = 글자그림[m.ilGan] || m.ilGan;
     let x = `<div class="card 늘펼침 먼저카드"><div class="card-title"><span class="gold-dot"></span>먼저 볼 것</div>`;
+    if ((지나온자료(r, 입력) || []).length) x += `<div class="먼저칸"><div class="먼저머리">맞는지부터 — 지나온 해</div><div class="먼저말" id="적중줄" style="font-size:15px"></div><button type="button" class="더보기" onclick="카드로('지나온카드')">지나온 해 확인하기</button></div>`;
     x += `<div class="먼저칸"><div class="먼저머리">그릇 — 무엇을 다루며 사는가</div><div class="먼저말"><b>${물}(${m.ilGan})</b>의 ${c.격 ? `${c.격}격${붙(c.격)}` : '명식'}${c.상신 ? `, 기둥은 ${c.상신}${괄(c.상신)}` : ''}.${왜('그릇', '', '그릇 판정')}</div><div class="먼저작은">${딱}${시모름 ? ' · 태어난 시각 없이 본 판정입니다' : ''}</div><button type="button" class="더보기" onclick="카드로('그릇카드')">그릇 자세히</button></div>`;
     const se = (r.단계11b_세운 || []).slice(0, 2);
     if (se.length) {
       const 줄 = se.map(s => { const 첫 = 첫말of(s.길흉.판정), 자 = s.길흉.자평읽기 && 첫말of(s.길흉.자평읽기.판정);
         return `<div class="먼저말">${s.연도}년(${s.간지}) <b style="color:${판정색(첫)}">${첫}</b>${왜('해', s.연도, s.연도 + '년')}${자 && 자 !== 첫 ? `<span class="먼저작은" style="display:inline"> · 자평진전으로는 「${자}」</span>` : ''}</div>`; }).join('');
-      const 나이 = new Date().getFullYear() - 입력.년 + 1, 대 = ((r.단계11_행운 || {}).대운 || []).find(u => 나이 >= u.시작나이 && 나이 < u.시작나이 + 10);
-      const 대말 = 대 ? `지금은 ${대.시작나이}세부터의 ${대.간지} 대운 — ${({'결이 크게 눌림':'지키는 십 년','결이 눌림':'조심하며 지키는 십 년','뒤섞임':'좋고 나쁨이 섞인 십 년','결이 살아남':'풀리는 십 년','결이 크게 살아남':'크게 풀리는 십 년'})[대.길흉.판정] || 대.길흉.판정}` : '';
+      const 나이 = new Date().getFullYear() - 입력.년 + 1, 대 = ((r.단계_흐름 || {}).대운 || []).find(u => 나이 >= u.시작나이 && 나이 < u.시작나이 + 10);   // 37차: 적천수 칸이라 적천수 대운(전엔 자평 대운이 섞였다)
+      const 대말 = 대 ? `지금은 ${대.시작나이}세부터의 ${대.간지} 대운 — ${({'결이 크게 눌림':'지키는 십 년','결이 눌림':'조심하며 지키는 십 년','뒤섞임':'좋고 나쁨이 섞인 십 년','결이 살아남':'풀리는 십 년','결이 크게 살아남':'크게 풀리는 십 년'})[대.판정] || 대.판정}${(대.충 || []).length ? ' (태어날 때의 글자와 부딪힘)' : ''}` : '';
       x += `<div class="먼저칸"><div class="먼저머리">흐름 — 올해와 내년 (적천수)</div>${줄}<div class="먼저작은">${대말}</div><button type="button" class="더보기" onclick="카드로('갈림카드')">세 책으로 해마다 보기</button></div>`;
     }
     const J = E.iljin || E.일진;
     if (J) { const a = J.analyze(r, { 날수: 7 }), 오 = a.날[0];
       const 점 = a.날.map((d, i) => `<div class="날점" title="${d.날짜} ${d.첫말}"><i style="background:${판정색(d.첫말.replace('날', '해'))}${/섞인/.test(d.첫말) ? ';opacity:.45' : ''}"></i>${i === 0 ? '오늘' : d.요일}</div>`).join('');
       x += `<div class="먼저칸"><div class="먼저머리">일진 — 오늘과 이번 주</div><div class="먼저말">오늘 ${오.간지} <b style="color:${판정색(오.첫말.replace('날', '해'))}">${오.첫말}</b>${왜('날', 오.날짜, '오늘')}</div><div class="먼저작은">${오.결}</div><div class="날점들" role="img" aria-label="${a.날.map(d => `${d.요일} ${d.첫말}`).join(', ')}">${점}</div><button type="button" class="더보기" onclick="카드로('일진카드')">이번 주 자세히</button></div>`; }
-    x += `<div class="궁통주" style="margin-top:4px">세 책의 판정을 더하지 않고 각자 보여 줍니다. 아래 카드 제목을 누르면 펼쳐집니다.</div></div>`;
+    x += `<div class="궁통주" style="margin-top:4px">세 책의 판정을 더하지 않고 각자 보여 줍니다. 아래 카드 제목을 누르면 펼쳐집니다.</div><div class="궁통주" id="기억줄" style="margin-top:2px"></div></div>`;
     return x;
   } catch(e) { if (typeof console !== 'undefined') console.warn('먼저 볼 것', e); return ''; }
 }
@@ -2438,7 +2495,7 @@ document.addEventListener('keydown', e => {
       && document.activeElement?.id !== '물음칸') 간명();
 });
 // 잠든 서버를 미리 깨운다. 실패해도 앱은 그대로 돌아야 하므로 통째로 감싼다.
-try { if (typeof fetch === 'function') fetch(중계 + '/health').catch(()=>{}); } catch(e){}
+try { if (typeof fetch === 'function') fetch(중계 + '/health').then(r => r.json()).then(d => { 전체확인 = 전체확인셈(d); 적중줄채우기(); }).catch(()=>{}); } catch(e){}
 if ('serviceWorker' in navigator)
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
 </script>

@@ -121,7 +121,7 @@ const crypto = require('crypto');
 const 캐시 = new Map();
 const 캐시TTL = Math.max(0, Number(process.env.CACHE_TTL_H ?? 24)) * 3600 * 1000;
 const 캐시MAX = Math.max(10, Number(process.env.CACHE_MAX || 500));
-const 캐시키 = (입력, interpretOpt) => crypto.createHash('sha256').update(JSON.stringify([입력.명식 && ['yeonGan','yeonJi','wolGan','wolJi','ilGan','ilJi','siGan','siJi','daysFromJeolip'].map(k => 입력.명식[k] ?? null), interpretOpt.gender, interpretOpt.출생연도 ?? null, interpretOpt.주제 ?? null, interpretOpt.관법 ?? null, interpretOpt.세운시작 ?? null, interpretOpt.세운개수 ?? null, interpretOpt.daysToJeolgi ?? null])).digest('hex');
+const 캐시키 = (입력, interpretOpt) => crypto.createHash('sha256').update(JSON.stringify([입력.명식 && ['yeonGan','yeonJi','wolGan','wolJi','ilGan','ilJi','siGan','siJi','daysFromJeolip'].map(k => 입력.명식[k] ?? null), interpretOpt.gender, interpretOpt.출생연도 ?? null, interpretOpt.주제 ?? null, interpretOpt.관법 ?? null, interpretOpt.세운시작 ?? null, interpretOpt.세운개수 ?? null, interpretOpt.daysToJeolgi ?? null, interpretOpt.기억 ?? null])).digest('hex');
 function 캐시읽기(k) { if (!캐시TTL) return null; const v = 캐시.get(k); if (!v) return null; if (Date.now() - v.때 > 캐시TTL) { 캐시.delete(k); return null; } return v.응답; }
 function 캐시쓰기(k, 응답) { if (!캐시TTL) return; 캐시.set(k, { 때: Date.now(), 응답 }); if (캐시.size > 캐시MAX) { const 이제 = Date.now(); for (const [kk, v] of 캐시) { if (캐시.size <= 캐시MAX) break; if (이제 - v.때 > 캐시TTL) 캐시.delete(kk); } while (캐시.size > 캐시MAX) 캐시.delete(캐시.keys().next().value); } }
 
@@ -300,6 +300,7 @@ const 서버 = http.createServer(async (req, res) => {
         세운시작: 입력.세운시작,
         세운개수: 입력.세운개수,          // 비우면 interpret 기본 — 올해부터 2070년까지 (2026-10-09 사용자 지시, 전 8)
         주제: 입력.주제,                  // '직업' 같은 것. 없으면 전체
+        기억: 입력.기억,                  // 37차 — 앱이 이 기기에 적어 둔 지난 물음·지나온 해 확인(서버는 저장 안 함, 브리프 재료만)
       };
       // 캐시 적중이면 Gemini 를 부르지 않는다(검사·보강이 끝난 응답 그대로, 캐시:true 만 붙여서)
       const 키 = 캐시키(입력, interpretOpt);
