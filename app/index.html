@@ -19,11 +19,12 @@
 :root{
   --bg:#F6F2EA; --card:#FFFFFF; --card2:#F4EEE2;
   --border:#E8E1D2; --border2:#D9CFBB;
-  --gold:#A8802F; --gold2:#C9A84C; --gold-dim:#D9C48C;
-  --text:#2C2620; --muted:#7A7264; --dim:#A39A88;
-  --green:#1F8A63; --red:#C0492F;
+  /* 2026-10-09(29차-5): 글자색은 가장 어두운 바탕(#F4EEE2)에서 WCAG AA 4.5:1 을 넘게 어둡게 — 옛 값 gold #A8802F·muted #7A7264·dim #A39A88·green #1F8A63·red #C0492F */
+  --gold:#866626; --gold2:#C9A84C; --gold-dim:#D9C48C;
+  --text:#2C2620; --muted:#716A5D; --dim:#706A5E;
+  --green:#197151; --red:#B4452C;
   /* 오행 — 크림 바탕에서 읽히도록 어둡게 잡았다 */
-  --목:#2E7D4F; --화:#D0301C; --토:#C79100; --금:#8E959E; --수:#1F1F23;
+  --목:#2C784C; --화:#CA2F1B; --토:#896400; --금:#666B72; --수:#1F1F23;   /* 29차-5 대비: 옛 토 #C79100·금 #8E959E */
   --r:12px; --r2:8px;
   --명조:'Nanum Myeongjo', serif;
   --본문:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
@@ -189,7 +190,7 @@ svg.고리 .나표{font-size:9.5px;fill:var(--gold);text-anchor:middle;font-weig
 .희기{margin:10px 0 4px;padding:10px 12px;background:rgba(201,168,76,.06);border-radius:10px}
 .희기줄{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0;font-size:13px}
 .희기줄 b{min-width:74px;font-size:12.5px}
-.희기줄.좋음 b{color:#2E7D4F}.희기줄.나쁨 b{color:#D0301C}
+.희기줄.좋음 b{color:#2C784C}.희기줄.나쁨 b{color:#CA2F1B}
 .희기칩{background:var(--card2);border:1px solid rgba(0,0,0,.08);border-radius:8px;padding:3px 9px;font-weight:600}
 .희기칩 small{font-weight:400;color:var(--dim);margin-left:5px}
 .희기주{font-size:11.5px;color:var(--dim);margin-top:6px;line-height:1.6}
@@ -216,11 +217,28 @@ svg.고리 .나표{font-size:9.5px;fill:var(--gold);text-anchor:middle;font-weig
 .갈림지도 .해{text-align:center;color:var(--dim);font-variant-numeric:tabular-nums}
 .갈림지도 button.칸{all:unset;box-sizing:border-box;display:block;width:100%;height:22px;border-radius:3px;cursor:pointer;background:#ece6da}
 .갈림지도 button.칸:focus-visible{outline:2px solid #6b5a38;outline-offset:1px}
-.갈림지도 button.칸.p2{background:#2E7D4F}.갈림지도 button.칸.p1{background:#8cc2a1}.갈림지도 button.칸.z0{background:#e3d9c4}.갈림지도 button.칸.m1{background:#e6a99b}.갈림지도 button.칸.m2{background:#B0301C}.갈림지도 button.칸.빈{background:#f4f1ea;outline:1px dashed #ddd2bd;outline-offset:-1px}
-.갈림지도 .맞음{height:8px;border-radius:2px}.갈림지도 .맞음.같음{background:#2b2b2b}.갈림지도 .맞음.갈림{background:repeating-linear-gradient(45deg,#8a6d1f 0 2px,transparent 2px 5px)}
+.갈림지도 button.칸.p2{background:#2C784C}.갈림지도 button.칸.p1{background:#8cc2a1}.갈림지도 button.칸.z0{background:#e3d9c4}.갈림지도 button.칸.m1{background:#e6a99b}.갈림지도 button.칸.m2{background:#B0301C}.갈림지도 button.칸.빈{background:#f4f1ea;outline:1px dashed #ddd2bd;outline-offset:-1px}
+.갈림지도 .맞음{height:8px;border-radius:2px}.갈림지도 .맞음.같음{background:#2b2b2b}.갈림지도 .맞음.갈림{background:repeating-linear-gradient(45deg,#7D621C 0 2px,transparent 2px 5px)}
 .갈림지도 .고름 button.칸{box-shadow:0 0 0 2px #6b5a38 inset}.갈림지도 .해.고름{color:#2b2b2b;font-weight:700}
 .갈림범례{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px;color:var(--dim);margin:2px 0 6px}.갈림범례 i{display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:-2px;margin-right:3px}
 .갈림근거{border-left:3px solid #d8cfbd;padding:6px 10px;margin-top:6px;font-size:14px;background:#faf7f1}
+/* 먼저 볼 것·접는 카드 (29차-5) */
+.먼저카드 .먼저칸{border-top:1px solid rgba(0,0,0,.08);padding:10px 0 8px}
+.먼저카드 .먼저칸:first-of-type{border-top:0;padding-top:2px}
+.먼저카드 .먼저머리{font-size:12px;color:#6b5a38;letter-spacing:.02em;margin-bottom:2px}
+.먼저카드 .먼저말{font-size:16px;line-height:1.55}
+.먼저카드 .먼저작은{font-size:13px;color:var(--dim);margin-top:2px}
+.먼저카드 .날점들{display:flex;gap:4px;margin-top:6px}
+.먼저카드 .날점{flex:1;text-align:center;font-size:11px;color:var(--dim)}
+.먼저카드 .날점 i{display:block;height:8px;border-radius:4px;margin-bottom:3px}
+.먼저카드 button.더보기{all:unset;cursor:pointer;font-size:13px;color:#6b5a38;text-decoration:underline;margin-top:4px;display:inline-block}
+.먼저카드 button.더보기:focus-visible,.카드접기:focus-visible{outline:2px solid #6b5a38;outline-offset:2px}
+.card-title .카드접기{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:inherit;width:100%;min-height:28px}
+.card-title .카드접기 .접기표{margin-left:auto;color:#a08f6a;font-size:14px;transition:transform .15s}
+.card-title .카드접기[aria-expanded="true"] .접기표{transform:rotate(90deg)}
+.card[data-접기] > .card-title{margin-bottom:0}
+.card[data-접기] > .카드몸{margin-top:10px}
+@media (prefers-reduced-motion: reduce){.card-title .카드접기 .접기표{transition:none}}
 .답표 td:first-child{white-space:nowrap;padding-right:12px}
 .답표 tr.이번달 td{font-size:13px;opacity:.85}
 .상담소제{font-weight:700;font-size:15px;margin:14px 0 4px;color:#3b3225}
@@ -229,7 +247,7 @@ svg.고리 .나표{font-size:9.5px;fill:var(--gold);text-anchor:middle;font-weig
 /* 일반인/전문가 층 (2026-10-07, PROMPTS 5) — 전문 카드는 전문가 층에서만. 답(상담)·명식·그릇·운·분야 곡선은 늘 보인다 */
 .층줄{display:flex;gap:8px;align-items:center;justify-content:flex-end;font-size:12.5px;color:var(--muted);margin:0 0 10px}
 .층줄 button{border:1px solid var(--border);background:var(--card);color:var(--muted);border-radius:999px;padding:4px 12px;font-size:12.5px;cursor:pointer}
-.층줄 button.켜짐{background:var(--gold-dim);color:#fff;border-color:var(--gold-dim)}
+.층줄 button.켜짐{background:var(--gold);color:#fff;border-color:var(--gold)}
 body:not(.층-전문가) .card.전문{display:none}
 body:not(.층-전문가) .검사줄{display:none}
 .답머리{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
@@ -242,7 +260,7 @@ body:not(.층-전문가) .검사줄{display:none}
 .추적줄{font-size:11.5px;color:var(--dim);margin-left:6px}
 .추적식{font-size:11.5px;color:var(--dim);margin-top:2px}
 .추적조건{font-size:12px;border-collapse:collapse;margin-top:4px}.추적조건 td{padding:2px 6px;border-top:1px dashed rgba(0,0,0,.08);vertical-align:top}
-.추적조건 td.성립{color:#2E7D4F;font-weight:700}.추적조건 td.불성립{color:#B0301C;font-weight:700}.추적조건 td.근거{color:var(--dim)}
+.추적조건 td.성립{color:#2C784C;font-weight:700}.추적조건 td.불성립{color:#B0301C;font-weight:700}.추적조건 td.근거{color:var(--dim)}
 .scroll-x{overflow-x:auto}
 .민감도{font-size:12px;border-collapse:collapse;min-width:100%}.민감도 th,.민감도 td{padding:4px 8px;border-bottom:1px solid rgba(0,0,0,.08);white-space:nowrap;text-align:left}
 .민감도 tr.기준 td{background:var(--card2);font-weight:600}.민감도 td.다름{background:#FBEBD9}
@@ -256,15 +274,15 @@ body:not(.층-전문가) .검사줄{display:none}
 .용어상자:not([open])>summary::after{content:' ▸ 펼치기'}
 .취운카드{background:var(--card2);border:1px solid rgba(0,0,0,.06);border-radius:14px;padding:16px 18px;margin:0 0 14px}
 .취운제목{font-weight:700;font-size:15px;margin-bottom:8px}
-.취운제목 .좋음{color:#2E7D4F}.취운제목 .나쁨{color:#D0301C}
+.취운제목 .좋음{color:#2C784C}.취운제목 .나쁨{color:#CA2F1B}
 .취운설명{font-size:13.5px;line-height:1.7;color:#4a4236;margin-bottom:10px}
 .취운근거{font-size:13px;line-height:1.7;background:rgba(255,255,255,.6);border-radius:10px;padding:10px 12px;margin-bottom:12px}
 .취운근거 .원문{font-family:serif;color:#6b5a38}
 .취운줄{margin-top:10px}
 .취운줄제목{font-weight:700;font-size:13px;margin:0 0 6px;padding-bottom:4px;border-bottom:1px dashed rgba(0,0,0,.12)}
-.취운줄제목.좋음{color:#2E7D4F}.취운줄제목.나쁨{color:#D0301C}
+.취운줄제목.좋음{color:#2C784C}.취운줄제목.나쁨{color:#CA2F1B}
 .취운항목{background:#fff;border-radius:10px;padding:10px 12px;margin:6px 0;font-size:13px;line-height:1.65;border-left:3px solid #ccc}
-.취운항목.좋음{border-left-color:#2E7D4F}.취운항목.나쁨{border-left-color:#D0301C}
+.취운항목.좋음{border-left-color:#2C784C}.취운항목.나쁨{border-left-color:#CA2F1B}
 .취운머리{display:flex;align-items:baseline;gap:8px;margin-bottom:2px}
 .취운이름{font-weight:700;font-size:15px}
 .취운십성{font-size:12px;color:var(--dim)}
@@ -390,7 +408,7 @@ footer b{color:var(--muted)}
 <aside class="sidebar">
   <div class="logo">
     <div class="logo-mark">看</div>
-    <div><span class="logo-name">간명</span><span class="logo-sub">看 命</span></div>
+    <div><h1 class="logo-name" style="margin:0">간명</h1><span class="logo-sub">看 命</span></div>
   </div>
   <nav>
     <div class="nav-section">보기</div>
@@ -432,12 +450,12 @@ footer b{color:var(--muted)}
             <input id="이름" placeholder="무명"></div>
         </div>
         <div class="입력줄" style="margin-top:14px">
-          <div class="칸"><label>태어난 해</label><input id="년" type="number" inputmode="numeric" autocomplete="off"></div>
-          <div class="칸"><label>달</label><input id="월" type="number" min="1" max="12" inputmode="numeric" autocomplete="off"></div>
-          <div class="칸"><label>날</label><input id="일" type="number" min="1" max="31" inputmode="numeric" autocomplete="off"></div>
-          <div class="칸"><label>시</label><input id="시" type="number" min="0" max="23" inputmode="numeric" autocomplete="off"></div>
-          <div class="칸"><label>분</label><input id="분" type="number" min="0" max="59" inputmode="numeric" autocomplete="off"></div>
-          <div class="칸"><label>성별</label><select id="성"><option value="여">여</option><option value="남">남</option></select></div>
+          <div class="칸"><label for="년">태어난 해</label><input id="년" type="number" inputmode="numeric" autocomplete="off"></div>
+          <div class="칸"><label for="월">달</label><input id="월" type="number" min="1" max="12" inputmode="numeric" autocomplete="off"></div>
+          <div class="칸"><label for="일">날</label><input id="일" type="number" min="1" max="31" inputmode="numeric" autocomplete="off"></div>
+          <div class="칸"><label for="시">시</label><input id="시" type="number" min="0" max="23" inputmode="numeric" autocomplete="off"></div>
+          <div class="칸"><label for="분">분</label><input id="분" type="number" min="0" max="59" inputmode="numeric" autocomplete="off"></div>
+          <div class="칸"><label for="성">성별</label><select id="성"><option value="여">여</option><option value="남">남</option></select></div>
           <button class="btn-gold" style="padding:10px 26px;font-size:15px" onclick="간명()">본다</button>
         </div>
 
@@ -736,7 +754,8 @@ function 간명(){
   // 일반인/전문가 층 (2026-10-07, PROMPTS 5): 일반인 층은 명식·그릇·운·분야 곡선·답만, 전문가 층은 다섯 기운·시간의 겹·궁통보감·연도별·열두 달·검사줄까지
   h += `<div class="층줄"><span>보기</span><button type="button" id="층-일반" onclick="층바꾸기('일반인')">일반인</button><button type="button" id="층-전문" onclick="층바꾸기('전문가')">전문가</button></div>`;
 
-  h += `<div class="card"><div class="card-title"><span class="gold-dot"></span>명식</div>
+  h += 먼저볼것카드(r, 입력, 시모름);
+  h += `<div class="card 늘펼침"><div class="card-title"><span class="gold-dot"></span>명식</div>
     <div class="기둥들">
       ${기둥('시', 시모름?null:m.siGan, m.siJi)}
       ${기둥('일', m.ilGan, m.ilJi, true)}
@@ -769,8 +788,8 @@ function 간명(){
 패중유성:'기둥을 깨는 글자가 있었지만, 그것을 눌러 주는 글자가 팔자 안에 함께 있어 도로 선 경우입니다. 흠집을 딛고 선 그릇이라, 그 구해준 글자가 이 명식의 은인입니다.',
 패격:'그릇은 잡혔는데 그것을 떠받칠 자리가 깨져 있어, 타고난 것만으로는 온전히 서지 못한 짜임입니다. 결이 없는 것이 아니라 쓰기 어렵게 놓인 것이니, 빈 곳을 메워 주는 운이 올 때 제 모양이 삽니다.',
 상신미현:'격은 잡혔는데 그것을 떠받칠 기둥 글자가 아직 팔자에 드러나지 않았습니다. 운에서 그 글자가 들어올 때 짜임이 비로소 완성되는 명식입니다.'}[c.성패] || '';
-  h += `<div class="card"><div class="card-title"><span class="gold-dot"></span>무엇을 다루며 사는가</div>
-    <div class="격줄"><span>${c.격}격<span style="color:#8a7a5c;font-size:13px"> — ${쉬운십성[c.격]||''}</span>${c.상신?` <span style="color:var(--gold)">기둥: ${c.상신}(${쉬운십성[c.상신]||''})</span>`:''}</span><span class="판정딱지">${딱지}</span></div>`;
+  h += `<div class="card 늘펼침 그릇카드"><div class="card-title"><span class="gold-dot"></span>무엇을 다루며 사는가</div>
+    <div class="격줄"><span>${c.격}격<span style="color:#77694F;font-size:13px"> — ${쉬운십성[c.격]||''}</span>${c.상신?` <span style="color:var(--gold)">기둥: ${c.상신}(${쉬운십성[c.상신]||''})</span>`:''}</span><span class="판정딱지">${딱지}</span></div>`;
   if (딱지풀이) h += `<div class="딱지풀이">${딱지풀이}</div>`;
   h += `<div class="설명">${격별칭(c.격)}${격설명(c.격)}${c.상신?` 그것을 <b>${c.상신}</b>이 떠받칩니다.`:''}</div>`;
   h += 격키워드(c.격);
@@ -782,7 +801,7 @@ function 간명(){
   for (const 종 of ['성격','패격','구응'])
     for (const x of (c.조문?.[종] || [])) {
       const 풀이 = 조문사전[x.해설키];
-      h += `<span><em>${종}</em>${풀이 ? 풀이 : ''}${풀이 ? ` <span style="color:#9a8a68;font-size:12px">(원문: ${x.원문})</span>` : x.원문}</span>`;
+      h += `<span><em>${종}</em>${풀이 ? 풀이 : ''}${풀이 ? ` <span style="color:#75694F;font-size:12px">(원문: ${x.원문})</span>` : x.원문}</span>`;
     }
   h += `</div>`;
   if (r.단계상신미현 && !r.단계상신미현.해당없음){
@@ -797,17 +816,11 @@ function 간명(){
   // 2026-10-07: 「지금」은 세는 나이(올해−출생년+1) — 간명서·대운 시작 나이와 같은 기준. 전에는 연 나이라 대운 경계에서 한 해 어긋났다
   const 올해 = new Date().getFullYear(), 나이 = 올해 - 입력.년 + 1;
   h += 시간겹HTML(m, r);
-  h += `<div class="card"><div class="card-title"><span class="gold-dot"></span>운 — ${hu.방향} · ${hu.대운수}세(세는 나이)부터</div>`;
+  h += `<div class="card 운카드"><div class="card-title"><span class="gold-dot"></span>운 — ${hu.방향} · ${hu.대운수}세(세는 나이)부터</div>`;
   // 2026-09-03: 「반기는 것은 실물·내보내는 힘…」 한 줄은 명리를 모르면 무슨 말인지 알 수 없다(실측).
   //   격 카드의 고정표(격만 보고 짠 것, 상신과 모순 나던 것)도 함께 걷어내고,
   //   엔진 취운 조문 하나를 출처로 낱말마다 풀어 주는 카드로 바꿨다.
   h += 희기표(r.결론.격, r.결론.상신, m.ilGan, hu);
-  h += 갈림지도카드(r);
-  h += 궁통카드(m, r);
-  h += 흐름카드(r);
-  h += 일진카드(r);                                       // 일진 (2026-10-09 사용자 지시)                                       // 셋째 층 「흐름」(滴天髓, 2026-10-07 사용자 결정)
-  h += 조문추적카드(r, 입력.성별);                       // 전문가 모드(2026-10-07, PROMPTS 7)
-  if (시모름) h += 민감도카드(m, 입력.성별, 입력.년);   // 시각 모름 — 열두 시주 민감도
   h += 대운곡선(hu.대운, 나이);
   for (const u of hu.대운){
     const 지금 = 나이 >= u.시작나이 && 나이 < u.시작나이 + 10;
@@ -824,8 +837,14 @@ function 간명(){
     </div>`;
   }
   h += `</div>`;
-
-  h += `<div class="card"><div class="card-title"><span class="gold-dot"></span>분야별 열여섯 해</div>` + 분야곡선판(r, 입력.성별) + `</div>`;
+  // 2026-10-09(29차-5): 아래 카드들은 전에는 운 카드 안에 들어가 있었다 — 따로 세우고 차례를 「세 책 → 날 → 분야 → 전문가」로
+  h += 갈림지도카드(r);
+  h += 흐름카드(r);                                       // 셋째 층 「흐름」(滴天髓, 2026-10-07 사용자 결정)
+  h += 궁통카드(m, r);
+  h += 일진카드(r);                                       // 일진 (2026-10-09 사용자 지시)
+  h += `<div class="card 분야카드"><div class="card-title"><span class="gold-dot"></span>분야별 열여섯 해</div>` + 분야곡선판(r, 입력.성별) + `</div>`;
+  h += 조문추적카드(r, 입력.성별);                       // 전문가 모드(2026-10-07, PROMPTS 7)
+  if (시모름) h += 민감도카드(m, 입력.성별, 입력.년);   // 시각 모름 — 열두 시주 민감도
 
   /* 알림 */
   const 알 = [...(r.만세력?.경고 || [])];
@@ -888,6 +907,8 @@ function 간명(){
     태어난 시각은 ${r.만세력?.보정 ? r.만세력.보정.replace('진태양시 ','진태양시로 ').replace('-','') + '당겨' : '진태양시로 32분 당겨'} 계산했습니다.</div>`;
 
   document.getElementById('화면결과').innerHTML = h;
+  접기적용(document.getElementById('화면결과'));   // 29차-5: 먼저 볼 것·명식·그릇 밖의 카드는 접어 둔다(첫 레이아웃이 가벼워진다)
+  if (!E.__덧붙임) (window.requestIdleCallback || (f => setTimeout(f, 1200)))(() => 덧붙임().then(덧카드채우기, () => {}));
   층바꾸기(document.body.classList.contains('층-전문가') ? '전문가' : '일반인');
   화면('결과');
 }
@@ -1377,7 +1398,7 @@ function 일진카드(r, 시작){
   let a; try { a = J.analyze(r, { 시작, 날수: 7 }); } catch(e) { return ''; }
   const esc = x => String(x ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const 첫 = a.날[0].날짜;
-  const 색 = t => /크게 열리|열리는/.test(t) ? '#2E7D4F' : /조심|지키는/.test(t) ? '#B0301C' : '#8a6d1f';
+  const 색 = t => /크게 열리|열리는/.test(t) ? '#2C784C' : /조심|지키는/.test(t) ? '#B0301C' : '#7D621C';
   const 줄 = a.날.map((d, i) => `<tr><td style="white-space:nowrap">${i === 0 && !시작 ? '<b>오늘</b><br>' : ''}${d.날짜.slice(5).replace('-', '/')}(${d.요일})<br><span style="color:var(--dim);font-size:12px">${d.간지}</span></td>
     <td><b style="color:${색(d.첫말)}">${d.첫말}</b><div style="font-size:13px">${esc(d.결)}</div>${d.사건.length ? `<div style="font-size:12px;color:var(--dim)">${esc(d.사건.join(' · '))}</div>` : ''}${d.밭 && d.밭.말 ? `<div style="font-size:12px;color:var(--dim)">${esc(d.밭.말)}</div>` : ''}</td></tr>`).join('');
   return `<div class="card 일진카드"><div class="card-title"><span class="gold-dot"></span>일진 — 하루하루의 결</div>
@@ -1389,7 +1410,7 @@ function 일진카드(r, 시작){
 function 일진다시(값){
   if (!현재 || !현재.r || !값) return; const [y, m, d] = 값.split('-').map(Number);
   const 칸 = document.querySelector('.card.일진카드'); if (!칸) return;
-  const t = document.createElement('div'); t.innerHTML = 일진카드(현재.r, { y, m, d }); if (t.firstElementChild) 칸.replaceWith(t.firstElementChild);
+  const t = document.createElement('div'); t.innerHTML = 일진카드(현재.r, { y, m, d }); const 새 = t.firstElementChild; if (새) { 칸.replaceWith(새); 접기적용(새.parentElement || document, true); }
 }
 // ── 세 층을 일반인 화면에도 (2026-10-09, 사용자 「자평진전은 자세한데 궁통보감은 안 나오고 적천수는 너무 간단」) ──
 const 글자그림 = {甲:'큰 나무',乙:'풀과 덩굴',丙:'해',丁:'등불',戊:'큰 산',己:'기름진 밭',庚:'쇠',辛:'보석',壬:'강물',癸:'단비'};
@@ -1399,7 +1420,7 @@ const 낳는 = {木:'火',火:'土',土:'金',金:'水',水:'木'}, 이기는 = 
 const 낳아주는 = Object.fromEntries(Object.entries(낳는).map(([a,b])=>[b,a])), 누르는 = Object.fromEntries(Object.entries(이기는).map(([a,b])=>[b,a]));
 const 간오행 = g => ({甲:'木',乙:'木',丙:'火',丁:'火',戊:'土',己:'土',庚:'金',辛:'金',壬:'水',癸:'水'})[g];
 const 판정첫말 = { '결이 크게 살아남':'크게 열리는 해', '결이 살아남':'열리는 해', '뒤섞임':'좋고 궂음이 섞인 해', '결이 눌림':'지키는 해', '결이 크게 눌림':'크게 조심할 해', '판단 보류':'판단 보류' };
-const 판정색 = t => /크게 열리|열리는/.test(t) ? '#2E7D4F' : /조심|지키는/.test(t) ? '#B0301C' : '#8a6d1f';
+const 판정색 = t => /크게 열리|열리는/.test(t) ? '#2C784C' : /조심|지키는/.test(t) ? '#B0301C' : '#7D621C';
 function 올해들(n){ const y = new Date().getFullYear(); return Array.from({length:n}, (_, i) => y + i); }
 function 연간지(y){ try { return E.seun.연간지(y); } catch(e) { const 간='甲乙丙丁戊己庚辛壬癸', 지='子丑寅卯辰巳午未申酉戌亥'; return { 천간: 간[(y-4)%10], 지지: 지[(y-4)%12], 간지: 간[(y-4)%10]+지[(y-4)%12] }; } }
 // 한 해에 궁통보감 필요 글자가 오는지·꺼리는 글자만 오는지 (27차 — 두 카드의 해마다 말이 갈릴 때 서로 밝히려고)
@@ -1410,6 +1431,59 @@ function 궁통해(m, y){
   return null;
 }
 const 갈림말 = '책마다 보는 눈이 달라 갈리는 것이니 한쪽으로 단정하지 않습니다';
+// ── 먼저 볼 것 (2026-10-09, 29차-5) — 결과 맨 위 한 화면: 그릇 한 줄 · 올해와 내년(흐름) · 오늘과 이번 주(일진). 자세한 것은 아래 카드를 펼쳐 본다
+function 먼저볼것카드(r, 입력, 시모름){
+  try {
+    const c = r.결론, m = r.명식;
+    const 쉬 = {정인:'배움과 문서', 편인:'남다른 통찰', 정관:'자리와 규범', 편관:'밀어붙이는 과업', 정재:'차곡히 쌓는 돈', 편재:'크게 굴리는 돈', 식신:'만들어 내보내는 힘', 상관:'틀을 깨는 재주', 비견:'내 편이 되는 힘', 겁재:'경쟁하며 나누는 힘'};
+    const 딱 = {성격:'짜임이 온전합니다', 성중유패:'서긴 했지만 흔드는 글자를 안고 있습니다', 패중유성:'흠이 있었지만 구해 주는 글자 덕에 다시 섰습니다', 패격:'짜임이 깨져 있어 운에서 메워야 합니다', 상신미현:'기둥이 될 글자가 아직 드러나지 않았습니다'}[c.성패] || '';
+    const 물 = 글자그림[m.ilGan] || m.ilGan;
+    let x = `<div class="card 늘펼침 먼저카드"><div class="card-title"><span class="gold-dot"></span>먼저 볼 것</div>`;
+    x += `<div class="먼저칸"><div class="먼저머리">그릇 — 무엇을 다루며 사는가</div><div class="먼저말"><b>${물}(${m.ilGan})</b>의 ${c.격 ? `${c.격}격 — ${쉬[c.격] || ''}` : '명식'}${c.상신 ? `, 기둥은 ${c.상신}(${쉬[c.상신] || ''})` : ''}.</div><div class="먼저작은">${딱}${시모름 ? ' · 태어난 시각 없이 본 판정입니다' : ''}</div><button type="button" class="더보기" onclick="카드로('그릇카드')">그릇 자세히</button></div>`;
+    const se = (r.단계11b_세운 || []).slice(0, 2);
+    if (se.length) {
+      const 줄 = se.map(s => { const 첫 = 첫말of(s.길흉.판정), 자 = s.길흉.자평읽기 && 첫말of(s.길흉.자평읽기.판정);
+        return `<div class="먼저말">${s.연도}년(${s.간지}) <b style="color:${판정색(첫)}">${첫}</b>${자 && 자 !== 첫 ? `<span class="먼저작은" style="display:inline"> · 자평진전으로는 「${자}」</span>` : ''}</div>`; }).join('');
+      const 나이 = new Date().getFullYear() - 입력.년 + 1, 대 = ((r.단계11_행운 || {}).대운 || []).find(u => 나이 >= u.시작나이 && 나이 < u.시작나이 + 10);
+      const 대말 = 대 ? `지금은 ${대.시작나이}세부터의 ${대.간지} 대운 — ${({'결이 크게 눌림':'지키는 십 년','결이 눌림':'조심하며 지키는 십 년','뒤섞임':'좋고 나쁨이 섞인 십 년','결이 살아남':'풀리는 십 년','결이 크게 살아남':'크게 풀리는 십 년'})[대.길흉.판정] || 대.길흉.판정}` : '';
+      x += `<div class="먼저칸"><div class="먼저머리">흐름 — 올해와 내년 (적천수)</div>${줄}<div class="먼저작은">${대말}</div><button type="button" class="더보기" onclick="카드로('갈림카드')">세 책으로 해마다 보기</button></div>`;
+    }
+    const J = E.iljin || E.일진;
+    if (J) { const a = J.analyze(r, { 날수: 7 }), 오 = a.날[0];
+      const 점 = a.날.map((d, i) => `<div class="날점" title="${d.날짜} ${d.첫말}"><i style="background:${판정색(d.첫말.replace('날', '해'))}${/섞인/.test(d.첫말) ? ';opacity:.45' : ''}"></i>${i === 0 ? '오늘' : d.요일}</div>`).join('');
+      x += `<div class="먼저칸"><div class="먼저머리">일진 — 오늘과 이번 주</div><div class="먼저말">오늘 ${오.간지} <b style="color:${판정색(오.첫말.replace('날', '해'))}">${오.첫말}</b></div><div class="먼저작은">${오.결}</div><div class="날점들" role="img" aria-label="${a.날.map(d => `${d.요일} ${d.첫말}`).join(', ')}">${점}</div><button type="button" class="더보기" onclick="카드로('일진카드')">이번 주 자세히</button></div>`; }
+    x += `<div class="궁통주" style="margin-top:4px">세 책의 판정을 더하지 않고 각자 보여 줍니다. 아래 카드 제목을 누르면 펼쳐집니다.</div></div>`;
+    return x;
+  } catch(e) { if (typeof console !== 'undefined') console.warn('먼저 볼 것', e); return ''; }
+}
+// ── 접는 카드 (29차-5) — 제목을 단추로 바꿔 aria-expanded 로 펼치고 접는다. 늘펼침 카드는 그대로. 이미 접기를 붙인 카드는 건너뛴다
+function 접기적용(root, 열기){
+  root.querySelectorAll('.card:not(.늘펼침)').forEach(card => {
+    if (card.dataset.접기) return;
+    const t = card.querySelector(':scope > .card-title'); if (!t) return;
+    card.dataset.접기 = '1';
+    const 몸 = document.createElement('div'); 몸.className = '카드몸';
+    while (t.nextSibling) 몸.appendChild(t.nextSibling);
+    card.appendChild(몸);
+    if (!card.id) card.id = '카드-' + Math.random().toString(36).slice(2, 8);
+    몸.id = card.id + '-몸';
+    const b = document.createElement('button'); b.type = 'button'; b.className = '카드접기';
+    b.setAttribute('aria-controls', 몸.id); b.innerHTML = t.innerHTML + '<span class="접기표" aria-hidden="true">▸</span>';
+    t.innerHTML = ''; t.appendChild(b);
+    b.addEventListener('click', () => 카드펼침(card, 몸.hidden));
+    카드펼침(card, !!열기);
+  });
+}
+function 카드펼침(card, 열기){
+  const 몸 = card.querySelector(':scope > .카드몸'), b = card.querySelector(':scope > .card-title .카드접기'); if (!몸 || !b) return;
+  몸.hidden = !열기; b.setAttribute('aria-expanded', String(열기));
+}
+function 카드로(클래스){
+  const card = document.querySelector('#화면결과 .card.' + 클래스); if (!card) return;
+  카드펼침(card, true);
+  card.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  const b = card.querySelector('.카드접기'); if (b) b.focus({ preventScroll: true });
+}
 // ── 세 책 갈림 지도 (2026-10-09, 29차-2) — 그릇(자평 25편을 한 해에)·밭(궁통 조후운)·흐름(적천수 歲運論)을 해마다 나란히.
 //   점수를 더하거나 평균 내지 않는다(유파 병렬). 셋이 같은 쪽이면 아래 줄이 진하고, 한쪽은 + 한쪽은 − 이면 빗금. 칸을 누르면 그해 근거 한 줄씩.
 const 첫말of = p => 판정첫말[p] || p;
@@ -1436,7 +1510,7 @@ function 갈림지도카드(r){
   x += `<div></div>` + 자료.map((d, i) => `<div class="해" data-i="${i}">${String(d.연도).slice(2)}</div>`).join('');
   x += 줄('그릇', '자') + 줄('밭', '밭') + 줄('흐름', '흐');
   x += `<div class="이름" style="font-size:11px">셋</div>` + 자료.map(d => `<div class="맞음 ${d.같음 ? '같음' : d.갈림 ? '갈림' : ''}" title="${d.같음 ? '세 책이 같은 쪽' : d.갈림 ? '책마다 갈림' : ''}"></div>`).join('');
-  x += `</div><div class="갈림범례"><span><i style="background:#2E7D4F"></i>크게 반김</span><span><i style="background:#8cc2a1"></i>반김</span><span><i style="background:#e3d9c4"></i>섞임·무관</span><span><i style="background:#e6a99b"></i>꺼림</span><span><i style="background:#B0301C"></i>크게 꺼림</span><span><i style="background:#2b2b2b;height:6px"></i>셋이 같은 쪽</span><span><i style="background:repeating-linear-gradient(45deg,#8a6d1f 0 2px,transparent 2px 5px);height:6px"></i>책마다 갈림</span></div>`;
+  x += `</div><div class="갈림범례"><span><i style="background:#2C784C"></i>크게 반김</span><span><i style="background:#8cc2a1"></i>반김</span><span><i style="background:#e3d9c4"></i>섞임·무관</span><span><i style="background:#e6a99b"></i>꺼림</span><span><i style="background:#B0301C"></i>크게 꺼림</span><span><i style="background:#2b2b2b;height:6px"></i>셋이 같은 쪽</span><span><i style="background:repeating-linear-gradient(45deg,#7D621C 0 2px,transparent 2px 5px);height:6px"></i>책마다 갈림</span></div>`;
   x += `<div id="갈림근거칸" class="갈림근거" aria-live="polite"></div>`;
   x += `<div class="궁통주">맨 위 숫자는 해(20○○년의 뒤 두 자리)입니다. 한 해의 머리 판정은 흐름(적천수 歲運論)이 맡고, 그릇·밭은 같은 해를 다른 눈으로 본 참고입니다. ${갈림말}.</div></div>`;
   setTimeout(() => 갈림근거(0), 0);
@@ -1463,10 +1537,10 @@ function 흐름카드(r){
   const jc = r && r.단계_흐름; if (!jc || jc.오류) return '';
   const esc = x => String(x ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   let x = `<div class="card 흐름카드"><div class="card-title"><span class="gold-dot"></span>적천수가 보는 흐름 — 세 번째 눈</div>`;
-  x += `<div class="궁통줄"><span class="궁통라벨" style="color:#8a6d1f">일간 ${jc.십간.글자}</span> ${esc(jc.십간.결)}<div class="궁통원문">「${esc(jc.십간.조문.원문)}」</div></div>`;
-  x += `<div class="궁통줄"><span class="궁통라벨" style="color:#2E7D4F">스스로 버틸 힘</span> <b>${esc(jc.쇠왕.상태)}</b> — ${esc(jc.쇠왕.결)}</div>`;
-  x += `<div class="궁통줄"><span class="궁통라벨" style="color:${jc.종화.후보 ? '#B0301C' : '#7a6f60'}">종·화</span> ${esc(jc.종화.결)}${jc.종화.조문 ? `<div class="궁통원문">「${esc(jc.종화.조문.원문)}」</div>` : ''}</div>`;
-  x += `<div class="궁통줄"><span class="궁통라벨" style="color:#8a6d1f">성정</span> ${esc(jc.성정.결)}</div>`;
+  x += `<div class="궁통줄"><span class="궁통라벨" style="color:#7D621C">일간 ${jc.십간.글자}</span> ${esc(jc.십간.결)}<div class="궁통원문">「${esc(jc.십간.조문.원문)}」</div></div>`;
+  x += `<div class="궁통줄"><span class="궁통라벨" style="color:#2C784C">스스로 버틸 힘</span> <b>${esc(jc.쇠왕.상태)}</b> — ${esc(jc.쇠왕.결)}</div>`;
+  x += `<div class="궁통줄"><span class="궁통라벨" style="color:${jc.종화.후보 ? '#B0301C' : '#6E6457'}">종·화</span> ${esc(jc.종화.결)}${jc.종화.조문 ? `<div class="궁통원문">「${esc(jc.종화.조문.원문)}」</div>` : ''}</div>`;
+  x += `<div class="궁통줄"><span class="궁통라벨" style="color:#7D621C">성정</span> ${esc(jc.성정.결)}</div>`;
   // 무엇이 흐름을 틔우나 — 쇠왕에서 글자 그림으로 (2026-10-09)
   { const 나 = 간오행(jc.십간.글자); const 상 = jc.쇠왕.상태;
     const 묶음 = (o, 뜻) => `${오행글자[o].map(그림말).join('·')}(${뜻})`;
@@ -1496,8 +1570,21 @@ function 흐름카드(r){
 }
 // ── 전문가 모드 (2026-10-07, PROMPTS 7): 조문 추적·시각 모름 민감도·명식 비교. 판정은 엔진 그대로, 근거를 꺼내 보이기만 한다 ──
 const esc2 = x => String(x ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+// 29차-5: 조문 추적 모듈은 engine.extra.js 로 나뉘었다 — 첫 화면을 그린 뒤 한가할 때 불러오고, 그 전에는 자리만 둔다
+let 덧약속 = null;
+function 덧붙임(){
+  if (typeof E !== 'undefined' && E.__덧붙임) return Promise.resolve();
+  return 덧약속 || (덧약속 = new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'engine.extra.js'; sc.onload = () => ok(); sc.onerror = () => { 덧약속 = null; no(new Error('조문 추적 자료를 불러오지 못했습니다')); }; document.head.appendChild(sc); }));
+}
+const 자리카드 = (클, 제목) => `<div class="card 전문 ${클}"><div class="card-title"><span class="gold-dot"></span>${제목}</div><div class="궁통주">조문 자료를 불러오는 중입니다…</div></div>`;
+function 덧카드채우기(){
+  if (!현재 || !현재.r) return;
+  const 바꿈 = (클, html) => { const 옛 = document.querySelector('#화면결과 .card.' + 클); if (!옛 || !html) return; const 열림 = !(옛.querySelector(':scope > .카드몸') || {}).hidden && !!옛.dataset.접기; const t = document.createElement('div'); t.innerHTML = html; const 새 = t.firstElementChild; 옛.replaceWith(새); 접기적용(새.parentElement, 열림); };
+  바꿈('추적자리', 조문추적카드(현재.r, 현재.입력.성별));
+  if (현재.입력.시모름) 바꿈('민감도자리', 민감도카드(현재.r.명식, 현재.입력.성별, 현재.입력.년));
+}
 function 조문추적카드(r, 성별){
-  const T = (typeof E !== 'undefined') && E.조문추적; if (!T) return '';
+  const T = (typeof E !== 'undefined') && E.조문추적; if (!T) return 자리카드('추적자리', '조문 추적 — 이 판정이 선 원문 자리');
   let t; try { t = T.추적(r, { 성별 }); } catch(e) { return ''; }
   const 줄말 = (책, z) => z.줄 && z.줄.length ? `<span class="추적줄">${책} ${z.장 ? z.장 + ' ' : ''}${z.줄.length > 3 ? `${z.줄[0]}~${z.줄[z.줄.length-1]}행` : z.줄.map(n => n + '행').join('·')}</span>` : '<span class="추적줄">줄 못 찾음</span>';
   const 조건표 = 조건 => 조건.length ? `<table class="추적조건">${조건.map(c => `<tr><td class="${c.성립 === true ? '성립' : c.성립 === false ? '불성립' : ''}">${c.성립 === true ? '○' : c.성립 === false ? '×' : '?'}</td><td>${esc2(c.키)}</td><td>${esc2(c.값)}</td><td class="근거">${esc2(c.근거)}</td></tr>`).join('')}</table>` : '';
@@ -1513,7 +1600,7 @@ function 조문추적카드(r, 성별){
   return x;
 }
 function 민감도카드(m, 성별, 출생연도){
-  const T = (typeof E !== 'undefined') && E.조문추적; if (!T) return '';
+  const T = (typeof E !== 'undefined') && E.조문추적; if (!T) return 자리카드('민감도자리', '시각을 모를 때 — 열두 시주 민감도');
   let s; try { s = T.시주민감도({ ...m, siGan: null, siJi: null }, { gender: 성별, 출생연도 }); } catch(e) { return ''; }
   const 칸 = ['격','상신','성패','최종성패','고저','궁통주판정'];
   let x = `<div class="card 전문"><div class="card-title"><span class="gold-dot"></span>시각을 모를 때 — 열두 시주 민감도</div>`;
@@ -1527,7 +1614,9 @@ function 민감도카드(m, 성별, 출생연도){
 let 비교선택 = [];
 function 비교선택토글(i, el){ if (el.checked) { 비교선택.push(i); if (비교선택.length > 2) { const 빠짐 = 비교선택.shift(); const 상자 = document.querySelector(`#목록칸 input[data-i="${빠짐}"]`); if (상자) 상자.checked = false; } } else 비교선택 = 비교선택.filter(x => x !== i); const b = document.getElementById('비교단추'); if (b) b.disabled = 비교선택.length !== 2; }
 function 비교하기(){
-  const T = (typeof E !== 'undefined') && E.조문추적; if (!T || 비교선택.length !== 2) return;
+  if (비교선택.length !== 2) return;
+  if (typeof E !== 'undefined' && !E.__덧붙임) { 덧붙임().then(비교하기, e => alert(e.message)); return; }
+  const T = (typeof E !== 'undefined') && E.조문추적; if (!T) return;
   const a = 읽기(); const [x, y] = 비교선택.map(i => a[i]); if (!x || !y) return;
   let rA, rB; try { rA = E.interpret.생년월일시로(x); rB = E.interpret.생년월일시로(y); rA.참고 = { 성별: x.성별 }; rB.참고 = { 성별: y.성별 }; } catch(e) { alert('비교할 명식을 다시 계산하지 못했습니다. ' + (e.message || '')); return; }
   const t = T.비교표(rA, rB);
@@ -1547,7 +1636,7 @@ function 궁통카드(m, 전체r){
   let r; try { r = G.analyze(m, 성별옵); } catch(e) { return ''; }
   if (!r || r.해당없음) return '';
   const 방향말 = {으뜸:'결이 크게 열리는 배합', 좋음:'결이 열리는 배합', 보통:'먹고 사는 데 모자람 없는 배합', 평범:'결이 크지 않은 배합', 막힘:'결이 막히는 배합'};
-  const 방향색 = {으뜸:'#2E7D4F', 좋음:'#2E7D4F', 보통:'#8a6d1f', 평범:'#7a6f60', 막힘:'#B0301C'};
+  const 방향색 = {으뜸:'#2C784C', 좋음:'#2C784C', 보통:'#7D621C', 평범:'#6E6457', 막힘:'#B0301C'};
   // 물상은 일간마다 다르다 — 己만 밭이다 (2026-09-07 사용자 지적 「그런데 왜 밭이야?」)
   const 물상 = {甲:'큰 나무',乙:'풀과 덩굴',丙:'해',丁:'등불',戊:'큰 산',己:'기름진 밭',庚:'쇠',辛:'보석',壬:'강물',癸:'단비'}[r.일간] || r.일간;
   const 계절 = {寅:'초봄',卯:'봄',辰:'늦봄',巳:'초여름',午:'한여름',未:'늦여름',申:'초가을',酉:'가을',戌:'늦가을',亥:'초겨울',子:'한겨울',丑:'늦겨울'}[r.월] || r.월+'월';
@@ -1576,14 +1665,14 @@ function 궁통카드(m, 전체r){
     // 적천수 해마다 판정과 갈리는 해를 밝힌다 (27차 — 「필요한 글자가 오는 해」가 적천수로는 조심할 해일 때 말없이 두지 않는다)
     const 세판 = new Map(((전체r && 전체r.단계11b_세운) || []).map(s => [s.연도, 판정첫말[s.길흉.판정] || s.길흉.판정]));
     const 갈린해 = 오는해.filter(y => /조심|지키는/.test(세판.get(y) || ''));
-    const 갈림 = 갈린해.length ? ` <span style="color:#8a6d1f">다만 이 가운데 ${몇해(갈린해, 6)}${갈린해.length <= 6 ? '은' : '는'} 적천수(해마다 흐름)로는 지키거나 조심할 해입니다 — 궁통보감은 「이 달의 밭에 필요한 글자가 오는가」를, 적천수는 「그해 글자가 원국·대운과 어떻게 맞물리는가」를 봅니다. ${갈림말}.</span>` : '';
-    x += `<div class="궁통요지"><b>쉽게 말하면</b> — ${쉬}${오는해.length ? ` 필요한 글자가 운에서 오는 해는 <b style="color:#2E7D4F">${몇해(오는해, 6)}</b>입니다.` : ''}${꺼리는해.length ? ` 꺼리는 글자만 오는 해는 ${몇해(꺼리는해, 6)}입니다.` : ''} 필요한 글자가 오는 해에 밭이 윤택해지고, 없을 때는 그 빈자리를 사람·배움·생활로 메웁니다.${갈림}</div>`;
+    const 갈림 = 갈린해.length ? ` <span style="color:#7D621C">다만 이 가운데 ${몇해(갈린해, 6)}${갈린해.length <= 6 ? '은' : '는'} 적천수(해마다 흐름)로는 지키거나 조심할 해입니다 — 궁통보감은 「이 달의 밭에 필요한 글자가 오는가」를, 적천수는 「그해 글자가 원국·대운과 어떻게 맞물리는가」를 봅니다. ${갈림말}.</span>` : '';
+    x += `<div class="궁통요지"><b>쉽게 말하면</b> — ${쉬}${오는해.length ? ` 필요한 글자가 운에서 오는 해는 <b style="color:#2C784C">${몇해(오는해, 6)}</b>입니다.` : ''}${꺼리는해.length ? ` 꺼리는 글자만 오는 해는 ${몇해(꺼리는해, 6)}입니다.` : ''} 필요한 글자가 오는 해에 밭이 윤택해지고, 없을 때는 그 빈자리를 사람·배움·생활로 메웁니다.${갈림}</div>`;
   } catch(e) { if (typeof console !== 'undefined') console.warn('궁통 쉽게 말하면', e); }
   const 자세히열림 = document.body.classList.contains('층-전문가') ? ' open' : '';
   x += `<details class="궁통자세히"${자세히열림}><summary style="cursor:pointer;font-size:13px;color:#6b5a38;margin:6px 0">원문 조문 자세히</summary>`;
   x += `<div class="궁통요지">이 달의 필요 글자는 <b>${r.용.join(' → ')}</b>${r.기 && r.기.length ? `, 꺼리는 글자는 <b>${r.기.join('·')}</b>` : ''}입니다. ${r.요지}</div>`;
   if (r.주판정) {
-    const p = r.주판정, 색 = 방향색[p.방향] || '#7a6f60';
+    const p = r.주판정, 색 = 방향색[p.방향] || '#6E6457';
     x += `<div class="궁통판정" style="border-left-color:${색}">
       <div class="궁통원문">「${p.원문}」</div>
       <div class="궁통판정어">원문 판정어 <b style="color:${색}">「${p.판정어}」</b>${p.방향 ? ` <span class="궁통방향">— ${방향말[p.방향]}</span>` : ''}</div>
@@ -1593,9 +1682,9 @@ function 궁통카드(m, 전체r){
     x += `<div class="궁통판정 없음">이 명식은 원문이 든 조건절 어디에도 정확히 들어맞지 않습니다. 아래 바탕과 흠으로 읽습니다.</div>`;
   }
   const 줄 = (라벨, xs, 색) => xs.map(z => `<div class="궁통줄"><span class="궁통라벨" style="color:${색}">${라벨}</span> 「${z.원문}」 — ${z.결}</div>`).join('');
-  x += 줄('바탕', r.바탕, '#8a6d1f') + 줄('흠', r.흠, '#B0301C') + 줄('완화', r.완화, '#2E7D4F');
+  x += 줄('바탕', r.바탕, '#7D621C') + 줄('흠', r.흠, '#B0301C') + 줄('완화', r.완화, '#2C784C');
   x += r.그밖의판정.map(z => `<div class="궁통줄"><span class="궁통라벨">함께 걸린 조건</span> 「${z.원문}」 → 「${z.판정어}」 — ${z.결}</div>`).join('');
-  x += (r.여명 || []).map(z => `<div class="궁통줄"><span class="궁통라벨" style="color:#8a6d1f">여명 조문</span> ${z.표시금지 ? '원문이 여명에 경계를 둔 배합(원문은 아래 「원문 그대로 보기」에서만)' : `「${z.원문}」`} — ${z.결}</div>`).join('');
+  x += (r.여명 || []).map(z => `<div class="궁통줄"><span class="궁통라벨" style="color:#7D621C">여명 조문</span> ${z.표시금지 ? '원문이 여명에 경계를 둔 배합(원문은 아래 「원문 그대로 보기」에서만)' : `「${z.원문}」`} — ${z.결}</div>`).join('');
   x += `<div class="궁통주">원문의 판정어(科甲·平常·孤苦 등)는 배합에 대한 옛 표현이지 사람에 대한 등급이 아닙니다. 자평진전 격국과는 별개 층 — 격국이 「무엇을 다루며 사는가」를 말하고, 이 층은 「이 달의 밭에 무엇이 갖춰졌는가」를 말합니다. 둘이 갈리면 모순이 아니라 층의 차이입니다.</div>`;
   x += 원문보기절(m, 성별옵, G);
   x += `</details></div>`;
@@ -1611,11 +1700,11 @@ function 원문보기절(m, 옵, G){
   const n = (v && v.항목 || []).length;
   if (!켜짐) return n ? `<div class="궁통주">이 명식에는 원문이 질병·수명·여명에 대해 적은 조문 ${n}건이 더 걸려 있습니다(표시하지 않음). 전문가용 「원문 그대로 보기」를 켜면 원문을 그대로 볼 수 있습니다.</div>` : '';
   if (!n) return `<div class="궁통주">「원문 그대로 보기」가 켜져 있으나, 이 명식에 걸린 질병·수명·여명 조문은 없습니다.</div>`;
-  const 자리색 = { 주판정:'#B0301C', '함께 걸린 조건':'#7a6f60', 바탕:'#8a6d1f', 흠:'#B0301C', 완화:'#2E7D4F', '여명 조문':'#8a6d1f', '질병 기록':'#7a6f60', 평주:'#7a6f60' };
+  const 자리색 = { 주판정:'#B0301C', '함께 걸린 조건':'#6E6457', 바탕:'#7D621C', 흠:'#B0301C', 완화:'#2C784C', '여명 조문':'#7D621C', '질병 기록':'#6E6457', 평주:'#6E6457' };
   let x = `<details open class="원문보기절" style="margin-top:10px;border-top:1px dashed #d8cfbd;padding-top:8px"><summary style="cursor:pointer;font-size:13px;color:#6b5a38"><b>원문 그대로</b> — 질병·수명·여명 조문 ${n}건 (전문가용)</summary>
     <div class="궁통주" style="margin-top:6px">${v.안내} 아래 글자는 상담 글·문답·간명서 본문에는 들어가지 않습니다.</div>`;
   for (const z of v.항목) {
-    x += `<div class="궁통줄"><span class="궁통라벨" style="color:${자리색[z.자리] || '#7a6f60'}">${z.자리}</span><span style="color:var(--dim);font-size:12px"> ${z.id}${z.줄 ? ` · 원문 ${z.줄}행` : ''} · ${z.유형}</span><br>
+    x += `<div class="궁통줄"><span class="궁통라벨" style="color:${자리색[z.자리] || '#6E6457'}">${z.자리}</span><span style="color:var(--dim);font-size:12px"> ${z.id}${z.줄 ? ` · 원문 ${z.줄}행` : ''} · ${z.유형}</span><br>
       <span class="궁통원문">「${z.원문}」</span>${z.판정어 ? ` <span style="color:var(--dim)">판정어 「${z.판정어}」</span>` : ''}<br><span style="color:#4a4236">${z.결}</span></div>`;
   }
   x += `</details>`;
@@ -1710,7 +1799,7 @@ function 시간겹HTML(m, r){
     const 충P={子:'午',午:'子',丑:'未',未:'丑',寅:'申',申:'寅',卯:'酉',酉:'卯',辰:'戌',戌:'辰',巳:'亥',亥:'巳'};
     const 합P={子:'丑',丑:'子',寅:'亥',亥:'寅',卯:'戌',戌:'卯',辰:'酉',酉:'辰',巳:'申',申:'巳',午:'未',未:'午'};
     const 원지=[m.yeonJi,m.wolJi,m.ilJi,m.siJi].filter(Boolean);
-    const 표식=지=>원지.includes(충P[지])?' · <tspan fill="#D0301C">충</tspan>':(원지.includes(합P[지])?' · <tspan fill="var(--gold)">합</tspan>':'');
+    const 표식=지=>원지.includes(충P[지])?' · <tspan fill="#CA2F1B">충</tspan>':(원지.includes(합P[지])?' · <tspan fill="var(--gold)">합</tspan>':'');
     // 세운
     const Y=now.getFullYear(); const 세=GANS[(Y-4)%10]+JIS[(Y-4)%12];
     // 월운(절기 근사: 매월 절입 대략일)
@@ -1952,6 +2041,7 @@ async function 간명서에세이(물음, 분량글자){
 
 // ───────────── 간명서 (본문 = 개인화 에세이, 부록 = 확정 판정 자료) ─────────────
 async function 간명서열기(상품 = '종합'){
+  try { await 덧붙임(); } catch(e) {}   // 부록 三 조문 추적이 쓴다(29차-5)
   if(!현재){ alert('먼저 명식을 봐 주세요.'); return; }
   const 간명서질문 = 상품표[상품] || 상품표.종합;
   const 단추=document.getElementById('간명서단추'); const 원래=단추.textContent; 단추.disabled=true;
@@ -2165,7 +2255,7 @@ async function 이해안됨보내기(btn){
 document.getElementById('원문보기').addEventListener('change', e => {
   try { localStorage.setItem('원문보기', e.target.checked ? '1' : '0'); } catch(err) {}
   // 이미 그린 결과가 있으면 궁통 카드만 다시 그린다 — 서버 호출 없음 (2026-10-07 10차)
-  if (현재 && 현재.r && 현재.r.명식) { const 상위 = document.querySelector('#결과 .card.궁통카드') || document.querySelector('.card.궁통카드'); if (상위) { const t = document.createElement('div'); t.innerHTML = 궁통카드(현재.r.명식, 현재.r); if (t.firstElementChild) 상위.replaceWith(t.firstElementChild); } }
+  if (현재 && 현재.r && 현재.r.명식) { const 상위 = document.querySelector('#결과 .card.궁통카드') || document.querySelector('.card.궁통카드'); if (상위) { const t = document.createElement('div'); t.innerHTML = 궁통카드(현재.r.명식, 현재.r); const 새 = t.firstElementChild; if (새) { const 열림 = !상위.dataset.접기 || !(상위.querySelector(':scope > .카드몸') || {}).hidden; 상위.replaceWith(새); if (새.closest('#화면결과')) 접기적용(새.parentElement, 열림); } } }
 });
 try { document.getElementById('원문보기').checked = localStorage.getItem('원문보기') === '1'; } catch(e) {}
 document.getElementById('시모름').addEventListener('change', e => {

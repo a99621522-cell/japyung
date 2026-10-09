@@ -14,6 +14,11 @@ const 모듈 = ['cheoja','chohu','chwiun','eumryeok','fixtures_zpjz','ganji','ge
   'haeseol','hapchung','ingwa','interpret','japgi','jari','jeoul','jijanggan','juje','manse','misonglip','myogo',
   'oegyeok','ohaeng_seosa','ohjeon','sangsin','sangsin_fallback','seonhu','seun','sinsal','sisol','sunjap','tonggeun',
   'tuchong','unbyeonhwa','unchung','wolun','yongeo','gungtong','gungtong_jomun','yukchin','gungtong_un','swiunmal','jomun_lines','jomun_trace','jeokcheonsu','iljin'];
+// 2026-10-09(29차-5): 첫 화면에 안 쓰는 모듈은 따로 — gemini 는 서버 전용이라 브라우저 번들에서 뺐고,
+//   조문 추적(jomun_trace + 원문 줄 번호표 jomun_lines)은 app/engine.extra.js 로 나눠 전문가 층·「왜?」·간명서 부록에서 처음 쓸 때 불러온다
+const 서버전용 = ['gemini'];
+const 나중 = ['jomun_lines', 'jomun_trace'];
+const 첫 = 모듈.filter(n => !서버전용.includes(n) && !나중.includes(n));
 const 별칭 = { 궁통조문:'gungtong_jomun', 조문추적:'jomun_trace', 적천수:'jeokcheonsu', 일진:'iljin', 지장간:'jijanggan', 서사:'ohaeng_seosa', 격국:'gyeokguk',
                해설:'haeseol', 만세력:'manse', 음력:'eumryeok' };
 
@@ -32,7 +37,7 @@ function require(p){
   return m.exports;
 }
 `;
-for (const n of 모듈) {
+for (const n of 첫) {
   const f = path.join(뿌리, n + '.js');
   if (!fs.existsSync(f)) throw new Error(`모듈 파일 없음: ${n}.js`);
   let src = fs.readFileSync(f, 'utf8');
@@ -40,13 +45,25 @@ for (const n of 모듈) {
   out += `__M["${n}"] = function(module, exports, require){\n${src}\n};\n`;
 }
 out += `var 간명엔진 = {};\n`;
-for (const n of 모듈) out += `간명엔진["${n}"] = require("${n}");\n`;
-for (const [k, v] of Object.entries(별칭)) out += `간명엔진["${k}"] = 간명엔진["${v}"];\n`;
-out += `간명엔진.__모듈수 = ${모듈.length};
+for (const n of 첫) out += `간명엔진["${n}"] = require("${n}");\n`;
+for (const [k, v] of Object.entries(별칭)) if (첫.includes(v)) out += `간명엔진["${k}"] = 간명엔진["${v}"];\n`;
+out += `간명엔진.__모듈수 = ${첫.length};
+간명엔진.__등록 = function(n, f){ __M[n] = f; };   // engine.extra.js 가 나중 모듈을 넣는다
+간명엔진.__require = require;
 globalThis.간명엔진 = 간명엔진;
 if (typeof module !== 'undefined' && module.exports) module.exports = 간명엔진;
 })();
 `;
 const 대상 = path.join(뿌리, 'app', 'engine.bundle.js');
 fs.writeFileSync(대상, out);
-console.log(`app/engine.bundle.js ${out.length.toLocaleString()}자 · 모듈 ${모듈.length}개`);
+let 덧 = `/* 간명 엔진 덧붙임 — 조문 추적(전문가 층·「왜?」·간명서 부록). engine.bundle.js 뒤에 불러온다. 자동 생성물. */
+(function(){
+"use strict";
+var E = globalThis.간명엔진; if (!E || !E.__등록) throw new Error('engine.bundle.js 가 먼저 있어야 합니다');
+`;
+for (const n of 나중) { let src = fs.readFileSync(path.join(뿌리, n + '.js'), 'utf8'); if (!src.endsWith('\n')) src += '\n'; 덧 += `E.__등록("${n}", function(module, exports, require){\n${src}\n});\n`; }
+for (const n of 나중) 덧 += `E["${n}"] = E.__require("${n}");\n`;
+for (const [k, v] of Object.entries(별칭)) if (나중.includes(v)) 덧 += `E["${k}"] = E["${v}"];\n`;
+덧 += `E.__덧붙임 = true;\n})();\n`;
+fs.writeFileSync(path.join(뿌리, 'app', 'engine.extra.js'), 덧);
+console.log(`app/engine.bundle.js ${out.length.toLocaleString()}자 · 모듈 ${첫.length}개 · app/engine.extra.js ${덧.length.toLocaleString()}자 · 모듈 ${나중.length}개`);
