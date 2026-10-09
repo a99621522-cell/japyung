@@ -207,6 +207,11 @@ svg.고리 .나표{font-size:9.5px;fill:var(--gold);text-anchor:middle;font-weig
 .궁통줄{font-size:13px;line-height:1.65;margin:4px 0;color:#4a4236}
 .궁통라벨{font-weight:700;font-size:12px;margin-right:6px}
 .궁통주{font-size:11.5px;color:var(--dim);margin-top:10px;line-height:1.6}
+.답표{width:100%;border-collapse:collapse;margin:8px 0 12px;font-size:14px;line-height:1.5}
+.답표 th,.답표 td{border-bottom:1px solid rgba(0,0,0,.12);padding:6px 8px;text-align:left;vertical-align:top}
+.답표 th{font-weight:600;border-bottom-width:2px}
+.답표 td:first-child{white-space:nowrap;padding-right:12px}
+.답표 tr.이번달 td{font-size:13px;opacity:.85}
 .상담소제{font-weight:700;font-size:15px;margin:14px 0 4px;color:#3b3225}
 .상담항목{margin:4px 0 4px 10px;padding-left:10px;border-left:2px solid rgba(0,0,0,.1)}
 .답머리{font-size:16px;margin:18px 0 6px;padding-bottom:3px;border-bottom:1px solid rgba(0,0,0,.08)}
@@ -1666,10 +1671,20 @@ function 검사표시(g){
   if (!조각.length) return '';
   return `<div class="검사줄" title="${(g.오류||[]).concat(g.경고||[]).join('\n').replace(/"/g,'&quot;')}">검사 — ${조각.join(' · ')}</div>`;
 }
+// 「▶ 해마다 보면」 표(2026-10-09) — 「| 해 | 읽기 |」 줄 묶음을 표로. 둘째 줄 「|---|」는 머리 구분선
+function 답표(x){
+  return String(x).replace(/(?:^[ \t]*\|.*\|[ \t]*$\n?){2,}/gm, 덩이 => {
+    const 줄 = 덩이.trim().split('\n').map(l => l.trim().replace(/^\||\|$/g, '').split('|').map(c => c.trim()));
+    const 구분 = 줄.length > 1 && 줄[1].every(c => /^:?-{2,}:?$/.test(c));
+    const 머리 = 구분 ? 줄[0] : null, 몸 = 구분 ? 줄.slice(2) : 줄;
+    const 칸 = (c, t) => `<${t}>${c.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')}</${t}>`;
+    return `<table class="답표">${머리 ? '<thead><tr>' + 머리.map(c => 칸(c, 'th')).join('') + '</tr></thead>' : ''}<tbody>${몸.map(r => '<tr' + (/^↳/.test(r[0]) ? ' class="이번달"' : '') + '>' + r.map(c => 칸(c, 'td')).join('') + '</tr>').join('')}</tbody></table>\n`;
+  });
+}
 function 꾸밈(x){
   // 2026-09-05: 신년운세 답이 「### 2027년의 성격」처럼 제목 표시를 그대로 드러내던 것을 고침 —
   //   ###/## 줄은 소제목으로, 줄머리 「* 」「- 」는 항목으로 바꾼다. 형광펜(**)은 그대로.
-  return x
+  return 답표(x)
     // 쉬운 말 층(2026-10-07): 「▶ 머리말」 줄은 소제목으로, 「▶ 이 답에 나온 말」부터 끝까지는 접었다 펴는 상자로
     .replace(/^(▶\s*이 답에 나온 말)\s*\n([\s\S]*)$/m, (_,h,b) => `<details class="용어상자" open><summary class="상담소제 답머리">${h}</summary>\n${b.trim()}\n</details>`)
     .replace(/^▶\s*(.+)$/gm, (_,t) => `<div class="상담소제 답머리">▶ ${t}</div>`)
@@ -1960,7 +1975,7 @@ function 층바꾸기(층){
 }
 (function 층초기화(){ let 층 = '일반인'; try { 층 = localStorage.getItem('층') || '일반인'; } catch(e) {} document.body.classList.toggle('층-전문가', 층 === '전문가'); })();
 // ── 「이해 안 됨」 단추 (2026-10-07, PROMPTS 5) — 답의 ▶ 절마다 하나. 절 이름만 서버에 보낸다(명식·본문 없음). 서버는 절별 횟수만 센다
-const 이해절들 = ['한 줄로 말하면','쉽게 풀어 보면','왜 그렇게 보나요','해 볼 만한 일','이 답에 나온 말'];
+const 이해절들 = ['한 줄로 말하면','쉽게 풀어 보면','왜 그렇게 보나요','해마다 보면','해 볼 만한 일','이 답에 나온 말'];
 function 이해단추(html){
   return html.replace(/<(div|summary) class="상담소제 답머리">▶ ([^<]+)<\/\1>/g, (all, tag, 제목) => {
     const 절 = 이해절들.find(x => 제목.trim().startsWith(x));
