@@ -56,7 +56,10 @@ const 원문사례 = [
     원문:'妻坐陽刃，凶也；而…日干無氣，全憑日刃幫身，則妻必能相夫' },
 ];
 
-function analyze(r, m) {
+function analyze(r, m, opt = {}) {
+  // 여명(2026-10-09): 배우자 글자는 관 — 「女以官爲夫」(4편). 24편 「妻星者，干頭之財也」는 남명의 말이다
+  const 여명 = (opt.성별 || opt.gender) === '여';
+  const 배우자글자 = 여명 ? ['정관', '편관'] : 재;
   const ctx = r.ctx;
   const rule = chwiun.lookup(ctx.gyeok, r.상신, ctx);
   const 속함 = (십성, g) => g === '정관합거' ? false
@@ -82,7 +85,7 @@ function analyze(r, m) {
 
   // ── 妻星 : 천간의 재
   const 처성 = [['년', m.yeonGan], ['월', m.wolGan], ['시', m.siGan]]
-    .filter(([, g]) => g && 재.includes(sipseong(m.ilGan, g)))
+    .filter(([, g]) => g && 배우자글자.includes(sipseong(m.ilGan, g)))
     .map(([p, g]) => ({ 자리:p, 글자:g, 십성:sipseong(m.ilGan, g), 희기:희기(sipseong(m.ilGan, g)) }));
   const 정편잡출 = new Set(처성.map(x => x.십성)).size >= 2;
 
@@ -98,7 +101,7 @@ function analyze(r, m) {
       충:일지충,
       원문사례: 해당사례.map(s => ({ 설명:s.설명, 원문:s.원문 })),
     },
-    처성: { 목록:처성, 정편잡출 },
+    처성: { 목록:처성, 정편잡출, 이름: 여명 ? '천간의 관(여명의 남편 글자)' : '천간의 재', 성별: 여명 ? '여' : '남' },
     부모: {
       월령득력, 년간유용,
       설명: (월령득력 || 년간유용)

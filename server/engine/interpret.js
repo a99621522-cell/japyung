@@ -223,8 +223,8 @@ function interpret(m, opt = {}) {
   const jh = johu(m.wolJi, jiPos, ganList, m.daysFromJeolip);
 
   // 10~11단계
-  const yc = yukchin23.analyze(g, m);   // 23편
-  const cj = cheoja.analyze(g, m);      // 24편
+  const yc = yukchin23.analyze(g, m, { 성별: gender });   // 23편 — 여명은 관=배우자(2026-10-09)
+  const cj = cheoja.analyze(g, m, { 성별: gender });      // 24편
   const gj = ganji.analyze(ctx, m);     // 27편
   const ss29 = sisol.analyze(ctx, m, g.격);  // 29편
   const oj = ohjeon.analyze(g, m, opt);      // 30편
