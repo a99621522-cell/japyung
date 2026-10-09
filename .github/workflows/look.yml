@@ -26,7 +26,7 @@ jobs:
           U="${{ inputs.url || 'https://misty-truth-03b6.a99621522.workers.dev/' }}"; mkdir -p out/app
           cd out/app
           wget -q -e robots=off --page-requisites --no-host-directories --adjust-extension=off "$U" || true
-          for f in index.html engine.bundle.js manseryeok.browser.js mundap_ui.js sw.js manifest.json manifest.webmanifest privacy.html; do
+          for f in index.html engine.bundle.js engine.extra.js manseryeok.browser.js mundap_ui.js sw.js manifest.json manifest.webmanifest privacy.html; do
             [ -s "$f" ] || wget -q "$U$f" -O "$f" || rm -f "$f"
           done
           ls -la

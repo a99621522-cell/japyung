@@ -1,0 +1,55 @@
+# 답 품질 기계 지표 (2026-10-09, 29차-4) — 평가 세트로 상담 답을 받아 판정 타당성·근거 추적·읽기·금지 표현을 재고
+# docs/eval/answer_baseline.json 과 견준다. 나빠지면 실패. Gemini 를 n번 부른다(기본 10).
+#   · 수동 실행: mode=live(배포 서버) 또는 local(이 브랜치 코드로 임시 서버 — 저장소 Secrets GEMINI_API_KEY 필요), update=true 면 기준값을 새로 써서 커밋
+#   · 매주 월 10:00 KST: 배포 서버로 10건
+#   · PR 에 「답평가」 라벨을 붙이면: 그 PR 코드(local)로 재고 PR 에 댓글
+name: 답 품질 지표
+on:
+  workflow_dispatch:
+    inputs:
+      mode: { description: 'live(배포 서버) | local(이 브랜치 코드, GEMINI_API_KEY 필요)', default: 'live' }
+      n: { description: '평가 세트 앞 몇 건 (Gemini 호출 수)', default: '10' }
+      update: { description: '기준값을 이번 결과로 새로 쓸까 (true/false)', default: 'false' }
+  schedule:
+    - cron: '0 1 * * 1'
+  pull_request:
+    types: [labeled]
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  metrics:
+    if: github.event_name != 'pull_request' || github.event.label.name == '답평가'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: 재기
+        id: m
+        env:
+          RELAY_URL: ${{ vars.RELAY_URL || 'https://ganmyeong-relay.onrender.com' }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          MODE="${{ github.event.inputs.mode || 'live' }}"; N="${{ github.event.inputs.n || '10' }}"
+          if [ "${{ github.event_name }}" = "pull_request" ]; then MODE=local; fi
+          EXTRA=""; if [ "${{ github.event.inputs.update }}" = "true" ]; then EXTRA="--update"; fi
+          if [ "$MODE" = "live" ]; then curl -s -m 90 "$RELAY_URL/health" > /dev/null || true; fi
+          set +e; node scripts/answer_metrics.js --$MODE --n "$N" --md metrics.md $EXTRA; CODE=$?; set -e
+          cat metrics.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"
+      - name: PR 댓글
+        if: github.event_name == 'pull_request' && always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [ -f metrics.md ] || echo "GEMINI_API_KEY 가 저장소 Secrets 에 없어 PR 코드로 재지 못했습니다." > metrics.md
+          gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments -F body=@metrics.md --jq .html_url
+      - name: 기준값 커밋
+        if: github.event.inputs.update == 'true'
+        run: |
+          git config user.name 'github-actions[bot]'; git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add docs/eval/answer_baseline.json && git commit -m "답 품질 기준값 갱신 (${{ github.event.inputs.mode }}, ${{ github.event.inputs.n }}건)" && git push || echo '바뀐 것 없음'
+      - name: 나빠졌으면 실패
+        if: steps.m.outputs.code != '0'
+        run: exit 1

@@ -14,6 +14,8 @@
  *   ⑪ 평가 세트 50건 기준값(scripts/eval_report.js, 2026-10-07 13차)
  *   ⑫ 셋째 층 흐름(scripts/jcs_check.js, 2026-10-07 17차)
  *   ⑬ 일진(scripts/iljin_check.js, 2026-10-09 26차)
+ *   ⑭ 闡微 명례 운 길흉 진술 대조(scripts/chanwei_un_check.js, 2026-10-09 29차-3)
+ *   ⑮ 답 품질 지표가 제대로 세는가(scripts/answer_metrics_check.js, 2026-10-09 29차-4)
  * 하나라도 틀리면 종료 코드 1.
  */
 const fs = require('fs');
@@ -149,6 +151,18 @@ console.log('⑬ 일진 (scripts/iljin_check.js — 날 간지 = 만세력 일�
 시험('iljin_check', () => {
   const out = execFileSync('node', [path.join(뿌리, 'scripts', 'iljin_check.js')], { encoding: 'utf8', timeout: 120000 });
   return /문제 항목 0/.test(out);
+});
+
+console.log('⑭ 闡微 운 진술 (scripts/chanwei_un_check.js — 명례 평의 대운·流年 길흉 진술 ↔ 엔진 대운 통합·분할·세운 일치율 회귀 감시, 2026-10-09)');
+시험('chanwei_un_check', () => {
+  const out = execFileSync('node', [path.join(뿌리, 'scripts', 'chanwei_un_check.js')], { encoding: 'utf8', timeout: 120000 });
+  return /문제 항목 0/.test(out);
+});
+
+console.log('⑮ 답 품질 지표 (scripts/answer_metrics_check.js — 뼈대를 옮긴 답은 어긋남 0·금지 0, 뒤집은 첫말·육친 흉단은 나빠짐으로, 2026-10-09)');
+시험('answer_metrics_check', () => {
+  const out = execFileSync('node', [path.join(뿌리, 'scripts', 'answer_metrics_check.js')], { encoding: 'utf8', timeout: 120000 });
+  return /전부 통과/.test(out);
 });
 
 console.log(실패.length ? `\n실패 ${실패.length}건` : '\n전부 통과');
