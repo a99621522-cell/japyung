@@ -207,7 +207,37 @@ function range(ctx, r, m, opt = {}) {
   return out;
 }
 
-module.exports = { 연간지, 오년구간, 대운관계, analyze, range };
+/**
+ * 지나온 해 — 사용자가 스스로 맞는지 확인하게 과거 해의 판정을 같은 규칙으로 낸다 (2026-10-09, 34차).
+ *   판정을 바꾸지 않는다: 지금 해를 내는 range 와 같은 함수·같은 대운 목록이다. 사용자가 「아님」을 눌러도
+ *   그 명식의 판정은 그대로이고(30편 결과 역산 금지), 집계는 엔진 전체를 고치는 데만 쓴다.
+ * @param {object} r 해석 결과(interpret) — r.ctx·r.결론·r.명식·r.단계11_행운
+ * @param {number} 출생연도
+ * @param {object} opt { 올해, 첫나이(세는 나이, 기본 16), 최대(해 수, 기본 30) }
+ * @returns [{…세운, 나이, 거리, 자리[]}] — 자리: 그해 아래 글자가 원국 아래 글자와 충하는 자리, 형·해 가운데 움직이는 자리
+ */
+function 지나온해(r, 출생연도, opt = {}) {
+  if (!r || !r.ctx || !출생연도) return [];
+  const 올해 = opt.올해 ?? new Date().getFullYear();
+  const 첫 = Math.max(출생연도 + (opt.첫나이 ?? 16) - 1, 올해 - (opt.최대 ?? 30));
+  if (첫 >= 올해) return [];
+  const m = r.명식;
+  const g = { ...(r.결론 || {}), ctx: r.ctx, 상신: r.결론 && r.결론.상신, 격: r.결론 && r.결론.격 };
+  const se = range(r.ctx, g, m, { 시작연도: 첫, 개수: 올해 - 첫, 대운목록: (r.단계11_행운 || {}).대운 || [], 출생연도 });
+  const 원국 = { 년: m.yeonJi, 월: m.wolJi, 일: m.ilJi, 시: m.siJi };
+  const CHUNG = require('./hapchung').CHUNG;
+  for (const s of se) {
+    s.나이 = s.연도 - 출생연도 + 1;
+    s.거리 = 올해 - s.연도;
+    const 충자리 = Object.keys(원국).filter(k => 원국[k] && CHUNG[s.지지] === 원국[k]);
+    const 형해자리 = (s.형해 || []).filter(f => f.움직임 && f.생극 !== '충').flatMap(f => f.자리 || []).filter(k => k !== '대운');
+    s.자리 = [...new Set([...충자리.map(k => ({ 자리: k, 까닭: '충' })), ...형해자리.map(k => ({ 자리: k, 까닭: '형·해(서로 극함)' }))].map(x => JSON.stringify(x)))].map(x => JSON.parse(x));
+    s.자리 = s.자리.filter((x, i, a) => a.findIndex(y => y.자리 === x.자리) === i).map(x => ({ ...x, 뜻: jeokcheonsu.자리뜻[x.자리] }));
+  }
+  return se;
+}
+
+module.exports = { 연간지, 오년구간, 대운관계, analyze, range, 지나온해 };
 
 if (require.main === module) {
   const { judge } = require('./gyeokguk');

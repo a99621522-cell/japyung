@@ -130,6 +130,17 @@ const 확인 = (이름, 조건, 설명) => { console.log(`  ${조건 ? '통과' 
     확인('통계에 명식 없음', !JSON.stringify(h).includes('辛'));
   }
 
+  console.log('⑥-2 /확인 (지나온 해 맞음·아님, 34차)');
+  { const 보내 = async 몸 => { const r = await fetch(주소 + '/확인', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(몸) }); return { 상태: r.status }; };
+    const a = await 보내({ 층: '흐름', 첫말: '지키는 해', 거리: 3, 답: '맞음', 자리: true });
+    const b = await 보내({ 층: '흐름', 첫말: '지키는 해', 거리: 12, 답: '아님', 자리: false, 명식: { ilGan: '辛' }, 생년: 1971 });
+    const c = await 보내({ 층: '흐름', 첫말: '대박인 해', 거리: 3, 답: '맞음' }), d = await 보내({ 층: '흐름', 첫말: '열리는 해', 거리: 0, 답: '맞음' });
+    const h = ((await (await fetch(주소 + '/health')).json()).통계 || {}).확인 || {};
+    확인('첫말·거리·자리 묶음으로 셈', a.상태 === 200 && b.상태 === 200 && h.첫말['지키는 해|맞음'] === 1 && h.첫말['지키는 해|아님'] === 1 && h.거리['1~3년 전|맞음'] === 1 && h.거리['11년 이상 전|아님'] === 1 && h.자리['자리 흔들림 있음|맞음'] === 1, JSON.stringify(h));
+    확인('모르는 첫말·거리 0 은 400', c.상태 === 400 && d.상태 === 400);
+    확인('통계에 명식·생년 없음', !JSON.stringify(h).includes('辛') && !JSON.stringify(h).includes('1971'));
+  }
+
   console.log('⑦ /판정 JSON API (2026-10-07 PROMPTS 7)');
   { const r = await 부름('/판정', { 명식: 몸기본.명식, 성별: '남', 출생연도: 1971, 절기날수: 13, 전체: true });
     확인('/판정 200 · 결론·추적·궁통·대운', r.상태 === 200 && r.d.성공 && r.d.결론 && r.d.결론.격 && Array.isArray(r.d.추적.자평) && r.d.추적.자평.length >= 1 && r.d.추적.자평[0].줄.length >= 1 && Array.isArray(r.d.추적.안걸림) && r.d.궁통 && Array.isArray(r.d.대운) && r.d.대운.length >= 1, JSON.stringify(r.d).slice(0, 200));
