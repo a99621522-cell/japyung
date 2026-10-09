@@ -211,7 +211,7 @@ async function 해석(m, opt = {}) {
   //   궁통보감 관법이거나 물음이 없으면 예전대로 조문 리포트.
   const 폴백 = (사유, 덧) => {
     let 본 = null;
-    try { if (interpretOpt.주제 && interpretOpt.관법 !== '궁통보감') 본 = require('./mureum').엔진답(r, interpretOpt.주제, { 성별: interpretOpt.gender }); } catch (e) {}
+    try { if (interpretOpt.주제 && interpretOpt.관법 !== '궁통보감') 본 = require('./mureum').엔진답(r, interpretOpt.주제, { 성별: interpretOpt.gender, 출생연도: interpretOpt.출생연도 }); } catch (e) {}
     return 본 ? { 성공: false, 사유, 판정: r, 본문: 본, 출처: '엔진 답', ...덧 } : { 성공: false, 사유, 판정: r, 본문: render(r, interpretOpt), 출처: '조문 리포트(폴백)', ...덧 };
   };
 
