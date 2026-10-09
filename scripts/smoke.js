@@ -6,7 +6,8 @@
  *
  * ① /health를 두드려 서버를 깨우고, 기대 커밋이 주어지면 그 커밋이 올라올 때까지 기다린다(최대 15분)
  * ② /해설에 시험 명식을 보내 답의 모양을 본다 — 쉬운 말 층(▶ 머리말·용어 풀이)과 답 검사 결과
- * Gemini를 한 번 부른다(요금 한 번).
+ * ③ /문답 첫 물음(앱 주 경로)도 보내 해마다 표 첫말을 엔진 세운 판정과 대조한다
+ * Gemini를 두 번 부른다(요금 두 번).
  */
 const 주소 = (process.env.RELAY_URL || 'https://ganmyeong-relay.onrender.com').replace(/\/$/, '');
 const 기대 = (process.argv[2] || '').slice(0, 7);
@@ -57,4 +58,39 @@ async function 건강() {
   if (!답.성공) { console.log(`::error::해설 실패 — ${답.사유}`); process.exit(1); }
   if (빠짐.length) { console.log(`::warning::머리말 빠짐: ${빠짐.join(', ')}`); process.exit(2); }
   console.log('쉬운 말 층 반영 확인 — 다섯 머리말 모두 있음');
+
+  // ③ /문답 첫 물음 (2026-10-09, 28차) — 앱에서 물음을 치면 /해설 이 아니라 이 길로 간다. 세운 3년만 계산하던 버그(24차)를
+  //    smoke 가 못 잡았던 까닭. 해마다 표 첫말을 같은 명식의 엔진 세운 판정과 대조한다. Gemini 한 번 더.
+  const 문몸 = { 명식: 몸.명식, 성별: 몸.성별, 출생연도: 몸.출생연도, 절기날수: 몸.절기날수, 질문: 몸.주제, 이력: [] };
+  const res2 = await fetch(`${주소}/%EB%AC%B8%EB%8B%B5`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(문몸),
+    signal: AbortSignal.timeout(180000),
+  });
+  const 답2 = await res2.json();
+  const 본문2 = String(답2.본문 || '');
+  console.log(`\n── /문답 첫 물음 ── 성공 ${답2.성공} · ${본문2.length}자`);
+  console.log('검사', JSON.stringify(답2.검사 || null));
+  console.log('\n' + 본문2 + '\n');
+  // 엔진 판정 — 서버(mundap_route)와 같은 옵션으로 이 저장소의 엔진을 돌린다(서버가 같은 커밋이면 같아야 한다)
+  const 문제 = [];
+  try {
+    const interpret = require('../interpret'), { 해마다첫말 } = require('../haeseol');
+    const r = interpret.interpret(몸.명식, { 출생연도: 몸.출생연도, gender: 몸.성별, daysToJeolgi: 몸.절기날수 });
+    const 판 = new Map((r.단계11b_세운 || []).map(x => [String(x.연도), 해마다첫말[x.길흉.판정]]));
+    const 줄 = 본문2.split('\n').filter(l => /^\s*\|\s*\**\s*\d{4}년/.test(l));
+    for (const l of 줄) {
+      const y = l.match(/(\d{4})년/)[1], 칸 = (l.split('|')[2] || '').replace(/\*/g, '').trim();
+      const 첫 = ['크게 열리는 해', '열리는 해', '좋고 궂음이 섞인 해', '크게 조심할 해', '지키는 해'].find(w => 칸.startsWith(w));
+      if (!판.has(y)) 문제.push(`${y}년: 엔진 세운에 없는 해`);
+      else if (첫 && 첫 !== 판.get(y)) 문제.push(`${y}년: 답 「${첫}」 ↔ 엔진 「${판.get(y)}」`);
+    }
+    console.log(`해마다 표 ${줄.length}줄 대조 — 어긋남 ${문제.length}`); 문제.forEach(x => console.log('  ' + x));
+  } catch (e) { console.log('엔진 대조 못 함 — ' + (e.message || e)); }
+  try { require('fs').appendFileSync('smoke-answer.md', `\n\n---\n\n### /문답 첫 물음 (앱 주 경로)\n\n성공 ${답2.성공} · ${본문2.length}자 · 검사: \`${JSON.stringify(답2.검사 || null)}\`\n\n해마다 표 엔진 대조: ${문제.length ? 문제.join(' / ') : '어긋남 없음'}\n\n---\n\n${본문2}\n`); } catch (e) {}
+  const 머리2 = [...머리.slice(0, 3), '▶ 해마다 보면', ...머리.slice(3)];
+  const 빠짐2 = 머리2.filter(m => !본문2.includes(m));
+  if (!답2.성공) { console.log(`::error::/문답 실패 — ${답2.사유}`); process.exit(1); }
+  if (문제.length) { console.log(`::error::/문답 해마다 표가 엔진 판정과 다름: ${문제.join(' / ')}`); process.exit(1); }
+  if (빠짐2.length) { console.log(`::warning::/문답 머리말 빠짐: ${빠짐2.join(', ')}`); process.exit(2); }
+  console.log('/문답 확인 — 여섯 머리말·해마다 표 엔진 판정 일치');
 })().catch(e => { console.log('::error::' + (e.message || e)); process.exit(1); });
