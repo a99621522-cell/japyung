@@ -13,6 +13,7 @@
  *   ⑩ 세계 만세력(scripts/world_check.js, 2026-10-07 11차)
  *   ⑪ 평가 세트 50건 기준값(scripts/eval_report.js, 2026-10-07 13차)
  *   ⑫ 셋째 층 흐름(scripts/jcs_check.js, 2026-10-07 17차)
+ *   ⑬ 일진(scripts/iljin_check.js, 2026-10-09 26차)
  * 하나라도 틀리면 종료 코드 1.
  */
 const fs = require('fs');
@@ -141,6 +142,12 @@ console.log('⑪ 평가 세트 50건 (scripts/eval_report.js — docs/eval/basel
 console.log('⑫ 셋째 층 「흐름」(滴天髓) (scripts/jcs_check.js — 원문 대조·종화 fixture·세운 戰衝和 규칙·무작위 불변식)');
 시험('jcs_check 600건', () => {
   const out = execFileSync('node', [path.join(뿌리, 'scripts', 'jcs_check.js'), '600'], { encoding: 'utf8', timeout: 120000 });
+  return /문제 항목 0/.test(out);
+});
+
+console.log('⑬ 일진 (scripts/iljin_check.js — 날 간지 = 만세력 일주 400날·무작위 200건×7일 불변식·브리프줄, 2026-10-09)');
+시험('iljin_check', () => {
+  const out = execFileSync('node', [path.join(뿌리, 'scripts', 'iljin_check.js')], { encoding: 'utf8', timeout: 120000 });
   return /문제 항목 0/.test(out);
 });
 
