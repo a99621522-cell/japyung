@@ -68,7 +68,22 @@ const 자동교정표 = [
 function 자동교정(본문) {
   let 글 = String(본문 || ''); const 고침 = [];
   for (const [식, 대신] of 자동교정표) { const 전 = 글; 글 = 글.replace(식, 대신); if (글 !== 전) 고침.push(String(식).slice(1, 24)); }
+  const 표 = 해마다칸정리(글); if (표 !== 글) { 글 = 표; 고침.push('해마다 표 칸'); }
   return { 본문: 글, 고침 };
+}
+
+/** 「▶ 해마다 보면」 표 읽기 칸 정리 (2026-10-09) — 뜻을 바꾸지 않는 것만 기계로 걷는다:
+ *  ① 읽기 칸의 굵은 글씨(굵게는 해 칸에만) ② 「해(丙)」「2027년(丁未)」 같은 괄호 속 한자 ③ 그 뒤 남는 「(붙듦)」 같은 풀이 괄호 앞 빈칸.
+ *  「丙-辛 합」처럼 문장에 박힌 한자·합충 이름은 손대지 않는다 — 검사기가 오류로 잡아 그 절만 다시 쓰게 한다 */
+function 해마다칸정리(글) {
+  const i = 글.indexOf('▶ 해마다 보면'); if (i < 0) return 글;
+  const j = 글.indexOf('▶', i + 2); const 끝 = j > 0 ? j : 글.length;
+  const 단락 = 글.slice(i, 끝).split('\n').map(l => {
+    const m = l.match(/^(\s*\|[^|]*\|)([^|]*)(\|\s*)$/); if (!m || /^\s*\|\s*:?-{2,}/.test(l) || /^\s*\|\s*해\s*\|/.test(l)) return l;
+    const 칸 = m[2].replace(/\*\*/g, '').replace(/\s*\([一-鿿·\s]+\)/g, '').replace(/[ \t]{2,}/g, ' ');
+    return m[1] + 칸 + m[3];
+  }).join('\n');
+  return 글.slice(0, i) + 단락 + 글.slice(끝);
 }
 
 function 검사(본문, ctx = {}) {
