@@ -13,8 +13,8 @@ const 뿌리 = path.join(__dirname, '..');
 const 모듈 = ['cheoja','chohu','chwiun','eumryeok','fixtures_zpjz','ganji','gemini','gukmyeong','gyeokguk','haengun',
   'haeseol','hapchung','ingwa','interpret','japgi','jari','jeoul','jijanggan','juje','manse','misonglip','myogo',
   'oegyeok','ohaeng_seosa','ohjeon','sangsin','sangsin_fallback','seonhu','seun','sinsal','sisol','sunjap','tonggeun',
-  'tuchong','unbyeonhwa','unchung','wolun','yongeo','gungtong','gungtong_jomun','yukchin','gungtong_un','swiunmal','jomun_lines','jomun_trace','jeokcheonsu'];
-const 별칭 = { 궁통조문:'gungtong_jomun', 조문추적:'jomun_trace', 적천수:'jeokcheonsu', 지장간:'jijanggan', 서사:'ohaeng_seosa', 격국:'gyeokguk',
+  'tuchong','unbyeonhwa','unchung','wolun','yongeo','gungtong','gungtong_jomun','yukchin','gungtong_un','swiunmal','jomun_lines','jomun_trace','jeokcheonsu','iljin'];
+const 별칭 = { 궁통조문:'gungtong_jomun', 조문추적:'jomun_trace', 적천수:'jeokcheonsu', 일진:'iljin', 지장간:'jijanggan', 서사:'ohaeng_seosa', 격국:'gyeokguk',
                해설:'haeseol', 만세력:'manse', 음력:'eumryeok' };
 
 let out = `/* 간명 엔진 번들 — 모듈 ${모듈.length}개. 자동 생성물이니 직접 고치지 마세요.

@@ -792,7 +792,8 @@ function 간명(){
   //   엔진 취운 조문 하나를 출처로 낱말마다 풀어 주는 카드로 바꿨다.
   h += 희기표(r.결론.격, r.결론.상신, m.ilGan, hu);
   h += 궁통카드(m);
-  h += 흐름카드(r);                                       // 셋째 층 「흐름」(滴天髓, 2026-10-07 사용자 결정)
+  h += 흐름카드(r);
+  h += 일진카드(r);                                       // 일진 (2026-10-09 사용자 지시)                                       // 셋째 층 「흐름」(滴天髓, 2026-10-07 사용자 결정)
   h += 조문추적카드(r, 입력.성별);                       // 전문가 모드(2026-10-07, PROMPTS 7)
   if (시모름) h += 민감도카드(m, 입력.성별, 입력.년);   // 시각 모름 — 열두 시주 민감도
   h += 대운곡선(hu.대운, 나이);
@@ -1338,6 +1339,27 @@ function 격설명(격){
   }[격] || '';
 }
 // ── 셋째 층 「흐름」(滴天髓) 카드 (2026-10-07 사용자 결정 「층을 두고 세운도 적천수대로 해」) — 그릇·밭과 병렬. 일반인 층에도 보인다 ──
+// ── 일진 (2026-10-09 사용자 지시 「일진을 보기를 원하는 사람들이 많은데 구현해봐」) ──
+//   원전(자평진전·궁통보감·적천수·천미)에 일진 대목은 없다 — 엔진 iljin.js 가 25편 방법(운의 한 글자를 원국에 대어 본다)을 하루에 적용한 참고
+function 일진카드(r, 시작){
+  const J = (typeof E !== 'undefined') && (E.iljin || E.일진); if (!J || !r || !r.명식) return '';
+  let a; try { a = J.analyze(r, { 시작, 날수: 7 }); } catch(e) { return ''; }
+  const esc = x => String(x ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const 첫 = a.날[0].날짜;
+  const 색 = t => /크게 열리|열리는/.test(t) ? '#2E7D4F' : /조심|지키는/.test(t) ? '#B0301C' : '#8a6d1f';
+  const 줄 = a.날.map((d, i) => `<tr><td style="white-space:nowrap">${i === 0 && !시작 ? '<b>오늘</b><br>' : ''}${d.날짜.slice(5).replace('-', '/')}(${d.요일})<br><span style="color:var(--dim);font-size:12px">${d.간지}</span></td>
+    <td><b style="color:${색(d.첫말)}">${d.첫말}</b><div style="font-size:13px">${esc(d.결)}</div>${d.사건.length ? `<div style="font-size:12px;color:var(--dim)">${esc(d.사건.join(' · '))}</div>` : ''}${d.밭 && d.밭.말 ? `<div style="font-size:12px;color:var(--dim)">${esc(d.밭.말)}</div>` : ''}</td></tr>`).join('');
+  return `<div class="card 일진카드"><div class="card-title"><span class="gold-dot"></span>일진 — 하루하루의 결</div>
+    <div style="display:flex;gap:8px;align-items:center;margin:4px 0 8px;font-size:14px"><label for="일진날">이 날부터 7일</label>
+    <input type="date" id="일진날" value="${첫}" onchange="일진다시(this.value)" style="padding:4px 6px;border:1px solid #d8cfbd;border-radius:6px"></div>
+    <table class="답표"><thead><tr><th>날</th><th>그날의 결</th></tr></thead><tbody>${줄}</tbody></table>
+    <div class="궁통주">이 명식이 반기는 글자와 꺼리는 글자(${esc(a.기준)})에 그날의 글자를 대어 본 것입니다. 자평진전·궁통보감·적천수에는 일진을 다룬 대목이 없어, 운의 한 글자를 원국에 대어 보는 자평진전 25편의 방법을 하루에 넓혀 쓴 참고입니다. 하루는 해·달·열 해 안의 가장 작은 단위라 큰 흐름을 뒤집지 않고, 무슨 일이 생긴다고 못 박지도 않습니다. 날은 자정에 바뀝니다.</div></div>`;
+}
+function 일진다시(값){
+  if (!현재 || !현재.r || !값) return; const [y, m, d] = 값.split('-').map(Number);
+  const 칸 = document.querySelector('.card.일진카드'); if (!칸) return;
+  const t = document.createElement('div'); t.innerHTML = 일진카드(현재.r, { y, m, d }); if (t.firstElementChild) 칸.replaceWith(t.firstElementChild);
+}
 // ── 세 층을 일반인 화면에도 (2026-10-09, 사용자 「자평진전은 자세한데 궁통보감은 안 나오고 적천수는 너무 간단」) ──
 const 글자그림 = {甲:'큰 나무',乙:'풀과 덩굴',丙:'해',丁:'등불',戊:'큰 산',己:'기름진 밭',庚:'쇠',辛:'보석',壬:'강물',癸:'단비'};
 const 그림말 = g => `${글자그림[g] || g}(${g})`;
