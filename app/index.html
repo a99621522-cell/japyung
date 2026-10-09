@@ -1546,7 +1546,7 @@ function 지나온해카드(r, 입력){
     const 답 = 확인읽기(r);
     const 열 = { '결이 크게 살아남':'크게 풀리는 십 년','결이 살아남':'풀리는 십 년','뒤섞임':'좋고 나쁨이 섞인 십 년','결이 눌림':'지키는 십 년','결이 크게 눌림':'크게 지키는 십 년' };
     const jd = (r.단계_흐름 && r.단계_흐름.대운) || [];
-    const 자리말 = s => s.자리.length ? `<div style="font-size:12.5px;color:var(--dim)">흔들리기 쉬웠던 쪽: ${s.자리.map(z => `${z.뜻}(${({년:'태어난 해',월:'태어난 달',일:'태어난 날',시:'태어난 시각'})[z.자리]}의 아래 글자와 ${z.까닭})`).join(', ')}</div>` : '';
+    const 자리말 = s => s.자리.length ? `<div style="font-size:12.5px;color:var(--dim)">흔들리기 쉬웠던 쪽: ${s.자리.map(z => `${z.뜻}(${({년:'태어난 해',월:'태어난 달',일:'태어난 날',시:'태어난 시각'})[z.자리]}의 아래 글자와 ${z.까닭}) — ${z.장면}`).join(' / ')}</div>` : '';
     const 줄 = s => { const 첫 = 판정첫말[s.길흉.판정] || s.길흉.판정;
       return `<tr data-해="${s.연도}"><td style="white-space:nowrap">${s.연도}년<div style="font-size:12px;color:var(--dim)">${s.간지} · ${s.나이}세</div></td><td><b style="color:${판정색(첫)}">${첫}</b>${왜('지난해', s.연도, s.연도 + '년')}${자리말(s)}
         <div class="확인단추" role="group" aria-label="${s.연도}년이 실제로 「${첫}」였나요">${확인답들.map(a => `<button type="button" aria-pressed="${답[s.연도] === a}" onclick="확인누름(this, ${s.연도}, '${a}')">${a}</button>`).join('')}</div></td></tr>`; };
@@ -1716,7 +1716,7 @@ function 흐름카드(r){
         const 사 = (s.길흉.전충화 || []).map(사건말).join(', ');
         const 궁 = 궁통해(r.명식, s.연도);
         const 궁말 = 궁 === '필요' && /조심|지키는/.test(첫) ? '궁통보감으로는 이 달의 밭에 필요한 글자가 오는 해' : 궁 === '꺼림' && /열리는/.test(첫) ? '궁통보감으로는 꺼리는 글자만 오는 해' : '';
-        return `<tr><td style="white-space:nowrap">${s.연도}년(${s.간지})</td><td><b style="color:${판정색(첫)}">${첫}</b>${왜('해', s.연도, s.연도 + '년')}${사 ? `<div style="font-size:12px;color:var(--dim)">${사}</div>` : ''}${자 && 자 !== 첫 ? `<div style="font-size:12px;color:var(--dim)">자평진전으로는 「${자}」 — 책마다 눈이 달라 갈립니다</div>` : ''}${궁말 ? `<div style="font-size:12px;color:var(--dim)">${궁말} — 책마다 눈이 달라 갈립니다</div>` : ''}${(s.형해 || []).length ? `<div style="font-size:12px;color:var(--dim)">형·해(점수 없음): ${esc(s.형해.map(f => `${f.말} — ${(f.생극 === '충' ? '충이기도 해 충으로 봄' : f.움직임 ? '그 자리가 흔들리기 쉬움' : '따로 일어나는 일 없음')}`).join(' · '))}</div>` : ''}</td></tr>`; }).join('');
+        return `<tr><td style="white-space:nowrap">${s.연도}년(${s.간지})</td><td><b style="color:${판정색(첫)}">${첫}</b>${왜('해', s.연도, s.연도 + '년')}${사 ? `<div style="font-size:12px;color:var(--dim)">${사}</div>` : ''}${자 && 자 !== 첫 ? `<div style="font-size:12px;color:var(--dim)">자평진전으로는 「${자}」 — 책마다 눈이 달라 갈립니다</div>` : ''}${궁말 ? `<div style="font-size:12px;color:var(--dim)">${궁말} — 책마다 눈이 달라 갈립니다</div>` : ''}${(() => { let z = []; try { z = E.seun.흔들자리(s, r.명식); } catch(e) {} return z.length ? `<div style="font-size:12px;color:var(--dim)">흔들리기 쉬운 쪽: ${z.map(q => `${q.뜻} — ${q.장면}`).join(' / ')}</div>` : ''; })()}${(s.형해 || []).length ? `<div style="font-size:12px;color:var(--dim)">형·해(점수 없음): ${esc(s.형해.map(f => `${f.말} — ${(f.생극 === '충' ? '충이기도 해 충으로 봄' : f.움직임 ? '그 자리가 흔들리기 쉬움' : '따로 일어나는 일 없음')}`).join(' · '))}</div>` : ''}</td></tr>`; }).join('');
       x += `<div style="margin-top:10px;font-weight:600;font-size:14px">해마다 — 적천수가 보는 한 해</div><table class="답표"><thead><tr><th>해</th><th>적천수 판정</th></tr></thead><tbody>${줄들}</tbody></table>`;
       // 2070년까지 (2026-10-09 사용자 지시) — 나머지 해는 접어서
       if (전.length > se.length) {
