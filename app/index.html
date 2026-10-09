@@ -774,6 +774,7 @@ function 간명(){
 
   h += 먼저볼것카드(r, 입력, 시모름);
   h += 지나온해카드(r, 입력);
+  h += AI카드(r);   // 38차 네 번째 눈
   h += `<div class="card 늘펼침"><div class="card-title"><span class="gold-dot"></span>명식</div>
     <div class="기둥들">
       ${기둥('시', 시모름?null:m.siGan, m.siJi)}
@@ -1583,9 +1584,10 @@ async function 확인누름(b, 연도, a){
   b.parentElement.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(답[연도] === x.textContent)));
   const 셈칸 = b.closest('.지나온카드').querySelector('.확인셈'); if (셈칸) 셈칸.innerHTML = 확인셈말(r);
   적중줄채우기(); 기억줄채우기();
+  { const 칸 = document.getElementById('AI칸'); if (칸 && AI읽기(r).length) 칸.innerHTML = AI내용(r, AI읽기(r)); }
   if (전 === a) return;   // 거둔 것은 보내지 않는다(서버는 더하기만)
   const s = (현재.지나온 || []).find(x => x.연도 === 연도); if (!s) return;
-  try { await fetch(중계 + '/확인', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ 층: '흐름', 첫말: 판정첫말[s.길흉.판정] || s.길흉.판정, 거리: s.거리, 답: a, 자리: s.자리.length > 0 }) }); } catch(e) { /* 못 보내도 조용히 */ }
+  try { await fetch(중계 + '/확인', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ 층: '흐름', 첫말: 판정첫말[s.길흉.판정] || s.길흉.판정, 거리: s.거리, 답: a, 자리: s.자리.length > 0, ...(AI관계(r, 연도) ? { ai: AI관계(r, 연도) } : {}) }) }); } catch(e) { /* 못 보내도 조용히 */ }
 }
 
 // ── 기억 (2026-10-09, 37차) — 이 명식으로 물은 것을 이 기기에만 적어 두고, 다음 물음에 지나온 해 확인과 함께 보낸다(서버는 저장하지 않는다) ──
@@ -1638,6 +1640,66 @@ function 적중줄채우기(){
   const 내 = 맞 + 아 ? `지나온 해 판정이 <b>${맞 + 아}해 가운데 ${맞}해 맞았다</b>고 확인하셨습니다.` : `판정을 믿기 전에 <b>지나온 해 몇 개가 맞는지</b> 먼저 확인해 보세요.`;
   const 모두 = 전체확인 ? ` <span class="먼저작은" style="display:inline">모든 이용자가 확인한 ${전체확인.맞 + 전체확인.아}해 기준 적중 ${(100 * 전체확인.맞 / (전체확인.맞 + 전체확인.아)).toFixed(0)}%(서버가 다시 시작하면 처음부터 셈).</span>` : '';
   칸.innerHTML = 내 + 모두;
+}
+
+// ── 네 번째 눈 — AI 자유 판정 (2026-10-09, 38차, 사용자 「판정 — 모델이나 상담자가 그때그때 함, 이것도 구현해」) ──
+//   다른 앱처럼 모델이 여덟 글자만 보고 스스로 판정한 것을 엔진 판정 옆에 나란히 둔다. 엔진 판정은 바꾸지 않는다.
+//   누를 때만 부르고(Gemini 한 번), 결과는 이 기기에 최근 세 번까지 둔다 — 「그때그때」 달라지는지 보이려고.
+const 방향 = 첫 => /열리는/.test(첫 || '') ? 1 : /지키는|조심/.test(첫 || '') ? -1 : 0;
+function AI키(r){ return 'AI판정:' + 확인키(r).slice('지나온확인:'.length); }
+function AI읽기(r){ try { return JSON.parse(localStorage.getItem(AI키(r))) || []; } catch(e) { return []; } }
+function 엔진첫말(r, y){
+  const s = (r.단계11b_세운 || []).find(x => x.연도 === y) || ((현재 && 현재.지나온) || []).find(x => x.연도 === y);
+  return s ? (판정첫말[s.길흉.판정] || s.길흉.판정) : null;
+}
+function AI관계(r, y){
+  const 판 = AI읽기(r)[0]; if (!판) return null; const a = (판.판정.해마다 || []).find(x => x.연도 === y), e = 엔진첫말(r, y); if (!a || !e) return null;
+  const da = 방향(a.판정), de = 방향(e); return da && de ? (da === de ? '같은쪽' : '반대쪽') : '한쪽섞임';
+}
+function AI카드(r){
+  const 목록 = AI읽기(r);
+  let x = `<div class="card AI카드"><div class="card-title"><span class="gold-dot"></span>네 번째 눈 — AI 자유 판정 (참고)</div><div id="AI칸">`;
+  x += AI내용(r, 목록);
+  return x + `</div></div>`;
+}
+function AI내용(r, 목록){
+  let x = `<div class="궁통주" style="margin:0 0 6px">다른 사주 앱이나 챗GPT처럼, 모델(Gemini)이 여덟 글자만 보고 <b>스스로</b> 판정한 것입니다. 원문 조문으로 낸 엔진 판정(세 책)은 모델에게 주지 않았고, 엔진 판정도 바꾸지 않습니다. 같은 사주라도 물을 때마다 달라질 수 있습니다 — 그 차이를 그대로 보여 드립니다.</div>`;
+  x += `<button type="button" class="더보기" style="all:unset;cursor:pointer;font-size:14px;color:#fff;background:#6b5a38;border-radius:14px;padding:5px 14px" onclick="AI받기(this)">${목록.length ? 'AI에게 다시 판정받기' : 'AI에게 따로 판정받기'}</button>`;
+  if (!목록.length) return x;
+  const 판 = 목록[0].판정, 앞 = 목록[1] && 목록[1].판정;
+  x += `<div class="궁통요지" style="margin-top:8px">${esc2(판.한줄)}<div class="먼저작은">강약 ${esc2(판.강약 || '-')} · 격국 ${esc2(판.격국 || '-')} · 용신 ${esc2(판.용신 || '-')}${(판.희신 || []).length ? ` · 희신 ${판.희신.map(esc2).join('·')}` : ''}${(판.기신 || []).length ? ` · 기신 ${판.기신.map(esc2).join('·')}` : ''} <span style="color:var(--dim)">(${esc2((목록[0].때 || '').slice(0, 10))} 판정)</span></div></div>`;
+  let 같 = 0, 반 = 0, 섞 = 0, 바뀜 = 0;
+  const 올해 = new Date().getFullYear();
+  const 줄 = (판.해마다 || []).map(a => {
+    const e = 엔진첫말(r, a.연도); const da = 방향(a.판정), de = 방향(e);
+    const 관 = !e ? '' : da && de ? (da === de ? '같은 쪽' : '반대 쪽') : '한쪽은 섞임';
+    if (관 === '같은 쪽') 같++; else if (관 === '반대 쪽') 반++; else if (관) 섞++;
+    const 전 = 앞 && (앞.해마다 || []).find(z => z.연도 === a.연도); if (전 && 전.판정 !== a.판정) 바뀜++;
+    return `<tr${a.연도 === 올해 ? ' style="background:#FAF7F1"' : ''}><td style="white-space:nowrap">${a.연도}${a.연도 < 올해 ? '<div style="font-size:11px;color:var(--dim)">지난 해</div>' : ''}</td><td><b style="color:${판정색(e || '')}">${esc2(e || '-')}</b></td><td><b style="color:${판정색(a.판정)}">${esc2(a.판정)}</b><div style="font-size:12px;color:var(--dim)">${esc2(a.까닭)}${전 && 전.판정 !== a.판정 ? ` · 앞서는 「${esc2(전.판정)}」` : ''}</div></td><td style="font-size:12px;color:${관 === '반대 쪽' ? '#B4452C' : 'var(--dim)'}">${관}</td></tr>`;
+  }).join('');
+  x += `<table class="답표" style="margin-top:8px"><thead><tr><th>해</th><th>엔진(적천수)</th><th>AI 자유 판정</th><th></th></tr></thead><tbody>${줄}</tbody></table>`;
+  x += `<div class="궁통주">${같 + 반 + 섞}해 가운데 같은 쪽 ${같}해 · 반대 쪽 ${반}해 · 한쪽이 섞임 ${섞}해.${앞 ? ` 앞서 받은 AI 판정과 견주면 ${바뀜}해가 달라졌습니다(모델 판정은 그때그때 달라질 수 있습니다).` : ''}</div>`;
+  // 지나온 해 확인으로 둘 중 어느 쪽이 맞았나 — 반대 쪽인 해만
+  const 답 = 확인읽기(r); let 엔진쪽 = 0, AI쪽 = 0;
+  for (const [y, v] of Object.entries(답)) { if (AI관계(r, +y) !== '반대쪽' || v === '모르겠음') continue; v === '맞음' ? 엔진쪽++ : AI쪽++; }
+  x += `<div class="확인셈" style="font-size:13.5px;margin-top:6px">${엔진쪽 + AI쪽 ? `엔진과 AI가 반대로 본 지나온 해 가운데 확인하신 ${엔진쪽 + AI쪽}해 — <b>엔진 쪽이 맞음 ${엔진쪽}</b> · <b>AI 쪽이 맞음 ${AI쪽}</b>` : '엔진과 AI가 반대로 본 지나온 해를 「지나온 해」 카드에서 확인하시면 어느 쪽이 맞았는지 여기 셉니다.'}</div>`;
+  return x;
+}
+async function AI받기(b){
+  if (!현재 || !현재.r) return; const r = 현재.r, m = r.명식;
+  const 원래 = b.textContent; b.disabled = true; b.textContent = 'AI가 판정하는 중…(30초쯤)';
+  const 몸 = { 명식: { yeonGan:m.yeonGan, yeonJi:m.yeonJi, wolGan:m.wolGan, wolJi:m.wolJi, ilGan:m.ilGan, ilJi:m.ilJi }, 출생연도: 현재.입력.년, 성별: 현재.입력.성별 };
+  if (!현재.입력.시모름) { 몸.명식.siGan = m.siGan; 몸.명식.siJi = m.siJi; }
+  const 대 = r.만세력 && r.만세력.대운; if (대 && 대.날수 != null) 몸.절기날수 = 대.날수;
+  const 그만 = new AbortController(); const t = setTimeout(() => 그만.abort(), 120000);
+  try {
+    const d = await (await fetch(중계 + '/자유판정', { method: 'POST', signal: 그만.signal, headers: { 'content-type': 'application/json' }, body: JSON.stringify(몸) })).json();
+    if (!d || !d.성공) { alert('AI 판정을 받지 못했습니다' + (d && d.사유 ? ' — ' + d.사유 : '') + '. 잠시 뒤 다시 눌러 주세요.'); return; }
+    const 목록 = [{ 때: d.때, 판정: d.판정 }, ...AI읽기(r)].slice(0, 3);
+    try { localStorage.setItem(AI키(r), JSON.stringify(목록)); } catch(e) {}
+    const 칸 = document.getElementById('AI칸'); if (칸) 칸.innerHTML = AI내용(r, 목록);
+  } catch(e) { alert(e.name === 'AbortError' ? '2분을 넘겨 멈췄습니다. 다시 눌러 주세요.' : '연결이 되지 않았습니다.'); }
+  finally { clearTimeout(t); b.disabled = false; b.textContent = 원래; }
 }
 // ── 먼저 볼 것 (2026-10-09, 29차-5) — 결과 맨 위 한 화면: 그릇 한 줄 · 올해와 내년(흐름) · 오늘과 이번 주(일진). 자세한 것은 아래 카드를 펼쳐 본다
 function 먼저볼것카드(r, 입력, 시모름){
