@@ -210,6 +210,17 @@ svg.고리 .나표{font-size:9.5px;fill:var(--gold);text-anchor:middle;font-weig
 .답표{width:100%;border-collapse:collapse;margin:8px 0 12px;font-size:14px;line-height:1.5}
 .답표 th,.답표 td{border-bottom:1px solid rgba(0,0,0,.12);padding:6px 8px;text-align:left;vertical-align:top}
 .답표 th{font-weight:600;border-bottom-width:2px}
+/* 세 책 갈림 지도 (29차-2) — 셋을 합치지 않고 나란히. 같은 쪽이면 진하게, 갈리면 빗금 */
+.갈림지도{display:grid;grid-template-columns:3.6em repeat(var(--n),minmax(0,1fr));gap:2px;align-items:stretch;font-size:11px;margin:6px 0}
+.갈림지도 .이름{font-size:12px;color:#6b5a38;display:flex;align-items:center}
+.갈림지도 .해{text-align:center;color:var(--dim);font-variant-numeric:tabular-nums}
+.갈림지도 button.칸{all:unset;box-sizing:border-box;display:block;width:100%;height:22px;border-radius:3px;cursor:pointer;background:#ece6da}
+.갈림지도 button.칸:focus-visible{outline:2px solid #6b5a38;outline-offset:1px}
+.갈림지도 button.칸.p2{background:#2E7D4F}.갈림지도 button.칸.p1{background:#8cc2a1}.갈림지도 button.칸.z0{background:#e3d9c4}.갈림지도 button.칸.m1{background:#e6a99b}.갈림지도 button.칸.m2{background:#B0301C}.갈림지도 button.칸.빈{background:#f4f1ea;outline:1px dashed #ddd2bd;outline-offset:-1px}
+.갈림지도 .맞음{height:8px;border-radius:2px}.갈림지도 .맞음.같음{background:#2b2b2b}.갈림지도 .맞음.갈림{background:repeating-linear-gradient(45deg,#8a6d1f 0 2px,transparent 2px 5px)}
+.갈림지도 .고름 button.칸{box-shadow:0 0 0 2px #6b5a38 inset}.갈림지도 .해.고름{color:#2b2b2b;font-weight:700}
+.갈림범례{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px;color:var(--dim);margin:2px 0 6px}.갈림범례 i{display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:-2px;margin-right:3px}
+.갈림근거{border-left:3px solid #d8cfbd;padding:6px 10px;margin-top:6px;font-size:14px;background:#faf7f1}
 .답표 td:first-child{white-space:nowrap;padding-right:12px}
 .답표 tr.이번달 td{font-size:13px;opacity:.85}
 .상담소제{font-weight:700;font-size:15px;margin:14px 0 4px;color:#3b3225}
@@ -791,6 +802,7 @@ function 간명(){
   //   격 카드의 고정표(격만 보고 짠 것, 상신과 모순 나던 것)도 함께 걷어내고,
   //   엔진 취운 조문 하나를 출처로 낱말마다 풀어 주는 카드로 바꿨다.
   h += 희기표(r.결론.격, r.결론.상신, m.ilGan, hu);
+  h += 갈림지도카드(r);
   h += 궁통카드(m, r);
   h += 흐름카드(r);
   h += 일진카드(r);                                       // 일진 (2026-10-09 사용자 지시)                                       // 셋째 층 「흐름」(滴天髓, 2026-10-07 사용자 결정)
@@ -1398,6 +1410,55 @@ function 궁통해(m, y){
   return null;
 }
 const 갈림말 = '책마다 보는 눈이 달라 갈리는 것이니 한쪽으로 단정하지 않습니다';
+// ── 세 책 갈림 지도 (2026-10-09, 29차-2) — 그릇(자평 25편을 한 해에)·밭(궁통 조후운)·흐름(적천수 歲運論)을 해마다 나란히.
+//   점수를 더하거나 평균 내지 않는다(유파 병렬). 셋이 같은 쪽이면 아래 줄이 진하고, 한쪽은 + 한쪽은 − 이면 빗금. 칸을 누르면 그해 근거 한 줄씩.
+const 첫말of = p => 판정첫말[p] || p;
+function 갈림자료(r){
+  const m = r.명식, 전 = (r.단계11b_세운 || []);
+  return 전.slice(0, 15).map(s => {
+    const 흐 = s.길흉.점수 ?? 0, 자 = (s.길흉.자평읽기 && s.길흉.자평읽기.점수) ?? 0;
+    let z = null; try { const g = 연간지(s.연도); z = E.gungtong_un.조후운(m.ilGan, m.wolJi, { 천간: g.천간, 지지: g.지지 }); } catch(e) {}
+    const 판 = z && !z.해당없음 ? [z.천간, z.지지].filter(Boolean) : [];
+    const 밭 = 판.filter(t => /필요/.test(t.판정 || '')).length - 판.filter(t => /꺼림/.test(t.판정 || '')).length;
+    const 부호 = [Math.sign(자), Math.sign(밭), Math.sign(흐)];
+    const 같음 = 부호.every(x => x > 0) || 부호.every(x => x < 0), 갈림 = 부호.includes(1) && 부호.includes(-1);
+    return { s, 연도: s.연도, 간지: s.간지, 자, 밭: z && !z.해당없음 ? 밭 : null, 흐, z, 같음, 갈림 };
+  });
+}
+function 갈림지도카드(r){
+  if (!r || !(r.단계11b_세운 || []).length) return '';
+  let 자료; try { 자료 = 갈림자료(r); } catch(e) { return ''; }
+  const 칸색 = v => v == null ? '빈' : v >= 2 ? 'p2' : v >= 1 ? 'p1' : v <= -2 ? 'm2' : v <= -1 ? 'm1' : 'z0';
+  const 줄 = (이름, 키) => `<div class="이름">${이름}</div>` + 자료.map((d, i) => `<div data-i="${i}"><button class="칸 ${칸색(d[키])}" onclick="갈림근거(${i})" aria-label="${d.연도}년 ${이름} ${d[키] == null ? '해당 없음' : d[키] > 0 ? '반김' : d[키] < 0 ? '꺼림' : '섞임'}"></button></div>`).join('');
+  let x = `<div class="card 갈림카드"><div class="card-title"><span class="gold-dot"></span>세 책이 보는 해마다 — ${자료[0].연도}~${자료[자료.length-1].연도}년</div>`;
+  x += `<div class="궁통주" style="margin:0 0 4px">세 책은 서로 다른 물음에 답합니다 — 그릇(자평진전)은 이 격이 반기는 글자가 오는가, 밭(궁통보감)은 이 계절에 필요한 글자가 오는가, 흐름(적천수)은 그해 글자가 원국·대운과 어떻게 맞물리는가. 셋을 더하지 않고 나란히 둡니다. 칸을 누르면 그해의 근거가 나옵니다.</div>`;
+  x += `<div class="갈림지도" style="--n:${자료.length}" role="group" aria-label="해마다 세 책의 판정">`;
+  x += `<div></div>` + 자료.map((d, i) => `<div class="해" data-i="${i}">${String(d.연도).slice(2)}</div>`).join('');
+  x += 줄('그릇', '자') + 줄('밭', '밭') + 줄('흐름', '흐');
+  x += `<div class="이름" style="font-size:11px">셋</div>` + 자료.map(d => `<div class="맞음 ${d.같음 ? '같음' : d.갈림 ? '갈림' : ''}" title="${d.같음 ? '세 책이 같은 쪽' : d.갈림 ? '책마다 갈림' : ''}"></div>`).join('');
+  x += `</div><div class="갈림범례"><span><i style="background:#2E7D4F"></i>크게 반김</span><span><i style="background:#8cc2a1"></i>반김</span><span><i style="background:#e3d9c4"></i>섞임·무관</span><span><i style="background:#e6a99b"></i>꺼림</span><span><i style="background:#B0301C"></i>크게 꺼림</span><span><i style="background:#2b2b2b;height:6px"></i>셋이 같은 쪽</span><span><i style="background:repeating-linear-gradient(45deg,#8a6d1f 0 2px,transparent 2px 5px);height:6px"></i>책마다 갈림</span></div>`;
+  x += `<div id="갈림근거칸" class="갈림근거" aria-live="polite"></div>`;
+  x += `<div class="궁통주">맨 위 숫자는 해(20○○년의 뒤 두 자리)입니다. 한 해의 머리 판정은 흐름(적천수 歲運論)이 맡고, 그릇·밭은 같은 해를 다른 눈으로 본 참고입니다. ${갈림말}.</div></div>`;
+  setTimeout(() => 갈림근거(0), 0);
+  return x;
+}
+function 갈림근거(i){
+  if (!현재 || !현재.r) return; const 칸 = document.getElementById('갈림근거칸'); if (!칸) return;
+  const 자료 = 갈림자료(현재.r), d = 자료[i]; if (!d) return;
+  document.querySelectorAll('.갈림지도 [data-i]').forEach(el => el.classList.toggle('고름', el.dataset.i === String(i)));
+  const esc = x => String(x ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const r = 현재.r; let 취 = null; try { 취 = E.chwiun.lookup(r.ctx.gyeok, r.결론.상신, r.ctx); } catch(e) {}
+  const 십 = { 비견:'비겁', 겁재:'비겁', 식신:'식상', 상관:'식상', 정재:'재', 편재:'재', 정관:'관', 편관:'살', 정인:'인', 편인:'인' };
+  const 자말 = d.s.길흉.자평읽기 ? 첫말of(d.s.길흉.자평읽기.판정) : '-';
+  const 그릇근거 = 취 ? `이 격(${r.결론.격}격${r.결론.상신 ? ' 用' + r.결론.상신 : ''})은 ${(취.희||[]).join('·') || '-'}을(를) 반기고 ${(취.기||[]).join('·') || '-'}을(를) 꺼립니다 — 그해 위 글자 ${d.s.천간}(${d.s.천간십성})·아래 글자 ${d.s.지지}(${d.s.지지십성})를 대어 봄${취.원문 && 취.원문[0] ? `<div class="궁통원문">「${esc(취.원문[0])}」</div>` : ''}` : '격의 희기가 정해지지 않았습니다';
+  const z = d.z; const 밭말 = !z || z.해당없음 ? '이 칸은 조후 판정이 없습니다' : [z.천간, z.지지].filter(Boolean).map(t => `${t.정기 && t.정기 !== t.글자 ? `${그림말(t.정기)}(${t.글자} 속)` : 그림말(t.글자)} — ${t.판정 === '필요' ? '이 계절에 필요한 글자' : t.판정 === '꺼림' ? '이 계절에 꺼리는 글자' : '이 계절과 무관'}`).join(' · ');
+  const 흐근거 = (d.s.길흉.전충화 || []).map(e => `${({戰:'부딪힘(위 글자끼리)',衝:'흔들림(아래 글자끼리)',和:'붙듦'})[e.종류] || e.종류} ${e.가감 > 0 ? '+' : e.가감 < 0 ? '−' : '±0'} — ${esc(e.설명)}`).join('<br>');
+  const 조 = d.s.길흉.조문;
+  칸.innerHTML = `<b>${d.연도}년(${d.간지})</b>${d.같음 ? ' — 세 책이 같은 쪽' : d.갈림 ? ` — ${갈림말}` : ''}
+    <div style="margin-top:4px"><b>흐름(적천수)</b> 「${첫말of(d.s.길흉.판정)}」${흐근거 ? `<div style="font-size:13px;color:var(--dim)">${흐근거}</div>` : ''}${조 ? `<div class="궁통원문">「${esc(조.원문)}」 (${조.줄}행)</div>` : ''}</div>
+    <div style="margin-top:4px"><b>그릇(자평진전 25편을 한 해에)</b> 「${자말}」<div style="font-size:13px;color:var(--dim)">${그릇근거}</div></div>
+    <div style="margin-top:4px"><b>밭(궁통보감)</b> ${d.밭 == null ? '' : d.밭 > 0 ? '「필요한 글자가 오는 해」' : d.밭 < 0 ? '「꺼리는 글자가 오는 해」' : '「크게 얽히지 않는 해」'}<div style="font-size:13px;color:var(--dim)">${밭말}</div></div>`;
+}
 function 흐름카드(r){
   const jc = r && r.단계_흐름; if (!jc || jc.오류) return '';
   const esc = x => String(x ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
