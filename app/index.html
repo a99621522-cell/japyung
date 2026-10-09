@@ -1471,7 +1471,7 @@ function 왜자료(종류, 키){
     const jh = r.단계_흐름 && r.단계_흐름.희기;
     return { 쉬움: `${s.연도}년(${s.간지})의 위 글자 ${그림말(s.천간)}·아래 글자 ${s.지지}가 적천수로 이 명식이 반기는 기운${jh ? `(${jh.희.join('·')})` : ''}인지 꺼리는 기운${jh ? `(${jh.기.join('·')})` : ''}인지 보고(위 글자를 두 배로 무겁게), 그해 글자가 지금 대운과 맞물리는 것을 더하고 뺐습니다 → 「${첫(s.길흉.판정)}」.${사.length ? ' ' + 사.join(', ') + '.' : ''}${자 && 자 !== 첫(s.길흉.판정) ? ` 자평진전 읽기로는 「${자}」라 책마다 갈립니다.` : ''}`,
       원문: [s.길흉.조문 ? `<div>「${왜esc(s.길흉.조문.원문)}」 ${줄표시('적천수', '歲運論', [s.길흉.조문.줄])}</div>` : '', ...(s.길흉.전충화 || []).map(e => e.원문 ? `<div>「${왜esc(e.원문)}」 ${줄표시('적천수', e.종류, [e.줄])}</div>` : '')].join('') + (jh ? `<div class="왜줄" style="margin-top:4px">반기는·꺼리는 기운의 잣대(적천수 자체): ${왜esc(jh.근거)}</div><div>「${왜esc(jh.조문.원문)}」 ${줄표시('적천수', null, [jh.조문.줄])}</div>` : ''),
-      조건: `<table>${(s.길흉.비고 || []).map(b => `<tr><td>·</td><td>${왜esc(b)}</td></tr>`).join('')}<tr><td>=</td><td>점수 ${s.길흉.점수 ?? '-'} → 「${첫(s.길흉.판정)}」</td></tr>${(s.형해 || []).length ? `<tr><td>형·해</td><td>${왜esc(s.형해.map(f => f.말).join(' · '))} — 점수에 넣지 않음(「刑與害兮動不動」 62행)</td></tr>` : ''}</table>` };
+      조건: `<table>${(s.길흉.비고 || []).map(b => `<tr><td>·</td><td>${왜esc(b)}</td></tr>`).join('')}<tr><td>=</td><td>점수 ${s.길흉.점수 ?? '-'} → 「${첫(s.길흉.판정)}」</td></tr>${(s.형해 || []).length ? `<tr><td>형·해</td><td>${s.형해.map(f => `${왜esc(f.말)} — ${왜esc(f.현상)}`).join('<br>')} (점수에 넣지 않음 — 「刑與害兮動不動」 62행, 闡微 「总以论其生克为是」)</td></tr>` : ''}</table>` };
   }
   if (종류 === '대운') {
     const u = ((r.단계11_행운 || {}).대운 || [])[+키]; if (!u) return {};
@@ -1486,7 +1486,7 @@ function 왜자료(종류, 키){
     const 말 = v => v > 0 ? '반기는 기운' : v < 0 ? '꺼리는 기운' : '어느 쪽도 아닌 기운';
     return { 쉬움: `${u.시작나이}세부터의 ${u.간지} 대운 — 위 글자 ${그림말(u.천간.글자)}은 ${말(u.천간.값)}, 아래 글자 ${u.지지.글자}(속 ${그림말(u.지지.정기)})는 ${말(u.지지.값)}입니다. 대운은 아래 글자를 두 배로 무겁게 봅니다 → 「${첫(u.판정)}」. 적천수가 반기는 기운은 ${jh.희.join('·')}, 꺼리는 기운은 ${jh.기.join('·')}입니다.`,
       원문: `<div>「大運譬如所歷之地，故重地支，未嘗無天干」 ${줄표시('적천수', '歲運論', [144])}</div><div>「${왜esc(jh.조문.원문)}」 ${줄표시('적천수', null, [jh.조문.줄])}</div>`,
-      조건: `<table><tr><td>위 글자</td><td>${u.천간.글자} → ${u.천간.값 > 0 ? '+1' : u.천간.값 < 0 ? '−1' : '0'} ×1</td></tr><tr><td>아래 글자</td><td>${u.지지.글자}(${u.지지.정기}) → ${u.지지.값 > 0 ? '+1' : u.지지.값 < 0 ? '−1' : '0'} ×2</td></tr><tr><td>=</td><td>점수 ${u.점수} → ${왜esc(u.판정)}</td></tr><tr><td>잣대</td><td>${왜esc(jh.근거)}</td></tr>${(u.형해 || []).length ? `<tr><td>형·해</td><td>${왜esc(u.형해.map(f => f.말).join(' · '))} — 점수에 넣지 않음</td></tr>` : ''}</table>` };
+      조건: `<table><tr><td>위 글자</td><td>${u.천간.글자} → ${u.천간.값 > 0 ? '+1' : u.천간.값 < 0 ? '−1' : '0'} ×1</td></tr><tr><td>아래 글자</td><td>${u.지지.글자}(${u.지지.정기}) → ${u.지지.값 > 0 ? '+1' : u.지지.값 < 0 ? '−1' : '0'} ×2</td></tr><tr><td>=</td><td>점수 ${u.점수} → ${왜esc(u.판정)}</td></tr><tr><td>잣대</td><td>${왜esc(jh.근거)}</td></tr>${(u.형해 || []).length ? `<tr><td>형·해</td><td>${u.형해.map(f => `${왜esc(f.말)} — ${왜esc(f.현상)}`).join('<br>')} (점수에 넣지 않음)</td></tr>` : ''}</table>` };
   }
   if (종류 === '날') {
     const J = E.iljin || E.일진; if (!J) return {}; const [y, mo, d] = String(키).split('-').map(Number);
@@ -1630,7 +1630,9 @@ function 흐름카드(r){
   x += `<div class="궁통줄"><span class="궁통라벨" style="color:${jc.종화.후보 ? '#B0301C' : '#6E6457'}">종·화</span> ${esc(jc.종화.결)}${jc.종화.조문 ? `<div class="궁통원문">「${esc(jc.종화.조문.원문)}」</div>` : ''}</div>`;
   x += `<div class="궁통줄"><span class="궁통라벨" style="color:#7D621C">성정</span> ${esc(jc.성정.결)}</div>`;
   // 형·해 — 사실만, 점수 없음 (32차, 사용자 「형 해 사실 기록만 붙여」) — 地支論 「刑與害兮動不動」
-  if (jc.형해) x += `<div class="궁통줄"><span class="궁통라벨" style="color:#6E6457">형·해</span> ${jc.형해.사실.length ? esc(jc.형해.사실.map(f => f.말).join(' · ')) : '원국 안에 형·해 관계가 없습니다'} <span style="color:var(--dim);font-size:12px">— 사실 기록만, 판정에 넣지 않음(「刑與害兮動不動」, 적천수 62행)</span></div>`;
+  // 33차(사용자 「형 해가 오면 어떤 현상이 있는지 설명해야지」): 두 글자의 생극으로 — 서로 극하는 짝만 그 자리를 흔든다(원주·闡微 任氏)
+  if (jc.형해) x += `<div class="궁통줄"><span class="궁통라벨" style="color:#6E6457">형·해</span> ${jc.형해.사실.length ? jc.형해.사실.map(f => `${esc(f.말)} — <span style="color:${f.움직임 ? '#B4452C' : 'var(--dim)'}">${esc(f.현상)}</span>`).join('<br>') : '원국 안에 형·해 관계가 없습니다'}
+    <details style="margin-top:4px"><summary style="cursor:pointer;font-size:12.5px;color:#6b5a38">형·해가 오면 무슨 일이 있나</summary><div class="궁통주" style="margin:4px 0">${esc(jc.형해.풀이)}.</div><div class="궁통원문">「${esc(jc.형해.조문.원문)}」 (적천수 ${jc.형해.조문.줄}행) · 「${esc(jc.형해.천미.원문)}」 (闡微 ${jc.형해.천미.줄}행)</div></details></div>`;
   // 무엇이 흐름을 틔우나 — 적천수 자체 희기(30차, 사용자 「혼용은 안 돼」: 자평 격의 희기를 빌리지 않는다)
   if (jc.희기) { const 그림들 = os => os.map(o => 오행글자[o].map(그림말).join('·')).join(', ');
     x += `<div class="궁통요지" style="margin-top:8px">적천수가 이 명식에서 <b>반기는 기운</b>은 ${그림들(jc.희기.희)}, <b>꺼리는 기운</b>은 ${그림들(jc.희기.기)}입니다. <span style="color:var(--dim);font-size:13px">${esc(jc.희기.근거)}</span></div>`;
@@ -1648,7 +1650,7 @@ function 흐름카드(r){
         const 사 = (s.길흉.전충화 || []).map(사건말).join(', ');
         const 궁 = 궁통해(r.명식, s.연도);
         const 궁말 = 궁 === '필요' && /조심|지키는/.test(첫) ? '궁통보감으로는 이 달의 밭에 필요한 글자가 오는 해' : 궁 === '꺼림' && /열리는/.test(첫) ? '궁통보감으로는 꺼리는 글자만 오는 해' : '';
-        return `<tr><td style="white-space:nowrap">${s.연도}년(${s.간지})</td><td><b style="color:${판정색(첫)}">${첫}</b>${왜('해', s.연도, s.연도 + '년')}${사 ? `<div style="font-size:12px;color:var(--dim)">${사}</div>` : ''}${자 && 자 !== 첫 ? `<div style="font-size:12px;color:var(--dim)">자평진전으로는 「${자}」 — 책마다 눈이 달라 갈립니다</div>` : ''}${궁말 ? `<div style="font-size:12px;color:var(--dim)">${궁말} — 책마다 눈이 달라 갈립니다</div>` : ''}${(s.형해 || []).length ? `<div style="font-size:12px;color:var(--dim)">형·해(점수 없음): ${esc(s.형해.map(f => f.말).join(' · '))}</div>` : ''}</td></tr>`; }).join('');
+        return `<tr><td style="white-space:nowrap">${s.연도}년(${s.간지})</td><td><b style="color:${판정색(첫)}">${첫}</b>${왜('해', s.연도, s.연도 + '년')}${사 ? `<div style="font-size:12px;color:var(--dim)">${사}</div>` : ''}${자 && 자 !== 첫 ? `<div style="font-size:12px;color:var(--dim)">자평진전으로는 「${자}」 — 책마다 눈이 달라 갈립니다</div>` : ''}${궁말 ? `<div style="font-size:12px;color:var(--dim)">${궁말} — 책마다 눈이 달라 갈립니다</div>` : ''}${(s.형해 || []).length ? `<div style="font-size:12px;color:var(--dim)">형·해(점수 없음): ${esc(s.형해.map(f => `${f.말} — ${(f.생극 === '충' ? '충이기도 해 충으로 봄' : f.움직임 ? '그 자리가 흔들리기 쉬움' : '따로 일어나는 일 없음')}`).join(' · '))}</div>` : ''}</td></tr>`; }).join('');
       x += `<div style="margin-top:10px;font-weight:600;font-size:14px">해마다 — 적천수가 보는 한 해</div><table class="답표"><thead><tr><th>해</th><th>적천수 판정</th></tr></thead><tbody>${줄들}</tbody></table>`;
       // 2070년까지 (2026-10-09 사용자 지시) — 나머지 해는 접어서
       if (전.length > se.length) {
@@ -1663,7 +1665,7 @@ function 흐름카드(r){
     const 열 = { '결이 크게 살아남':'크게 풀리는 십 년','결이 살아남':'풀리는 십 년','뒤섞임':'좋고 나쁨이 섞인 십 년','결이 눌림':'지키는 십 년','결이 크게 눌림':'크게 지키는 십 년' };
     const 자평대운 = ((r.단계11_행운 || {}).대운 || []);
     const 줄들 = jc.대운.map((u, i) => { const 말 = 열[u.판정] || u.판정, 지금 = 나이 >= u.시작나이 && 나이 < u.시작나이 + 10; const 자 = 자평대운[i] && 열[자평대운[i].길흉.판정];
-      return `<tr${지금 ? ' style="background:#FAF7F1"' : ''}><td style="white-space:nowrap">${u.시작나이}세 ${u.간지}${지금 ? ' <b>지금</b>' : ''}</td><td><b style="color:${판정색(말.replace('십 년', '해').replace('풀리는', '열리는'))}">${말}</b>${왜('흐름대운', i, u.간지 + ' 대운(적천수)')}${자 && 자 !== 말 ? `<div style="font-size:12px;color:var(--dim)">자평진전으로는 「${자}」 — 책마다 눈이 달라 갈립니다</div>` : ''}${(u.형해 || []).length ? `<div style="font-size:12px;color:var(--dim)">형·해(점수 없음): ${esc(u.형해.map(f => f.말).join(' · '))}</div>` : ''}</td></tr>`; }).join('');
+      return `<tr${지금 ? ' style="background:#FAF7F1"' : ''}><td style="white-space:nowrap">${u.시작나이}세 ${u.간지}${지금 ? ' <b>지금</b>' : ''}</td><td><b style="color:${판정색(말.replace('십 년', '해').replace('풀리는', '열리는'))}">${말}</b>${왜('흐름대운', i, u.간지 + ' 대운(적천수)')}${자 && 자 !== 말 ? `<div style="font-size:12px;color:var(--dim)">자평진전으로는 「${자}」 — 책마다 눈이 달라 갈립니다</div>` : ''}${(u.형해 || []).length ? `<div style="font-size:12px;color:var(--dim)">형·해(점수 없음): ${esc(u.형해.map(f => `${f.말} — ${(f.생극 === '충' ? '충이기도 해 충으로 봄' : f.움직임 ? '그 자리가 흔들리기 쉬움' : '따로 일어나는 일 없음')}`).join(' · '))}</div>` : ''}</td></tr>`; }).join('');
     x += `<div style="margin-top:10px;font-weight:600;font-size:14px">대운 — 적천수로 읽으면</div><table class="답표"><thead><tr><th>대운</th><th>적천수 판정</th></tr></thead><tbody>${줄들}</tbody></table><div class="궁통주">대운은 지나가는 땅이라 아래 글자를 두 배로 무겁게 봅니다(「大運譬如所歷之地，故重地支」). 위의 운 카드(자평진전)와 따로 낸 판정입니다.</div>`;
   }
   x += `<div class="궁통주">${esc(jc.병렬문)}. 한 해 운(세운)의 판정도 이 책의 歲運論으로 냅니다 — 운 카드의 해마다 보기에 戰·衝·和가 붙습니다. 질병·귀천 장은 쓰지 않습니다.</div></div>`;
