@@ -733,7 +733,7 @@ function toLLMBrief(r, opt = {}) {
   //   2029년을 「자산이 안정된다」로 읽던 일(엔진은 눌림) — 판정은 코드, 문장은 Gemini.
   if (se?.length) { const 뼈 = 해마다뼈대(se, { ...opt, 명식: r.명식 }); if (뼈.length) L.push(...뼈); }
   // 물음에 맞춘 해(31차, 사용자 「언제 결혼 가능할까라고 물으면 그에 맞는 답을 해야지」) — 그 일을 맡는 글자가 오는 해 × 적천수 판정
-  if (opt.주제) { try { const 줄 = require('./mureum').브리프줄(r, opt.주제, { 성별: opt.gender || opt.성별 }); if (줄) L.push(줄); } catch (e) {} }
+  if (opt.주제) { try { const 줄 = require('./mureum').브리프줄(r, opt.주제, { 성별: opt.gender || opt.성별, 출생연도: opt.출생연도 }); if (줄) L.push(줄); } catch (e) {} }
   // 기억(37차) — 앱이 이 기기에 적어 둔 지난 물음과 지나온 해 확인. 참고용 자료, 판정은 바꾸지 않는다
   if (opt.기억) { try { L.push(...require('./gieok').브리프줄(opt.기억, r, { 출생연도: opt.출생연도 })); } catch (e) {} }
   // 일진(2026-10-09 사용자 지시) — 오늘부터 7일. 원전에 일진 조문이 없어 25편 방법을 하루에 적용한 참고임을 줄에 적는다
