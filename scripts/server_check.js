@@ -37,6 +37,7 @@ let 마지막모범 = '';
 const 진짜fetch = globalThis.fetch;
 globalThis.fetch = async (url, init) => {
   if (String(url).startsWith('http://127.0.0.1')) return 진짜fetch(url, init);   // 시험이 서버를 부르는 것은 진짜로
+  if (상태.모드 === '402') return { ok: false, status: 402, json: async () => ({}) };   // 31차: Gemini 결제 거절 흉내
   const 보낸 = JSON.parse(init.body).contents[0].parts[0].text;
   상태.호출.push({ 크기: 보낸.length, 섹션: 보낸.includes('[답 고쳐 쓰기') });
   let 답;
@@ -148,13 +149,24 @@ const 확인 = (이름, 조건, 설명) => { console.log(`  ${조건 ? '통과' 
     확인('캐시 답에 명식 글자 키 없음(해시만)', !JSON.stringify(h1.캐시).includes('辛'));
     process.env.GEMINI_DAILY_CAP = '1';   // 이미 호출이 여럿이라 바로 상한
     const r2 = await 부름('/해설', { ...몸기본, 주제: '내년 이직은 어때' });
-    확인('일일 상한에 닿으면 Gemini 안 부르고 조문 리포트 폴백 + 사유', r2.상태 === 200 && r2.d.성공 === false && /상한/.test(r2.d.사유 || '') && r2.d.본문 && r2.d.출처 === '조문 리포트(폴백)', JSON.stringify({ 성공: r2.d.성공, 사유: r2.d.사유, 출처: r2.d.출처 }));
+    확인('일일 상한에 닿으면 Gemini 안 부르고 엔진 답(물음 있음) 폴백 + 사유', r2.상태 === 200 && r2.d.성공 === false && /상한/.test(r2.d.사유 || '') && r2.d.본문 && r2.d.출처 === '엔진 답', JSON.stringify({ 성공: r2.d.성공, 사유: r2.d.사유, 출처: r2.d.출처 }));
     const h2 = (await (await fetch(주소 + '/health')).json()).통계;
     확인('/health gemini 막힘 셈·상한 표시', h2.gemini.막힘 >= 1 && h2.gemini.상한 === 1 && h2.gemini.호출 === 전호출, JSON.stringify(h2.gemini));
     delete process.env.GEMINI_DAILY_CAP;
     const r3 = await 부름('/해설', { ...몸기본, 주제: '내년 이직은 어때' });
     확인('상한 풀면 다시 부름(폴백은 캐시에 안 넣었음)', r3.상태 === 200 && r3.d.캐시 !== true && (await (await fetch(주소 + '/health')).json()).통계.gemini.호출 > 전호출);
   }
+
+  console.log('⑨ Gemini 가 HTTP 402 로 거절할 때 — 물음에 맞춘 엔진 답(31차)');
+  { 상태.모드 = '402';
+    const r1 = await 부름('/해설', { ...몸기본, 주제: '언제 결혼 가능할까' });
+    확인('/해설 → 200 · 엔진 답 · 성공 false', r1.상태 === 200 && r1.d.성공 === false && r1.d.출처 === '엔진 답', JSON.stringify({ 상태: r1.상태, 출처: r1.d.출처, 사유: r1.d.사유 }));
+    확인('/해설 엔진 답이 물음(인연)에 맞고 조문 리포트가 아님', /▶ 한 줄로 말하면/.test(r1.d.본문 || '') && /인연/.test(r1.d.본문 || '') && !/## /.test(r1.d.본문 || ''), (r1.d.본문 || '').slice(0, 120));
+    확인('사유에 402·결제 안내', /402/.test(r1.d.사유 || '') && /결제/.test(r1.d.사유 || ''), r1.d.사유);
+    const r2 = await 부름('/문답', { ...몸기본, 질문: '내년에 이직은 어때?', 이력: [] });
+    확인('/문답 → 200 · 엔진 답(경고창 대신)', r2.상태 === 200 && r2.d.출처 === '엔진 답' && /▶ 한 줄로 말하면/.test(r2.d.본문 || ''), JSON.stringify({ 상태: r2.상태, 출처: r2.d.출처, 사유: r2.d.사유 }));
+    확인('/문답 엔진 답이 물으신 해(내년)를 주어로', new RegExp(`${new Date().getFullYear() + 1}년은`).test(r2.d.본문 || ''), (r2.d.본문 || '').slice(0, 120));
+    상태.모드 = '사투리'; }
 
   서버.close();
   try { fs.rmSync(임시, { recursive: true, force: true }); } catch (e) {}
