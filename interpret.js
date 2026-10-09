@@ -286,9 +286,11 @@ function interpret(m, opt = {}) {
     단계_흐름: (() => { try { return require('./jeokcheonsu').analyze({ ctx }, m); } catch (e) { return { 오류: String(e && e.message || e).slice(0, 120) }; } })(),
     // 세운 — 출생연도를 주면 대운과 묶어 「此五年中」 구간까지 표시한다
     단계11b_세운: opt.세운 === false ? null : (() => {
+      const 세운끝해 = opt.세운끝해 ?? 2070;
       const se = seun.range(ctx, g, m, {
         시작연도: opt.세운시작 ?? new Date().getFullYear(),
-        개수: opt.세운개수 ?? 10,
+        // 2026-10-09 사용자 지시 「2070년까지 계산해」 — 기본은 시작 해부터 2070년까지(적어도 10해)
+        개수: opt.세운개수 ?? Math.max(10, 세운끝해 - (opt.세운시작 ?? new Date().getFullYear()) + 1),
         대운목록: hu.대운, 출생연도: opt.출생연도,
       });
       // 월운 — 세운 각 해마다 붙인다.

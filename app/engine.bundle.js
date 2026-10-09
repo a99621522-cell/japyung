@@ -3701,6 +3701,9 @@ function 해마다뼈대(se, opt = {}) {
     L.push(`| ${x.연도}년(${x.간지}) | ${해마다첫말[x.길흉.판정]}. … |`);
     if (i === 0 && 이번달) L.push(`| ↳ 이번 달(양력 ${이번달.범위}) | … |`);
   });
+  // 2026-10-09 사용자 지시 「2070년까지 계산해」 — 표는 일곱 해, 그 밖의 해는 판정만 한 줄로. 먼 해를 물어도 엔진 판정으로 답하게
+  const 전부 = se.filter(x => x && x.길흉 && 해마다첫말[x.길흉.판정]);
+  if (전부.length > 줄.length) L.push(`[세운 판정 전부 — ${전부[0].연도}~${전부[전부.length - 1].연도}년, 적천수 歲運論. 물으신 해가 위 표 밖이면 이 줄의 첫말을 그대로 쓰고, 표에 그 해 줄을 더할 때도 이 첫말로] ` + 전부.map(x => `${x.연도} ${해마다첫말[x.길흉.판정]}`).join(' · '));
   return L;
 }
 
@@ -5953,9 +5956,11 @@ function interpret(m, opt = {}) {
     단계_흐름: (() => { try { return require('./jeokcheonsu').analyze({ ctx }, m); } catch (e) { return { 오류: String(e && e.message || e).slice(0, 120) }; } })(),
     // 세운 — 출생연도를 주면 대운과 묶어 「此五年中」 구간까지 표시한다
     단계11b_세운: opt.세운 === false ? null : (() => {
+      const 세운끝해 = opt.세운끝해 ?? 2070;
       const se = seun.range(ctx, g, m, {
         시작연도: opt.세운시작 ?? new Date().getFullYear(),
-        개수: opt.세운개수 ?? 10,
+        // 2026-10-09 사용자 지시 「2070년까지 계산해」 — 기본은 시작 해부터 2070년까지(적어도 10해)
+        개수: opt.세운개수 ?? Math.max(10, 세운끝해 - (opt.세운시작 ?? new Date().getFullYear()) + 1),
         대운목록: hu.대운, 출생연도: opt.출생연도,
       });
       // 월운 — 세운 각 해마다 붙인다.
@@ -13446,6 +13451,8 @@ function 검사(본문, 모드 = '상담', ctx = {}) {
       // 뼈대 줄만 읽는다 — 브리프 안 모범 답안 표(예시 명식)를 섞지 않게 「[해마다 표 뼈대」 바로 뒤 표 줄만
       const 뼈 = {}; const 브줄 = String(ctx.브리프).split('\n'); const 시작 = 브줄.findIndex(l => l.startsWith('[해마다 표 뼈대'));
       if (시작 >= 0) for (let k = 시작 + 1; k < 브줄.length && /^\|/.test(브줄[k]); k++) { const m = 브줄[k].match(/^\|\s*(\d{4})년\([^)]*\)\s*\|\s*([^.|]+)\./); if (m && 첫말쪽[m[2].trim()] != null) 뼈[m[1]] = m[2].trim(); }
+      // 2070년까지의 판정 한 줄(「[세운 판정 전부 —」)도 읽는다 — 표에 먼 해를 더해도 엔진 첫말과 대조 (2026-10-09)
+      { const 전줄 = 브줄.find(l => l.startsWith('[세운 판정 전부')); if (전줄) for (const m of 전줄.matchAll(/(\d{4}) (크게 열리는 해|열리는 해|좋고 궂음이 섞인 해|지키는 해|크게 조심할 해)/g)) if (!뼈[m[1]]) 뼈[m[1]] = m[2]; }
       const 표줄 = 단락(글, 머리.해마다).split('\n').filter(l => /^\s*\|/.test(l));
       const 어긋 = [], 빠짐 = [];
       for (const l of 표줄) {

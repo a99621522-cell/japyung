@@ -388,6 +388,8 @@ function 검사(본문, 모드 = '상담', ctx = {}) {
       // 뼈대 줄만 읽는다 — 브리프 안 모범 답안 표(예시 명식)를 섞지 않게 「[해마다 표 뼈대」 바로 뒤 표 줄만
       const 뼈 = {}; const 브줄 = String(ctx.브리프).split('\n'); const 시작 = 브줄.findIndex(l => l.startsWith('[해마다 표 뼈대'));
       if (시작 >= 0) for (let k = 시작 + 1; k < 브줄.length && /^\|/.test(브줄[k]); k++) { const m = 브줄[k].match(/^\|\s*(\d{4})년\([^)]*\)\s*\|\s*([^.|]+)\./); if (m && 첫말쪽[m[2].trim()] != null) 뼈[m[1]] = m[2].trim(); }
+      // 2070년까지의 판정 한 줄(「[세운 판정 전부 —」)도 읽는다 — 표에 먼 해를 더해도 엔진 첫말과 대조 (2026-10-09)
+      { const 전줄 = 브줄.find(l => l.startsWith('[세운 판정 전부')); if (전줄) for (const m of 전줄.matchAll(/(\d{4}) (크게 열리는 해|열리는 해|좋고 궂음이 섞인 해|지키는 해|크게 조심할 해)/g)) if (!뼈[m[1]]) 뼈[m[1]] = m[2]; }
       const 표줄 = 단락(글, 머리.해마다).split('\n').filter(l => /^\s*\|/.test(l));
       const 어긋 = [], 빠짐 = [];
       for (const l of 표줄) {
