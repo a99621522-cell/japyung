@@ -7,7 +7,7 @@
  *   - 인터넷이 없으면 캐시에서 꺼낸다 (오프라인은 그대로 된다)
  * 정적 파일 몇 개짜리 앱이라 이쪽이 손해가 없다.
  */
-const 판 = 'ganmyeong-v63';
+const 판 = 'ganmyeong-v64';
 const 자산 = ['./', './index.html', './engine.bundle.js', './engine.extra.js', './manseryeok.browser.js', './mundap_ui.js', './manifest.json', './privacy.html',
               './icon-192.png', './icon-512.png'];
 
