@@ -257,4 +257,4 @@ function analyze(m) {
 }
 
 module.exports = { analyze, detectJiji, detectCheongan, resolve, woljiStatus,
-                   YUKHAP, SAMHAP, BANGHAP, CHUNG, GANHAP };
+                   YUKHAP, SAMHAP, BANGHAP, CHUNG, GANHAP, SAMHYEONG, SANGHYEONG, JAHYEONG, HAE };   // 형·해 표는 32차부터 적천수 층 사실 기록(점수 없음)이 쓴다
