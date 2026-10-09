@@ -33,4 +33,6 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # 화면만 올리는 배포(assets 전용, main 없음)는 Wrangler 4 가 필요하다 — 액션 기본값 3.90 은 「Missing entry-point」로 실패 (2026-10-09)
+          wranglerVersion: "4"
           command: deploy
