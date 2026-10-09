@@ -90,8 +90,8 @@
     입력.value = ''; 보내는중 = true; 단추.disabled = true;
     말풍선(로그, '나', 질문);
     const 기다림 = 말풍선(로그, '앱', '소스를 뒤져 답을 쓰는 중입니다…', '기다림');
-    const 타이머 = setTimeout(()=>{ 기다림.textContent = '서버를 깨우고 있습니다 — 처음엔 30초쯤 걸립니다'; }, 8000);
-    const 그만 = new AbortController(); const 시간초과 = setTimeout(()=>그만.abort(), 90000);
+    const 타이머 = setTimeout(()=>{ 기다림.textContent = '간명 중입니다 — 처음엔 30초쯤 걸릴 수 있습니다'; }, 8000);
+    const 그만 = new AbortController(); const 시간초과 = setTimeout(()=>그만.abort(), 150000);
     try {
       const res = await fetch(중계 + '/문답', { method:'POST', signal: 그만.signal,
         headers:{'Content-Type':'application/json'}, body: JSON.stringify(몸만들기(질문)) });

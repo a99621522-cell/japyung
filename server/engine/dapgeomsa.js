@@ -80,8 +80,13 @@ function 해마다칸정리(글) {
   const j = 글.indexOf('▶', i + 2); const 끝 = j > 0 ? j : 글.length;
   const 단락 = 글.slice(i, 끝).split('\n').map(l => {
     const m = l.match(/^(\s*\|[^|]*\|)([^|]*)(\|\s*)$/); if (!m || /^\s*\|\s*:?-{2,}/.test(l) || /^\s*\|\s*해\s*\|/.test(l)) return l;
-    const 칸 = m[2].replace(/\*\*/g, '').replace(/\s*\([一-鿿·\s]+\)/g, '').replace(/[ \t]{2,}/g, ' ');
-    return m[1] + 칸 + m[3];
+    let 칸 = m[2].replace(/\*\*/g, '').replace(/\s*\([一-鿿·\s]+\)/g, '').replace(/[ \t]{2,}/g, ' ').trim()
+      .replace(/^[一-鿿]{1,2}\s*[-·]\s*[一-鿿]{1,2}\s*(?:합|충)(?:\([^)]*\))?\s*[:：]\s*/, '');   // 「丙-辛 합(붙듦): …」 머리표
+    // 2026-10-09: 그래도 한자·합충 이름·자리 이름이 든 문장은 통째로 뺀다(첫 문장 = 엔진 첫말은 남김) — 이 오류로 Gemini 를 한 번 더 부르면 답이 90초를 넘겼다
+    const 문 = 칸.split(/(?<=[.!?。])\s+/);
+    const 나쁨 = s => /[一-鿿]/.test(s) || /(?:합|충)\s*(?:\(|을|이 |으로|하여)|\((?:붙듦|부딪힘|맺어짐|묶임)\)/.test(s) || /년지|월지|일지|시지|년간|월간|시간의|천간|지지|상신|대운의 아래/.test(s);
+    if (문.length > 1) 칸 = [문[0], ...문.slice(1).filter(s => !나쁨(s))].join(' ');
+    return m[1] + ' ' + 칸 + ' ' + m[3].trimStart();
   }).join('\n');
   return 글.slice(0, i) + 단락 + 글.slice(끝);
 }
