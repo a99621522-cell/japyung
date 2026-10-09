@@ -283,7 +283,7 @@ function interpret(m, opt = {}) {
     단계30_시주신뢰: oj,
     단계11_행운: hu,
     // 셋째 층 「흐름」(滴天髓) — 자평(그릇)·궁통(밭)과 병렬. 2026-10-07 사용자 결정 「층을 두고 세운도 적천수대로 해」
-    단계_흐름: (() => { try { return require('./jeokcheonsu').analyze({ ctx }, m); } catch (e) { return { 오류: String(e && e.message || e).slice(0, 120) }; } })(),
+    단계_흐름: (() => { try { return require('./jeokcheonsu').analyze({ 대운: hu && hu.대운 }, m); } catch (e) { return { 오류: String(e && e.message || e).slice(0, 120) }; } })(),
     // 세운 — 출생연도를 주면 대운과 묶어 「此五年中」 구간까지 표시한다
     단계11b_세운: opt.세운 === false ? null : (() => {
       const 세운끝해 = opt.세운끝해 ?? 2070;
