@@ -73,7 +73,7 @@ try {
   const { FIXTURES } = require(path.join(뿌리, 'fixtures_chanwei'));
   const C = m => interpret(m, { gender: '남', 출생연도: 1800, 세운: false }).ctx;
   const 쇠왕절 = FIXTURES.filter(f => /衰旺|衰旺/.test(f.절) || /^衰旺|^衰旺/.test(f.절));
-  let 쇠왕맞 = 0; for (const f of 쇠왕절) { const c = C(f.m); const x = J.쇠왕(c); const h = f.평.slice(0, 40); const 기대 = /衰者|衰极|衰極|弱极|弱極/.test(h) ? '衰' : /旺者|旺极|旺極|乘权|乘權/.test(h) ? '旺' : null; if (!기대 || 기대 === x.상태) 쇠왕맞++; }
+  let 쇠왕맞 = 0; for (const f of 쇠왕절) { const x = J.쇠왕(f.m); /* 30차: 적천수 자체 셈 */ const h = f.평.slice(0, 40); const 기대 = /衰者|衰极|衰極|弱极|弱極/.test(h) ? '衰' : /旺者|旺极|旺極|乘权|乘權/.test(h) ? '旺' : null; if (!기대 || 기대 === x.상태) 쇠왕맞++; }
   확인(`闡微 衰旺 장 ${쇠왕절.length}건 쇠왕 일치`, 쇠왕맞 === 쇠왕절.length, 쇠왕절.length - 쇠왕맞);
   const 양성 = FIXTURES.filter(f => /從象|化象|假從|假化|从象|化象|假从|假化/.test(f.절)), 음성 = FIXTURES.filter(f => /八格|官殺|官杀|傷官|伤官|體用|体用|月令|精神|源流|通關|通关/.test(f.절));
   let tp = 0, tn = 0; for (const f of 양성) { const x = J.종화(f.m, C(f.m)); if (x.후보 && ((/化/.test(f.절)) === /化/.test(x.후보))) tp++; } for (const f of 음성) { const x = J.종화(f.m, C(f.m)); if (!x.후보) tn++; }
