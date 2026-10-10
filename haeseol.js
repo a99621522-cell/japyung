@@ -756,6 +756,8 @@ function toLLMBrief(r, opt = {}) {
   else if (se?.length) { const 뼈 = 해마다뼈대(se, { ...opt, 명식: r.명식 }); if (뼈.length) L.push(...뼈); }
   // 물음에 맞춘 해(31차, 사용자 「언제 결혼 가능할까라고 물으면 그에 맞는 답을 해야지」) — 그 일을 맡는 글자가 오는 해 × 적천수 판정
   if (opt.주제) { try { const 줄 = require('./mureum').브리프줄(r, opt.주제, { 성별: opt.gender || opt.성별, 출생연도: opt.출생연도 }); if (줄) L.push(줄); } catch (e) {} }
+  // 49차 — 기업 채용 일정(서버가 인터넷에서 찾아 넘긴 것) × 그날·그달의 엔진 셈
+  if (opt.채용일정) { try { const 줄 = require('./chaeyong').일정줄(r, opt.채용일정, { 성별: opt.gender || opt.성별, 출생연도: opt.출생연도 }); if (줄) L.push(줄); } catch (e) {} }
   // 48차 — 직업 결 맞댐·그 일의 운이 오는 해와 달(물음에 직업이 있거나 적성을 물을 때만)
   if (opt.주제) { try { const 줄 = require('./jikeop').브리프줄(r, opt.주제, { 성별: opt.gender || opt.성별, 출생연도: opt.출생연도 }); if (줄) L.push(줄); } catch (e) {} }
   // 기억(37차) — 앱이 이 기기에 적어 둔 지난 물음과 지나온 해 확인. 참고용 자료, 판정은 바꾸지 않는다

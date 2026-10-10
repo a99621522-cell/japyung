@@ -270,6 +270,37 @@ async function 보내기(브리프, opt = {}) {
   return (j?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') ?? '').trim();
 }
 
+// ── 기업 채용 일정 검색 (2026-10-10, 49차) ─────────────────────
+//   운영자 「어떤 기업을 언급하면 언제 시험과 면접·합격자 발표가 있는지 인터넷에서 검색해서 답변해」.
+//   Gemini 의 Google 검색 도구(grounding)로 공개 공고의 날짜만 JSON 으로 받는다 — 판정은 엔진(chaeyong.일정줄).
+//   하루 호출 상한에 함께 센다. 같은 기업은 12시간 메모리 캐시(명식·물음은 키에 넣지 않는다 — 기업 이름만).
+const 채용캐시 = new Map();
+async function 채용일정검색(기업, opt = {}) {
+  const { apiKey = process.env.GEMINI_API_KEY, model = 'gemini-2.5-flash', fetchImpl = globalThis.fetch } = opt;
+  const C = require('./chaeyong');
+  if (!기업 || !apiKey) return null;
+  const 올해 = new Date(Date.now() + 9 * 3600e3).getUTCFullYear();
+  const 키 = `${기업}|${올해}`, 있 = 채용캐시.get(키);
+  if (있 && Date.now() - 있.t < 12 * 3600e3) return 있.v;
+  if (!호출허용()) return null;
+  try {
+    const res = await fetchImpl(`${ENDPOINT(model)}?key=${apiKey}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: C.검색프롬프트(기업, 올해) }] }], tools: [{ google_search: {} }], generationConfig: { temperature: 0 } }),
+    });
+    if (!res.ok) return null;
+    const j = await res.json();
+    const 글 = (j?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') ?? '');
+    const v = C.정리(글, 기업);
+    // 출처는 모델이 적은 것보다 검색 도구가 돌려준 것을 먼저
+    const 근거 = (j?.candidates?.[0]?.groundingMetadata?.groundingChunks || []).map(c => c?.web?.uri).filter(Boolean);
+    if (v && 근거.length) v.출처 = [...new Set([...근거, ...v.출처])].slice(0, 4);
+    if (채용캐시.size > 200) 채용캐시.clear();
+    채용캐시.set(키, { t: Date.now(), v });
+    return v;
+  } catch (e) { return null; }
+}
+
 // ── 섹션별 다시 쓰기 (2026-10-07, C16) ─────────────────────────
 //   답이 검사에 걸리면 전에는 브리프 전체(5만 자)에 지적을 붙여 처음부터 다시 쓰게 했다.
 //   이제는 짧은 요청 — 원래 답 + 오류 목록 + 쉬운 말 규칙(swiunmal에서 가져옴) + 허용 간지·연도(dapgeomsa.허용목록) —
@@ -366,7 +397,7 @@ async function 고쳐쓰기(a) {
   return 결과;
 }
 
-module.exports = { 해석, validate, 지어내기검사, 문제문장제거, 재요청프롬프트, 보내기, 섹션다시쓰기프롬프트, 규칙줄고르기, 고쳐쓰기, toLLMBrief, 일일호출통계 };
+module.exports = { 채용일정검색, 해석, validate, 지어내기검사, 문제문장제거, 재요청프롬프트, 보내기, 섹션다시쓰기프롬프트, 규칙줄고르기, 고쳐쓰기, toLLMBrief, 일일호출통계 };
 
 if (require.main === module) {
   const m = { yeonGan:'甲', yeonJi:'申', wolGan:'壬', wolJi:'申',
