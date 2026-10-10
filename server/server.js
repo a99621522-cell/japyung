@@ -247,6 +247,13 @@ const 서버 = http.createServer(async (req, res) => {
     // ── 문답 모드 ──────────────────────────────
     // 첫 물음은 「묻는다」와 똑같은 상담글, 두 번째부터 소스 전체를 연 자유 문답.
     // 그 갈림은 mundap_route가 이력 길이로 스스로 판단한다.
+    // 49차 — 물음에 기업 이름이 있으면 채용 일정을 인터넷에서 찾아 재료로(실패해도 답은 그대로 진행)
+    if ((길 === '/문답' || 길 === '/해설' || 길 === '/interpret') && !입력.채용일정) {
+      try { const C = require('./engine/chaeyong'); const 물음 = 길 === '/문답' ? 입력.질문 : 입력.주제; const 기업 = C.기업of(물음);
+        if (기업) { 통계.채용검색 = (통계.채용검색 || 0) + 1; const G = require('./engine/gemini'); 입력.채용일정 = await G.채용일정검색(기업, { apiKey: API_KEY, model: MODEL }); if (!입력.채용일정) 통계.채용검색실패 = (통계.채용검색실패 || 0) + 1; }
+      } catch (e) { 입력.채용일정 = null; }
+    }
+    const 출처붙임 = 답 => { try { if (답 && 입력.채용일정 && typeof 답.본문 === 'string' && !답.본문.includes('채용 일정 출처')) 답.본문 += require('./engine/chaeyong').출처줄(입력.채용일정); } catch (e) {} return 답; };
     if (길 === '/문답') {
       통계.요청.문답++;
       try {
@@ -259,7 +266,7 @@ const 서버 = http.createServer(async (req, res) => {
           return 보냄(res, 500, { 성공: false, 사유: 답.사유 || '답을 만들지 못했습니다', 본문: null }, origin);
         }
         통계반영(답);
-        return 보냄(res, 200, 답, origin);
+        return 보냄(res, 200, 출처붙임(답), origin);
       } catch (e) {
         통계.예외++; console.log(`[문답] 예외 — ${String(e && e.message || e).slice(0, 120)}`);
         return 보냄(res, 500, { 성공: false, 사유: String(e && e.message || '답을 만들지 못했습니다').slice(0, 200), 본문: null }, origin);
@@ -277,6 +284,7 @@ const 서버 = http.createServer(async (req, res) => {
         세운개수: 입력.세운개수,          // 비우면 interpret 기본 — 올해부터 2070년까지 (2026-10-09 사용자 지시, 전 8)
         주제: 입력.주제,                  // '직업' 같은 것. 없으면 전체
         기억: 입력.기억,                  // 37차 — 앱이 이 기기에 적어 둔 지난 물음(서버는 저장 안 함, 브리프 재료만)
+        채용일정: 입력.채용일정,          // 49차 — 서버가 인터넷에서 찾은 기업 채용 일정(없으면 null)
       };
       // 캐시 적중이면 Gemini 를 부르지 않는다(검사·보강이 끝난 응답 그대로, 캐시:true 만 붙여서)
       const 키 = 캐시키(입력, interpretOpt);
@@ -347,6 +355,7 @@ const 서버 = http.createServer(async (req, res) => {
         검사: 검사 ? { 통과: 검사.통과, 다시씀: !!검사.다시씀, 시도, 보강된용어, 재검사: 재검사 || undefined, 다시쓰기: 다시쓰기 || undefined, 첫오류: 검사.다시씀 ? 첫오류이름 : undefined, 오류: 검사.오류.map(x => x.규칙 + ': ' + x.내용), 경고: 검사.경고.map(x => x.규칙 + ': ' + x.내용) } : undefined,
       };
       통계반영(응답);
+      출처붙임(응답);
       if (응답.성공 && /^Gemini/.test(응답.출처 || '')) 캐시쓰기(키, 응답);   // 성공한 Gemini 답만 — 폴백·실패는 다음에 다시 시도하게 둔다
       보냄(res, 200, 응답, origin);
     } catch (e) {
