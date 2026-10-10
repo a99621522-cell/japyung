@@ -80,7 +80,7 @@ async function 건강() {
     const 줄 = 본문2.split('\n').filter(l => /^\s*\|\s*\**\s*\d{4}년/.test(l));
     for (const l of 줄) {
       const y = l.match(/(\d{4})년/)[1], 칸 = (l.split('|')[2] || '').replace(/\*/g, '').trim();
-      const 첫 = ['크게 열리는 해', '열리는 해', '좋고 궂음이 섞인 해', '크게 조심할 해', '지키는 해'].find(w => 칸.startsWith(w));
+      const 첫 = ['크게 열리는 해', '열리는 해', '두드러진 일이 적은 해', '크게 조심할 해', '지키는 해'].find(w => 칸.startsWith(w));
       if (!판.has(y)) 문제.push(`${y}년: 엔진 세운에 없는 해`);
       else if (첫 && 첫 !== 판.get(y)) 문제.push(`${y}년: 답 「${첫}」 ↔ 엔진 「${판.get(y)}」`);
     }

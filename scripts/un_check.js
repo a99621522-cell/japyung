@@ -102,7 +102,7 @@ for (const [이름, 기대] of Object.entries(국기대)) {
 문제.물음셈 = [];
 { const M = require('../mureum'), D = require('../dapgeomsa'), J = require('../iljin'); const { 생년월일시로 } = require('../interpret');
   const r = 생년월일시로({ 년: 1971, 월: 9, 일: 21, 시: 21, 분: 40, 성별: '남' }); const o = { 성별: '남', 출생연도: 1971 };
-  const 첫 = { '결이 크게 살아남': '크게 열리는 해', '결이 살아남': '열리는 해', '뒤섞임': '좋고 궂음이 섞인 해', '결이 눌림': '지키는 해', '결이 크게 눌림': '크게 조심할 해' };
+  const 첫 = { '결이 크게 살아남': '크게 열리는 해', '결이 살아남': '열리는 해', '뒤섞임': '두드러진 일이 적은 해', '결이 눌림': '지키는 해', '결이 크게 눌림': '크게 조심할 해' };
   const y1 = r.단계11b_세운[1], y3 = r.단계11b_세운[3];
   const 해줄 = M.물음셈줄(r, `${y1.연도}년이랑 ${y3.연도}년 중 언제 이직이 좋아`, o);
   if (!해줄.includes(`${y1.연도}년(${y1.간지}) ${첫[y1.길흉.판정]}`) || !해줄.includes(`${y3.연도}년(${y3.간지}) ${첫[y3.길흉.판정]}`)) 문제.물음셈.push('해 첫말 ≠ 세운');
@@ -114,7 +114,7 @@ for (const [이름, 기대] of Object.entries(국기대)) {
 // j) 들기 쉬운 일(40차) — 득은 적천수가 반기는 글자, 실은 꺼리는 글자에서만; 인연은 남 재·여 관(겁재 아님); 표에 병·사고·사망·이별 낱말 없음
 문제.들기쉬운일 = [];
 { const SG = require('../sageon'), J = require('../jeokcheonsu'), { GAN } = require('../jijanggan'); const { interpret } = require('../interpret');
-  const 금 = /병|사고|사망|죽|수명|이혼|이별|파혼|수술/;
+  const 금 = /병|사망|죽|수명|이혼|이별|파혼|수술/;   // 46차: 사고는 「~하기 쉬운 일」로 허용(사용자 지시)
   for (const 표 of [...Object.values(SG.일표).flat(), ...Object.values(SG.자리일)]) if (금.test(표)) 문제.들기쉬운일.push('금지 낱말: ' + 표);
   for (let i = 0; i < 120; i++) for (const 성 of ['남', '여']) { let m; try { m = manse.사주(1950 + Math.floor(rnd() * 61), 1 + Math.floor(rnd() * 12), 1 + Math.floor(rnd() * 28), Math.floor(rnd() * 24), 0, { 성별: 성 }).명식; } catch (e) { continue; }
     const r = interpret(m, { gender: 성, 출생연도: 1980, 세운개수: 6, 월운: false }); const H = J.희기(m);
@@ -123,11 +123,15 @@ for (const [이름, 기대] of Object.entries(국기대)) {
       const 인연십 = (성 === '여' ? ['정관', '편관'] : ['정재', '편재']);
       if (인연있음 && !인연십.includes(s.천간십성) && !인연십.includes(s.지지십성)) 문제.들기쉬운일.push(`${성} ${s.연도} 인연 오배속 ${s.천간십성}/${s.지지십성}`);
       // 43차: 브리프줄·화면이 같은 고름(할일) — 열리는 해에 조심할 일(실)이, 지킴·조심 해에 살릴 일(득)이 섞이지 않는다
-      { const 첫 = { '결이 크게 살아남': '크게 열리는 해', '결이 살아남': '열리는 해', '뒤섞임': '좋고 궂음이 섞인 해', '결이 눌림': '지키는 해', '결이 크게 눌림': '크게 조심할 해' }[s.길흉.판정] || '';
+      { const 첫 = { '결이 크게 살아남': '크게 열리는 해', '결이 살아남': '열리는 해', '뒤섞임': '두드러진 일이 적은 해', '결이 눌림': '지키는 해', '결이 크게 눌림': '크게 조심할 해' }[s.길흉.판정] || '';
         const 할 = SG.할일(g, 첫);
-        if (/열리는/.test(첫) && 할.some(x => g.실.includes(x.일) && !g.득.includes(x.일))) 문제.들기쉬운일.push(`${s.간지} 열리는 해에 조심할 일`);
-        if (/조심|지키는/.test(첫) && 할.some(x => g.득.includes(x.일) && !g.실.includes(x.일))) 문제.들기쉬운일.push(`${s.간지} 조심 해에 살릴 일`);
-        if (/섞인/.test(첫) && g.득.length && g.실.length && !(할.some(x => g.득.includes(x.일)) && 할.some(x => g.실.includes(x.일)))) 문제.들기쉬운일.push(`${s.간지} 섞인 해에 한쪽만`);
+        // 46차: 판정 쪽 일이 먼저, 반대쪽 일은 하나까지(2019년 주식 손해 — 열리는 해에도 꺼리는 돈 글자의 일을 남긴다)
+        const 반대 = /열리는/.test(첫) ? 할.filter(x => g.실.includes(x.일) && !g.득.includes(x.일) && !g.자리.includes(x.일)) : /조심|지키는/.test(첫) ? 할.filter(x => g.득.includes(x.일) && !g.실.includes(x.일) && !g.자리.includes(x.일)) : [];
+        if (반대.length > 1) 문제.들기쉬운일.push(`${s.간지} 반대쪽 일이 ${반대.length}개`);
+        if (/열리는/.test(첫) && g.득.length && !g.득.includes(할[0] && 할[0].일)) 문제.들기쉬운일.push(`${s.간지} 열리는 해인데 살릴 일이 먼저가 아님`);
+        if (/조심|지키는/.test(첫) && g.실.length && !g.실.includes(할[0] && 할[0].일)) 문제.들기쉬운일.push(`${s.간지} 조심 해인데 조심할 일이 먼저가 아님`);
+        if (/열리는/.test(첫) && g.실.length && !할.some(x => g.실.includes(x.일))) 문제.들기쉬운일.push(`${s.간지} 열리는 해의 꺼리는 일이 빠짐`);
+        if (/두드러진/.test(첫) && g.득.length && g.실.length && !(할.some(x => g.득.includes(x.일)) && 할.some(x => g.실.includes(x.일)))) 문제.들기쉬운일.push(`${s.간지} 섞인 해에 한쪽만`);
         const 줄 = SG.브리프줄([s], m, { 성별: 성 }); for (const x of 할) if (!줄.includes(x.일)) 문제.들기쉬운일.push(`${s.간지} 브리프줄에 화면 일 없음`); }
       if (g.득.length && !(H.값(GAN[s.천간].ohaeng) > 0 || H.값(GAN[require('../jijanggan').jeonggi(s.지지)].ohaeng) > 0)) 문제.들기쉬운일.push(`득인데 반기는 글자 없음 ${s.간지}`); } } }
 // k) 지나온 해 물음(44차, 사용자 「지난 10년 뭘 조심해야 했어라고 물었는데 엉뚱한 대답」) — 물음 감지, 브리프 뼈대가 지나온 해로, 앞날 해 고르기 줄 없음,
@@ -136,7 +140,7 @@ for (const [이름, 기대] of Object.entries(국기대)) {
 { const U = require('../mureum'), M = require('../mundap'), D = require('../dapgeomsa'), S = require('../seun'), I = require('../interpret');
   for (const [q, 기대] of [['지난 10년 뭘 조심해야 했어', 10], ['작년엔 어땠어?', 1], ['지난 5년 돌아보면 어땠나요', 5], ['그동안 뭘 조심했어야 했나요', 10], ['지난번에 물은 이직 다시', null], ['내년 이직 어때', null], ['언제 결혼할까', null]]) {
     const x = U.지난물음(q); if ((x ? x.해수 : null) !== 기대) 문제.지나온물음.push(`감지 「${q}」 ${x && x.해수} ≠ ${기대}`); }
-  const 첫 = { '결이 크게 살아남': '크게 열리는 해', '결이 살아남': '열리는 해', '뒤섞임': '좋고 궂음이 섞인 해', '결이 눌림': '지키는 해', '결이 크게 눌림': '크게 조심할 해' };
+  const 첫 = { '결이 크게 살아남': '크게 열리는 해', '결이 살아남': '열리는 해', '뒤섞임': '두드러진 일이 적은 해', '결이 눌림': '지키는 해', '결이 크게 눌림': '크게 조심할 해' };
   for (let i = 0; i < 12; i++) { const 성 = i % 2 ? '여' : '남', 년 = 1950 + Math.floor(rnd() * 50);
     let r; try { r = I.생년월일시로({ 년, 월: 1 + Math.floor(rnd() * 12), 일: 1 + Math.floor(rnd() * 28), 시: Math.floor(rnd() * 24), 분: 0, 성별: 성 }); } catch (e) { continue; }
     const q = '지난 10년 뭘 조심해야 했어', b = M.toMundapBrief(r, { 질문: q, 성별: 성, 출생연도: 년 });
