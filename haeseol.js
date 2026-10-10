@@ -732,6 +732,8 @@ function toLLMBrief(r, opt = {}) {
   if (opt.주제) { try { const 줄 = require('./mureum').브리프줄(r, opt.주제, { 성별: opt.gender || opt.성별, 출생연도: opt.출생연도 }); if (줄) L.push(줄); } catch (e) {} }
   // 기억(37차) — 앱이 이 기기에 적어 둔 지난 물음과 지나온 해 확인. 참고용 자료, 판정은 바꾸지 않는다
   if (opt.기억) { try { L.push(...require('./gieok').브리프줄(opt.기억, r, { 출생연도: opt.출생연도 })); } catch (e) {} }
+  // 41차 — 지나온 해에 있었기 쉬운 일(같은 셈)
+  if (opt.출생연도) { try { const 줄 = require('./sageon').지나온줄(r, opt.출생연도, { 성별: opt.gender || opt.성별 }); if (줄) L.push(줄); } catch (e) {} }
   // 일진(2026-10-09 사용자 지시) — 오늘부터 7일. 원전에 일진 조문이 없어 25편 방법을 하루에 적용한 참고임을 줄에 적는다
   try { const 일 = require('./iljin').브리프줄(r); if (일) L.push(일); } catch (e) {}
   // 셋째 층 「흐름」(滴天髓) — 재료 줄. 결 문장만 옮기고 원문·조문 id 는 인용으로만 (2026-10-07)
