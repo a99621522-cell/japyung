@@ -1,12 +1,14 @@
 /**
  * scripts/look.js — 배포된 화면을 브라우저로 열어 본다 (GitHub Actions에서 돈다)
  *   node scripts/look.js <주소> <저장폴더> [물음]
- * 휴대폰 크기로 열어 → 시험 명식(2001-09-15 12:30 여)을 넣고 「본다」 → 물음을 넣고 「묻는다」 →
+ * 휴대폰 크기로 열어 → 명식(넷째 인자 'YYYY-MM-DD HH:MM 남|여', 없으면 시험 명식 2001-09-15 12:30 여)을 넣고 「본다」 → 물음을 넣고 「묻는다」 →
  * 답이 올 때까지 기다려 캡처한다. 단계마다 캡처·글자를 남기고, 실패해도 그 자리까지 남긴다.
  */
 const { chromium } = require('playwright');
 const fs = require('fs');
-const [주소, 폴더, 물음 = '취업, 결혼, 재물, 건강을 알려주세요'] = process.argv.slice(2);
+const [주소, 폴더, 물음 = '취업, 결혼, 재물, 건강을 알려주세요', 명식입력 = ''] = process.argv.slice(2);
+// 명식입력: 'YYYY-MM-DD HH:MM 남|여' (비우면 시험 명식 2001-09-15 12:30 여)
+const 명 = /^(\d{4})-(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{2})\s*(남|여)$/.exec(명식입력.trim()) || [null, '2001', '9', '15', '12', '30', '여'];
 fs.mkdirSync(폴더, { recursive: true });
 const 기록 = (s) => { console.log(s); fs.appendFileSync(`${폴더}/진행.txt`, s + '\n'); };
 (async () => {
@@ -20,9 +22,10 @@ const 기록 = (s) => { console.log(s); fs.appendFileSync(`${폴더}/진행.txt`
     await p.waitForTimeout(2500);
     await 찍기('1-첫화면');
     await p.fill('#이름', '시험');
-    await p.fill('#년', '2001'); await p.fill('#월', '9'); await p.fill('#일', '15');
-    await p.fill('#시', '12'); await p.fill('#분', '30');
-    await p.selectOption('#성', '여');
+    await p.fill('#년', 명[1]); await p.fill('#월', String(+명[2])); await p.fill('#일', String(+명[3]));
+    await p.fill('#시', String(+명[4])); await p.fill('#분', 명[5]);
+    await p.selectOption('#성', 명[6]);
+    기록(`명식 ${명.slice(1).join(' ')}`);
     await p.click('button:has-text("본다")');
     await p.waitForTimeout(3000);
     await 찍기('2-결과화면');

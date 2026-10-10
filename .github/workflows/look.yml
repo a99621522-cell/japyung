@@ -12,6 +12,9 @@ on:
       question:
         description: 물음
         default: 취업, 결혼, 재물, 건강을 알려주세요
+      birth:
+        description: 명식 (YYYY-MM-DD HH:MM 남|여, 비우면 시험 명식)
+        default: ''
 permissions:
   contents: write
 jobs:
@@ -34,7 +37,7 @@ jobs:
         run: |
           npm i --no-save playwright@1
           npx playwright install --with-deps chromium
-          node scripts/look.js "${{ inputs.url || 'https://misty-truth-03b6.a99621522.workers.dev/' }}" out/look "${{ inputs.question || '취업, 결혼, 재물, 건강을 알려주세요' }}"
+          node scripts/look.js "${{ inputs.url || 'https://misty-truth-03b6.a99621522.workers.dev/' }}" out/look "${{ inputs.question || '취업, 결혼, 재물, 건강을 알려주세요' }}" "${{ inputs.birth || '' }}"
       - name: 결과 올리기
         if: always()
         run: |
