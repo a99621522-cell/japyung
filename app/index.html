@@ -1607,7 +1607,7 @@ function 먼저볼것카드(r, 입력, 시모름){
     const se = (r.단계11b_세운 || []).slice(0, 2);
     if (se.length) {
       const 줄 = se.map(s => { const 첫 = 첫말of(s.길흉.판정), 자 = s.길흉.자평읽기 && 첫말of(s.길흉.자평읽기.판정);
-        return `<div class="먼저말">${s.연도}년(${s.간지}) <b style="color:${판정색(첫)}">${첫}</b>${왜('해', s.연도, s.연도 + '년')}${자 && 자 !== 첫 ? `<span class="먼저작은" style="display:inline"> · 자평진전으로는 「${자}」</span>` : ''}</div>`; }).join('');
+        return `<div class="먼저말">${s.연도}년(${s.간지}) <b style="color:${판정색(첫)}">${첫}</b>${왜('해', s.연도, s.연도 + '년')}${자 && 자 !== 첫 ? `<span class="먼저작은" style="display:inline"> · 자평진전으로는 「${자}」</span>` : ''}</div>${들기쉬운일(s, r, 첫)}`; }).join('');
       const 나이 = new Date().getFullYear() - 입력.년 + 1, 대 = ((r.단계_흐름 || {}).대운 || []).find(u => 나이 >= u.시작나이 && 나이 < u.시작나이 + 10);   // 37차: 적천수 칸이라 적천수 대운(전엔 자평 대운이 섞였다)
       const 대말 = 대 ? `지금은 ${대.시작나이}세부터의 ${대.간지} 대운 — ${({'결이 크게 눌림':'지키는 십 년','결이 눌림':'조심하며 지키는 십 년','뒤섞임':'좋고 나쁨이 섞인 십 년','결이 살아남':'풀리는 십 년','결이 크게 살아남':'크게 풀리는 십 년'})[대.판정] || 대.판정}${(대.충 || []).length ? ' (태어날 때의 글자와 부딪힘)' : ''}` : '';
       x += `<div class="먼저칸"><div class="먼저머리">흐름 — 올해와 내년 (적천수)</div>${줄}<div class="먼저작은">${대말}</div><button type="button" class="더보기" onclick="카드로('갈림카드')">세 책으로 해마다 보기</button></div>`;
@@ -1697,6 +1697,15 @@ function 갈림근거(i){
     <div style="margin-top:4px"><b>그릇(자평진전 25편을 한 해에)</b> 「${자말}」<div style="font-size:13px;color:var(--dim)">${그릇근거}</div></div>
     <div style="margin-top:4px"><b>밭(궁통보감)</b> ${d.밭 == null ? '' : d.밭 > 0 ? '「필요한 글자가 오는 해」' : d.밭 < 0 ? '「꺼리는 글자가 오는 해」' : '「크게 얽히지 않는 해」'}<div style="font-size:13px;color:var(--dim)">${밭말}</div></div>`;
 }
+// 40차 — 해마다 들기 쉬운 일(sageon: 그해 십성 + 적천수 희기 + 원국과 부딪히는 자리). 첫말 쪽 일을 먼저, 바뀌기 쉬운 것을 뒤에
+function 들기쉬운일(s, r, 첫, 꼴){
+  let g = null; try { g = E.sageon.그해(s, r.명식, { 성별: 현재 && 현재.입력 && 현재.입력.성별 }); } catch(e) { return ''; }
+  const 고 = /열리는/.test(첫) ? g.득 : /조심|지키는/.test(첫) ? g.실 : [...g.득, ...g.실];
+  const 이름 = [...고.slice(0, 2), ...g.자리.slice(0, 1)];
+  if (!이름.length) return '';
+  const 글 = `들기 쉬운 일: ${이름.map(esc2).join(' / ')}`;
+  return 꼴 === 'div' ? `<div style="font-size:12.5px;color:#4a4033;margin-top:2px">${글}</div>` : `<div class="먼저작은">${글}</div>`;
+}
 function 흐름카드(r){
   const jc = r && r.단계_흐름; if (!jc || jc.오류) return '';
   const esc = x => String(x ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -1726,7 +1735,7 @@ function 흐름카드(r){
         const 사 = (s.길흉.전충화 || []).map(사건말).join(', ');
         const 궁 = 궁통해(r.명식, s.연도);
         const 궁말 = 궁 === '필요' && /조심|지키는/.test(첫) ? '궁통보감으로는 이 달의 밭에 필요한 글자가 오는 해' : 궁 === '꺼림' && /열리는/.test(첫) ? '궁통보감으로는 꺼리는 글자만 오는 해' : '';
-        return `<tr><td style="white-space:nowrap">${s.연도}년(${s.간지})</td><td><b style="color:${판정색(첫)}">${첫}</b>${왜('해', s.연도, s.연도 + '년')}${사 ? `<div style="font-size:12px;color:var(--dim)">${사}</div>` : ''}${자 && 자 !== 첫 ? `<div style="font-size:12px;color:var(--dim)">자평진전으로는 「${자}」 — 책마다 눈이 달라 갈립니다</div>` : ''}${궁말 ? `<div style="font-size:12px;color:var(--dim)">${궁말} — 책마다 눈이 달라 갈립니다</div>` : ''}${(() => { let z = []; try { z = E.seun.흔들자리(s, r.명식); } catch(e) {} return z.length ? `<div style="font-size:12px;color:var(--dim)">흔들리기 쉬운 쪽: ${z.map(q => `${q.뜻} — ${q.장면}`).join(' / ')}</div>` : ''; })()}${(s.형해 || []).length ? `<div style="font-size:12px;color:var(--dim)">형·해(점수 없음): ${esc(s.형해.map(f => `${f.말} — ${(f.생극 === '충' ? '충이기도 해 충으로 봄' : f.움직임 ? '그 자리가 흔들리기 쉬움' : '따로 일어나는 일 없음')}`).join(' · '))}</div>` : ''}</td></tr>`; }).join('');
+        return `<tr><td style="white-space:nowrap">${s.연도}년(${s.간지})</td><td><b style="color:${판정색(첫)}">${첫}</b>${왜('해', s.연도, s.연도 + '년')}${사 ? `<div style="font-size:12px;color:var(--dim)">${사}</div>` : ''}${자 && 자 !== 첫 ? `<div style="font-size:12px;color:var(--dim)">자평진전으로는 「${자}」 — 책마다 눈이 달라 갈립니다</div>` : ''}${궁말 ? `<div style="font-size:12px;color:var(--dim)">${궁말} — 책마다 눈이 달라 갈립니다</div>` : ''}${들기쉬운일(s, r, 첫, 'div')}${(s.형해 || []).length ? `<div style="font-size:12px;color:var(--dim)">형·해(점수 없음): ${esc(s.형해.map(f => `${f.말} — ${(f.생극 === '충' ? '충이기도 해 충으로 봄' : f.움직임 ? '그 자리가 흔들리기 쉬움' : '따로 일어나는 일 없음')}`).join(' · '))}</div>` : ''}</td></tr>`; }).join('');
       x += `<div style="margin-top:10px;font-weight:600;font-size:14px">해마다 — 적천수가 보는 한 해</div><table class="답표"><thead><tr><th>해</th><th>적천수 판정</th></tr></thead><tbody>${줄들}</tbody></table>`;
       // 2070년까지 (2026-10-09 사용자 지시) — 나머지 해는 접어서
       if (전.length > se.length) {

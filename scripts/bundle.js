@@ -13,7 +13,7 @@ const 뿌리 = path.join(__dirname, '..');
 const 모듈 = ['cheoja','chohu','chwiun','eumryeok','fixtures_zpjz','ganji','gemini','gukmyeong','gyeokguk','haengun',
   'haeseol','hapchung','ingwa','interpret','japgi','jari','jeoul','jijanggan','juje','manse','misonglip','myogo',
   'oegyeok','ohaeng_seosa','ohjeon','sangsin','sangsin_fallback','seonhu','seun','sinsal','sisol','sunjap','tonggeun',
-  'tuchong','unbyeonhwa','unchung','wolun','yongeo','gungtong','gungtong_jomun','yukchin','gungtong_un','swiunmal','jomun_lines','jomun_trace','jeokcheonsu','iljin','mureum'];
+  'tuchong','unbyeonhwa','unchung','wolun','yongeo','gungtong','gungtong_jomun','yukchin','gungtong_un','swiunmal','jomun_lines','jomun_trace','jeokcheonsu','iljin','mureum','sageon'];
 // 2026-10-09(29차-5): 첫 화면에 안 쓰는 모듈은 따로 — gemini 는 서버 전용이라 브라우저 번들에서 뺐고,
 //   조문 추적(jomun_trace + 원문 줄 번호표 jomun_lines)은 app/engine.extra.js 로 나눠 전문가 층·「왜?」·간명서 부록에서 처음 쓸 때 불러온다
 const 서버전용 = ['gemini'];

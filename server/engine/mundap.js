@@ -296,6 +296,8 @@ function toMundapBrief(r, opt = {}) {
   L.push(...지식창고(r));
   // 31차: 이어 묻는 물음에도 물음에 맞춘 해(그 일의 글자가 오는 해 × 적천수 판정)
   try { const 줄 = require('./mureum').브리프줄(r, 질문, { 성별: opt.성별, 출생연도: opt.출생연도 }); if (줄) L.push(줄); } catch (e) {}
+  // 40차 — 해마다 들기 쉬운 일(이어 묻는 물음에도)
+  try { const 줄 = require('./sageon').브리프줄(r.단계11b_세운 || [], r.명식, { 성별: opt.성별 }); if (줄) L.push(줄); } catch (e) {}
   // 기억(37차)
   if (opt.기억) { try { L.push(...require('./gieok').브리프줄(opt.기억, r, { 출생연도: opt.출생연도 })); } catch (e) {} }
   // 32차: 형·해를 직접 물으면 적천수 地支論 사실 기록(점수 없음)
