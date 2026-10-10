@@ -293,8 +293,9 @@ async function 채용일정검색(기업, opt = {}) {
     const 글 = (j?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') ?? '');
     const v = C.정리(글, 기업);
     // 출처는 모델이 적은 것보다 검색 도구가 돌려준 것을 먼저
-    const 근거 = (j?.candidates?.[0]?.groundingMetadata?.groundingChunks || []).map(c => c?.web?.uri).filter(Boolean);
-    if (v && 근거.length) v.출처 = [...new Set([...근거, ...v.출처])].slice(0, 4);
+    // 검색 도구의 출처는 중계 주소(vertexaisearch…)라 읽을 수 없다 — 모델이 적은 실제 주소를 앞에, 없으면 사이트 이름(web.title)을
+    const 근거 = (j?.candidates?.[0]?.groundingMetadata?.groundingChunks || []).map(c => c?.web?.title).filter(Boolean);
+    if (v) { const 실 = v.출처.filter(u => !/vertexaisearch|grounding-api-redirect/.test(u)); v.출처 = [...new Set([...실, ...근거])].slice(0, 4); }
     if (채용캐시.size > 200) 채용캐시.clear();
     채용캐시.set(키, { t: Date.now(), v });
     return v;
