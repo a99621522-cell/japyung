@@ -69,6 +69,7 @@ function 자동교정(본문) {
   let 글 = String(본문 || ''); const 고침 = [];
   for (const [식, 대신] of 자동교정표) { const 전 = 글; 글 = 글.replace(식, 대신); if (글 !== 전) 고침.push(String(식).slice(1, 24)); }
   const 표 = 해마다칸정리(글); if (표 !== 글) { 글 = 표; 고침.push('해마다 표 칸'); }
+  try { const t = require('./swiunmal').한줄사투리교정(글); if (t !== 글) { 글 = t; 고침.push('한 줄 답 사투리'); } } catch (e) {}   // 53차
   return { 본문: 글, 고침 };
 }
 
@@ -132,6 +133,37 @@ function 십성짝가림(글) {
   return t.replace(new RegExp(`([${천간}])([${지지}])\\((${십들S})·(${십들S})\\)`, 'g'), '○○($3·$4)');
 }
 
+// 53차: 십성 이름만 있고 글자가 없는 자리 — 같은 줄 ±12자 안에 간지가 없으면. 표 줄(읽기 칸은 한자 금지)·한 줄 답(한자 금지)·
+//   「이 답에 나온 말」 풀이 줄(같은 줄에 글자가 있으면 됨)·머리말 줄은 셈하지 않는다
+function 실명빈자리(글) {
+  글 = String(글 || ''); const out = []; const 한줄 = '▶ 한 줄로 말하면', 용어 = '▶ 이 답에 나온 말';
+  const 한i = 글.indexOf(한줄), 한끝 = 한i < 0 ? -1 : (글.indexOf('▶', 한i + 2) < 0 ? 글.length : 글.indexOf('▶', 한i + 2)), 용i = 글.indexOf(용어);
+  for (const m of 글.matchAll(new RegExp(`(${십성들.join('|')})`, 'g'))) {
+    const 줄시작 = 글.lastIndexOf('\n', m.index) + 1, 줄끝0 = 글.indexOf('\n', m.index), 줄 = 글.slice(줄시작, 줄끝0 < 0 ? 글.length : 줄끝0);
+    if (/^\s*[|▶]/.test(줄)) continue;
+    if (한i >= 0 && m.index > 한i && m.index < 한끝) continue;
+    if (용i >= 0 && m.index > 용i && new RegExp(`[${천간}${지지}]`).test(줄)) continue;
+    const 괄 = 글.slice(m.index + m[0].length).match(/^\([^)\n]{0,40}\)/);   // 「편관(책임과 … 힘) 丁」 — 쉬운말 괄호는 건너뛰고 본다
+    const 뒤끝 = m.index + m[0].length + (괄 ? 괄[0].length : 0) + 12;
+    const 앞뒤 = 글.slice(Math.max(줄시작, m.index - 12), Math.min(줄끝0 < 0 ? 글.length : 줄끝0, 뒤끝));
+    if (!new RegExp(`[${천간}${지지}]`).test(앞뒤)) out.push({ 이름: m[0], i: m.index });
+  }
+  return out;
+}
+/** 53차: 글자 없이 쓴 십성 이름 뒤에 일간 기준 그 십성의 천간을 괄호로 붙인다 — 「편관(丁)이」. 이름 뒤에 쉬운말 괄호가 있으면 그 안 앞에 「丁·」.
+ *  「이 답에 나온 말」 풀이의 머리 낱말(「- 편관:」)은 건드리지 않는다(용어 풀이 짝 맞춤이 깨진다) */
+function 십성실명보강(본문, 브리프) {
+  const 일 = 일간of(브리프); let 글 = String(본문 || ''); if (!일) return { 본문: 글, 고침: 0 };
+  let 글자of = () => null; try { const J = require('./jijanggan'); 글자of = 이름 => 이름 === '비견' ? 일 : [...천간].find(g => g !== 일 && J.sipseong(일, g) === 이름) || null; } catch (e) {}
+  const 자리 = 실명빈자리(글).sort((a, b) => b.i - a.i); let n = 0;
+  for (const { 이름, i } of 자리) {
+    const 줄시작 = 글.lastIndexOf('\n', i) + 1; if (new RegExp(`^\\s*-\\s*${이름}\\s*[:：]`).test(글.slice(줄시작, i + 이름.length + 3))) continue;
+    const g = 글자of(이름); if (!g) continue; const 뒤 = i + 이름.length;
+    글 = 글[뒤] === '(' ? 글.slice(0, 뒤 + 1) + g + '·' + 글.slice(뒤 + 1) : 글.slice(0, 뒤) + `(${g})` + 글.slice(뒤); n++;
+  }
+  return { 본문: 글, 고침: n };
+}
+
 function 검사(본문, ctx = {}) {
   const 오류 = [], 경고 = [];
   const 글 = String(본문 || '');
@@ -181,10 +213,7 @@ function 검사(본문, ctx = {}) {
 
   // ⑤ 십성 이름만 있고 글자 실명 없음 (같은 문장 안 12자 이내에 천간 글자)
   let 실명없음 = 0; const 예 = [];
-  for (const m of 글.matchAll(new RegExp(`(${십성들.join('|')})`, 'g'))) {
-    const 앞뒤 = 글.slice(Math.max(0, m.index - 12), m.index + m[0].length + 12);
-    if (!new RegExp(`[${천간}${지지}]`).test(앞뒤)) { 실명없음++; if (예.length < 3) 예.push(m[0]); }
-  }
+  for (const k of 실명빈자리(글)) { 실명없음++; if (예.length < 3) 예.push(k.이름); }
   if (실명없음 >= 3) 경고.push({ 규칙: '십성 실명', 내용: `십성 이름만 있고 글자가 없는 곳 ${실명없음}군데(${예.join('·')}…) — 「식신 辛」처럼 글자를 함께` });
 
   // ⑤-1 표 문구 베껴 쓰기 (2026-09-08 사용자: 「찍어서 쓰면 같은 답만 나와」) — 운 글자 대조표의 조각(「·」로 나뉜 항목)이
@@ -247,4 +276,4 @@ function 검사(본문, ctx = {}) {
   return { 통과, 오류, 경고, 다시쓰기지시, 글자수: n, 쉬운말: 쉬운말 && 쉬운말.통계 };
 }
 
-module.exports = { 십성짝가림, 십성짝들, 십성기준, 십성이름교정, 일간of, 검사, 허용목록, 애매한말핵심, 자동교정, 표시금지원문, 등급어예외 };
+module.exports = { 십성실명보강, 실명빈자리, 십성짝가림, 십성짝들, 십성기준, 십성이름교정, 일간of, 검사, 허용목록, 애매한말핵심, 자동교정, 표시금지원문, 등급어예외 };
