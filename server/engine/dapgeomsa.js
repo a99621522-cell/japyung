@@ -143,6 +143,7 @@ function 실명빈자리(글) {
   for (const m of 글.matchAll(new RegExp(`(${십성들.join('|')})`, 'g'))) {
     const 줄시작 = 글.lastIndexOf('\n', m.index) + 1, 줄끝0 = 글.indexOf('\n', m.index), 줄 = 글.slice(줄시작, 줄끝0 < 0 ? 글.length : 줄끝0);
     if (/^\s*[|▶]/.test(줄)) continue;
+    if (글[m.index + m[0].length] === '격') continue;   // 「정관격」 같은 격 이름은 글자를 붙이지 않는다
     if (한i >= 0 && m.index > 한i && m.index < 한끝) continue;
     if (용i >= 0 && m.index > 용i && new RegExp(`[${천간}${지지}]`).test(줄)) continue;
     const 괄 = 글.slice(m.index + m[0].length).match(/^\([^)\n]{0,40}\)/);   // 「편관(책임과 … 힘) 丁」 — 쉬운말 괄호는 건너뛰고 본다
