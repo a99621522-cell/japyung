@@ -289,6 +289,13 @@ function 규칙줄고르기(모드, opt = {}) {
  * @param {Array}  오류   dapgeomsa.검사().오류  [{규칙, 내용}]
  * @param {object} opt    { 브리프, 모드, 주제, 규칙줄 } — 규칙줄을 주면 그것을, 없으면 모드로 고른다
  */
+function 지나온재료(브리프) {
+  const 줄 = String(브리프 || '').split('\n'); const i = 줄.findIndex(l => l.startsWith('[해마다 표 뼈대 — 지나온 해')); if (i < 0) return [];
+  const L = ['', '─── 지나온 해 재료(엔진 셈 — 이것만 옮길 것) ───', 줄[i]];
+  for (let k = i + 1; k < 줄.length && /^\|/.test(줄[k]); k++) L.push(줄[k]);
+  L.push(...줄.filter(l => l.startsWith('[지나온 해 — 무엇을') || l.startsWith('[이 물음의 답 차례')));
+  return L;
+}
 function 섹션다시쓰기프롬프트(원답, 오류, opt = {}) {
   const D = require('./dapgeomsa');
   const 허용 = D.허용목록(opt.브리프 || '');
@@ -306,6 +313,8 @@ function 섹션다시쓰기프롬프트(원답, 오류, opt = {}) {
     간지.length ? `- 쓸 수 있는 간지(원국·대운·세운·월운에 있는 것만): ${간지.join(' ')}` : '- 간지는 원래 답에 있는 것만 쓰세요.',
     연도.length ? `- 쓸 수 있는 연도: ${연도[0]}~${연도[연도.length - 1]} 가운데 원래 답과 운 표에 있는 해만` : '',
     ...(Array.isArray(규칙) ? 규칙 : [String(규칙)]),
+    // 44차: 지나온 해 물음에 걸리면 고칠 재료(지나온 표 뼈대·무엇을 → 어떻게·답 차례)를 함께 — 없으면 「→ 어떻게」를 지어내거나 비운다
+    ...((오류 || []).some(x => x.규칙 === '지나온 해 물음') ? 지나온재료(opt.브리프) : []),
     '',
     '─── 원래 답 (여기부터) ───',
     String(원답 || ''),
