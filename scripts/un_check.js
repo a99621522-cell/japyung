@@ -111,6 +111,18 @@ for (const [이름, 기대] of Object.entries(국기대)) {
   if (!/1월\([甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥], \d{4}년 1월/.test(M.물음셈줄(r, '1월 운', o))) 문제.물음셈.push('1월 = 앞 해 세운의 다음해 달');
   if (M.물음셈줄(r, '내 성격은 어때', o)) 문제.물음셈.push('때 없는 물음에 셈이 붙음');
   for (const q of ['다음 주 계약 좋은 날', '11월에 이사하기 좋은 날', '60살에는', '지금 대운', '12월 재물운', '2030년 3월 결혼']) { const k = D.검사(M.엔진답(r, q, o), { 질문: q }); if ((k.오류 || []).length) 문제.물음셈.push(`${q} 엔진 답 오류 ${k.오류[0]}`); } }
+// j) 들기 쉬운 일(40차) — 득은 적천수가 반기는 글자, 실은 꺼리는 글자에서만; 인연은 남 재·여 관(겁재 아님); 표에 병·사고·사망·이별 낱말 없음
+문제.들기쉬운일 = [];
+{ const SG = require('../sageon'), J = require('../jeokcheonsu'), { GAN } = require('../jijanggan'); const { interpret } = require('../interpret');
+  const 금 = /병|사고|사망|죽|수명|이혼|이별|파혼|수술/;
+  for (const 표 of [...Object.values(SG.일표).flat(), ...Object.values(SG.자리일)]) if (금.test(표)) 문제.들기쉬운일.push('금지 낱말: ' + 표);
+  for (let i = 0; i < 120; i++) for (const 성 of ['남', '여']) { let m; try { m = manse.사주(1950 + Math.floor(rnd() * 61), 1 + Math.floor(rnd() * 12), 1 + Math.floor(rnd() * 28), Math.floor(rnd() * 24), 0, { 성별: 성 }).명식; } catch (e) { continue; }
+    const r = interpret(m, { gender: 성, 출생연도: 1980, 세운개수: 6, 월운: false }); const H = J.희기(m);
+    for (const s of r.단계11b_세운 || []) { const g = SG.그해(s, m, { 성별: 성 });
+      const 인연있음 = [...g.득, ...g.실].some(x => /인연/.test(x));
+      const 인연십 = (성 === '여' ? ['정관', '편관'] : ['정재', '편재']);
+      if (인연있음 && !인연십.includes(s.천간십성) && !인연십.includes(s.지지십성)) 문제.들기쉬운일.push(`${성} ${s.연도} 인연 오배속 ${s.천간십성}/${s.지지십성}`);
+      if (g.득.length && !(H.값(GAN[s.천간].ohaeng) > 0 || H.값(GAN[require('../jijanggan').jeonggi(s.지지)].ohaeng) > 0)) 문제.들기쉬운일.push(`득인데 반기는 글자 없음 ${s.간지}`); } } }
 let 실패 = 0;
 for (const [k, v] of Object.entries(문제)) { console.log(`  ${v.length ? '실패' : '통과'}  ${k} ${v.length}건${v.length ? ' — ' + v.slice(0,3).join(' / ') : ''}`); if (v.length) 실패++; }
 console.log(`  [두 읽기 뒤집힘 표 — 사실 보고] 대운 ${표.대운수}개: 천간5↔지지5 갈림 ${표.갈림} · 통합↔천간5 어긋남 ${표.통합vs천간5} · 통합↔지지5 어긋남 ${표.통합vs지지5} · 모두 같은 결 ${표.모두같음} · 갈림이 하나라도 있는 명식 ${표.갈린명식}/${N - 예외} · 판정 보류(상신 미지정) 대운 ${표.보류}`);

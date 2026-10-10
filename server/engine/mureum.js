@@ -268,7 +268,8 @@ function 엔진답(r, 질문, opt = {}) {
   for (const h of 고른) {
     const 글 = x.글자이름 ? (h.옴.length ? ` ${x.일}의 글자가 ${h.옴.some(o => o.자리 !== '숨어서') ? '오는' : '숨어서 오는'} 해.` : '') : '';
     const 자 = h.자평 ? ` 자평진전으로는 「${h.자평}」라 책마다 갈립니다.` : '';
-    L.push(`| ${h.연도}년(${h.간지}) | ${h.첫말}.${글}${자} |`);
+    let 일 = ''; try { const s = ((r.단계11b_세운) || []).find(z => z.연도 === h.연도); if (s) { const g = require('./sageon').그해(s, r.명식, opt); const 고 = /열리는/.test(h.첫말) ? g.득 : /조심|지키는/.test(h.첫말) ? g.실 : [...g.득, ...g.실]; const 이름 = [고[0], g.자리[0]].filter(Boolean); if (이름.length) 일 = ` 들기 쉬운 일: ${이름.join(' / ')}.`; } } catch (e) {}   // 40차
+    L.push(`| ${h.연도}년(${h.간지}) | ${h.첫말}.${일}${글}${자} |`);
   }
   L.push('');
   L.push('▶ 해 볼 만한 일');
