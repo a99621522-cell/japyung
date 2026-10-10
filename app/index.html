@@ -857,6 +857,7 @@ function 간명(){
   h += 흐름카드(r);                                       // 셋째 층 「흐름」(滴天髓, 2026-10-07 사용자 결정)
   h += 궁통카드(m, r);
   h += 일진카드(r);                                       // 일진 (2026-10-09 사용자 지시)
+  h += 직업카드(r, 입력);                                // 직업 결 맞댐·그 일의 운이 오는 해와 달 (48차)
   h += `<div class="card 분야카드"><div class="card-title"><span class="gold-dot"></span>분야별 열여섯 해</div>` + 분야곡선판(r, 입력.성별) + `</div>`;
   h += 조문추적카드(r, 입력.성별);                       // 전문가 모드(2026-10-07, PROMPTS 7)
   if (시모름) h += 민감도카드(m, 입력.성별, 입력.년);   // 시각 모름 — 열두 시주 민감도
@@ -1415,6 +1416,27 @@ function 시경계견줌(r, r2, 이쪽, 저쪽){
       : `<br>두 쪽 모두 격·상신·성패는 같습니다 — 시주가 맡는 늦은 때·자녀 자리의 결만 달라집니다.`;
     return { html: 말 + 표, 다름, 다름말 };
   } catch(e) { return { html: '', 다름: [], 다름말: '' }; }
+}
+// 48차 — 현대 직업을 「날마다 요구하는 일하는 결(십성)」로 풀어 이 명식과 맞댄 표. 세 책 따로·점수 합산 없음·오행 물상 배속 없음
+function 직업카드(r, 입력){
+  if (!E.jikeop || !r || !r.결론) return '';
+  const esc = x => String(x ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  let 조합 = []; try { 조합 = E.jikeop.조합of(r.결론.격, r.결론.상신).map(k => E.jikeop.조합표[k].말 + ' — ' + E.jikeop.조합표[k].결); } catch(e) {}
+  const 색 = { '중심이 닿음':'var(--green)', '짜임이 닿음':'var(--green)', '바탕이 닿음':'var(--gold)', '덜 닿음':'var(--dim)' };
+  const 흐색 = { '할수록 풀리는 쪽':'var(--green)', '소모가 큰 쪽':'var(--red)', '두드러지지 않는 쪽':'var(--dim)' };
+  let 줄 = '', 묶 = '';
+  for (const j of E.jikeop.직업표) {
+    let x, t; try { x = E.jikeop.맞댐(r, j); t = E.jikeop.시기(r, j, { 출생연도: 입력 && 입력.년 }); } catch(e) { continue; }
+    if (j.묶음 !== 묶) { 묶 = j.묶음; 줄 += `<tr><td colspan="3" style="font-size:12px;color:var(--muted);padding-top:8px">${esc(묶)}</td></tr>`; }
+    const h = t.좋은해[0], d = h && t.달.find(z => z.연도 === h.연도);
+    줄 += `<tr><td style="white-space:nowrap"><b>${esc(j.이름)}</b>${j.출처 ? '<div style="font-size:11px;color:var(--dim)">이 앱의 구성</div>' : ''}</td>
+      <td><span style="color:${색[x.자평.닿음]}">그릇 ${esc(x.자평.닿음)}</span> · <span style="color:${흐색[x.적천수.쪽]}">흐름 ${esc(x.적천수.쪽)}</span>${x.자평.부딪힘 ? `<div style="font-size:12px;color:var(--red)">${esc(x.자평.부딪힘.split(' — ')[0])}</div>` : ''}<div style="font-size:12px;color:var(--dim)">요구하는 결: ${esc(x.결)} · 같은 직업 안의 길: ${esc(x.트랙.join('·'))}</div></td>
+      <td style="font-size:12.5px">${h ? `${h.연도}년${d && d.달.length ? '<br>' + esc(d.달.map(z => z.양력월 + '월').join('·')) : ''}` : '<span style="color:var(--dim)">15년 안에 드묾</span>'}</td></tr>`;
+  }
+  return `<div class="card 직업카드"><div class="card-title"><span class="gold-dot"></span>일의 결 — 지금 준비하는 일이 맞는가</div>
+    <div class="궁통요지">직업을 「그 일이 날마다 요구하는 결」로 풀어 이 명식과 맞댄 표입니다. 그릇은 자평진전의 격·기둥·짜임, 흐름은 적천수가 반기는 기운으로 따로 봅니다(더하지 않습니다). 오른쪽은 그 결의 글자가 반기는 기운으로 오는 가장 가까운 해와 그해의 달입니다. 직업을 오행에 대지 않고, 순위를 매기지 않습니다. 직업 표는 통변 관례이고, 적성·성적·업계 사정은 글자 밖의 일입니다.</div>
+    ${조합.length ? `<div style="font-size:13px;margin:6px 0">이 명식의 짜임: <b>${esc(조합.join(' / '))}</b></div>` : ''}
+    <div class="scroll-x"><table class="표" style="width:100%"><thead><tr><th>직업</th><th>이 명식과 맞대면</th><th>운이 오는 때</th></tr></thead><tbody>${줄}</tbody></table></div></div>`;
 }
 function 일진카드(r, 시작){
   const J = (typeof E !== 'undefined') && (E.iljin || E.일진); if (!J || !r || !r.명식) return '';
