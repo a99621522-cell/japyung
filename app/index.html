@@ -1539,7 +1539,7 @@ function 지나온해카드(r, 입력){
     const 열 = { '결이 크게 살아남':'크게 풀리는 십 년','결이 살아남':'풀리는 십 년','뒤섞임':'좋고 나쁨이 섞인 십 년','결이 눌림':'지키는 십 년','결이 크게 눌림':'크게 지키는 십 년' };
     const jd = (r.단계_흐름 && r.단계_흐름.대운) || [];
     // 41차(사용자 「과거도 마찬가지야, 구체적으로」): 그해 있었기 쉬운 일의 이름 — sageon(그해 십성 + 적천수 희기 + 원국과 부딪히는 자리)
-    const 자리말 = s => { let 이름 = []; try { 이름 = E.sageon.고른일(E.sageon.그해(s, r.명식, { 성별: 입력.성별 }), 판정첫말[s.길흉.판정] || s.길흉.판정); } catch(e) {} return 이름.length ? `<div style="font-size:12.5px;color:#4a4033;margin-top:2px">있었기 쉬운 일: ${이름.map(esc2).join(' / ')}</div>` : ''; };
+    const 자리말 = s => { let 할 = []; try { 할 = E.sageon.할일(E.sageon.그해(s, r.명식, { 성별: 입력.성별 }), 판정첫말[s.길흉.판정] || s.길흉.판정); } catch(e) {} return 할.length ? `<div style="font-size:12.5px;color:#4a4033;margin-top:2px">${할.map(x => `<b>${x.쪽 === '조심' ? '조심했어야 할 일' : '살렸어야 할 일'}</b> ${esc2(x.일)}${x.방법 ? ` → ${esc2(x.방법)}` : ''}`).join('<br>')}</div>` : ''; };   // 42차
     const 줄 = s => { const 첫 = 판정첫말[s.길흉.판정] || s.길흉.판정;
       return `<tr data-해="${s.연도}"><td style="white-space:nowrap">${s.연도}년<div style="font-size:12px;color:var(--dim)">${s.간지} · ${s.나이}세</div></td><td><b style="color:${판정색(첫)}">${첫}</b>${왜('지난해', s.연도, s.연도 + '년')}${자리말(s)}</td></tr>`; };
     let 앞대운 = null; const 행들 = [];
@@ -1551,7 +1551,7 @@ function 지나온해카드(r, 입력){
     }
     const 앞 = 행들.slice(0, 14).join(''), 뒤 = 행들.slice(14).join('');
     let x = `<div class="card 지나온카드"><div class="card-title"><span class="gold-dot"></span>지나온 해</div>`;
-    x += `<div class="궁통주" style="margin:0 0 6px">올해를 읽는 규칙(적천수 歲運論) 그대로 지나온 해를 읽었습니다. 「있었기 쉬운 일」은 그해 들어온 글자와 태어날 때의 글자가 맞물리는 자리로 셈한 일의 이름입니다(통변 관례 — 일어났다고 못박는 말이 아닙니다).</div>`;
+    x += `<div class="궁통주" style="margin:0 0 6px">올해를 읽는 규칙(적천수 歲運論) 그대로 지나온 해를 읽었습니다. 해마다 그해 들어온 글자와 태어날 때의 글자가 맞물리는 자리로 셈한 「조심했어야 할 일·살렸어야 할 일」과 그 대처입니다(통변 관례 — 일어났다고 못박는 말이 아닙니다).</div>`;
     x += `<table><tbody>${앞}</tbody></table>`;
     if (뒤) x += `<details style="margin-top:4px"><summary style="cursor:pointer;font-size:13px;color:#6b5a38">더 지난 해 보기</summary><table><tbody>${뒤}</tbody></table></details>`;
     return x + `</div>`;
@@ -1701,9 +1701,9 @@ function 갈림근거(i){
 // 40차 — 해마다 들기 쉬운 일(sageon: 그해 십성 + 적천수 희기 + 원국과 부딪히는 자리). 첫말 쪽 일을 먼저, 바뀌기 쉬운 것을 뒤에
 function 들기쉬운일(s, r, 첫, 꼴){
   let g = null; try { g = E.sageon.그해(s, r.명식, { 성별: 현재 && 현재.입력 && 현재.입력.성별 }); } catch(e) { return ''; }
-  const 이름 = E.sageon.고른일(g, 첫);
-  if (!이름.length) return '';
-  const 글 = `들기 쉬운 일: ${이름.map(esc2).join(' / ')}`;
+  const 할 = E.sageon.할일(g, 첫);   // 42차 — 무엇을 → 어떻게
+  if (!할.length) return '';
+  const 글 = 할.map(x => `<b>${x.쪽 === '조심' ? '조심' : '살릴 일'}</b> ${esc2(x.일)}${x.방법 ? ` → ${esc2(x.방법)}` : ''}`).join('<br>');
   return 꼴 === 'div' ? `<div style="font-size:12.5px;color:#4a4033;margin-top:2px">${글}</div>` : `<div class="먼저작은">${글}</div>`;
 }
 function 흐름카드(r){
