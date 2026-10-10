@@ -16,6 +16,7 @@
  *   ⑬ 일진(scripts/iljin_check.js, 2026-10-09 26차)
  *   ⑭ 闡微 명례 운 길흉 진술 대조(scripts/chanwei_un_check.js, 2026-10-09 29차-3)
  *   ⑮ 답 품질 지표가 제대로 세는가(scripts/answer_metrics_check.js, 2026-10-09 29차-4)
+ *   ⑯ 십성 배속 전수 감사(scripts/sipseong_audit.js, 2026-10-10 52차)
  * 하나라도 틀리면 종료 코드 1.
  */
 const fs = require('fs');
@@ -163,6 +164,12 @@ console.log('⑮ 답 품질 지표 (scripts/answer_metrics_check.js — 뼈대�
 시험('answer_metrics_check', () => {
   const out = execFileSync('node', [path.join(뿌리, 'scripts', 'answer_metrics_check.js')], { encoding: 'utf8', timeout: 120000 });
   return /전부 통과/.test(out);
+});
+
+console.log('⑯ 십성 배속 전수 감사 (scripts/sipseong_audit.js — 열 일간 × 브리프·문답·간명서·엔진 답·일진의 해·달·날 글자=십성 짝을 따로 세운 기준표와 대조, 답 검사·교정·예시 가림, 2026-10-10 52차)');
+시험('sipseong_audit', () => {
+  const out = execFileSync('node', [path.join(뿌리, 'scripts', 'sipseong_audit.js'), '30'], { encoding: 'utf8', timeout: 300000 });
+  return /틀린 짝 0/.test(out) && /예시 가림[^\n]*통과/.test(out);
 });
 
 console.log(실패.length ? `\n실패 ${실패.length}건` : '\n전부 통과');
