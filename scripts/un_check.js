@@ -122,6 +122,13 @@ for (const [이름, 기대] of Object.entries(국기대)) {
       const 인연있음 = [...g.득, ...g.실].some(x => /인연/.test(x));
       const 인연십 = (성 === '여' ? ['정관', '편관'] : ['정재', '편재']);
       if (인연있음 && !인연십.includes(s.천간십성) && !인연십.includes(s.지지십성)) 문제.들기쉬운일.push(`${성} ${s.연도} 인연 오배속 ${s.천간십성}/${s.지지십성}`);
+      // 43차: 브리프줄·화면이 같은 고름(할일) — 열리는 해에 조심할 일(실)이, 지킴·조심 해에 살릴 일(득)이 섞이지 않는다
+      { const 첫 = { '결이 크게 살아남': '크게 열리는 해', '결이 살아남': '열리는 해', '뒤섞임': '좋고 궂음이 섞인 해', '결이 눌림': '지키는 해', '결이 크게 눌림': '크게 조심할 해' }[s.길흉.판정] || '';
+        const 할 = SG.할일(g, 첫);
+        if (/열리는/.test(첫) && 할.some(x => g.실.includes(x.일) && !g.득.includes(x.일))) 문제.들기쉬운일.push(`${s.간지} 열리는 해에 조심할 일`);
+        if (/조심|지키는/.test(첫) && 할.some(x => g.득.includes(x.일) && !g.실.includes(x.일))) 문제.들기쉬운일.push(`${s.간지} 조심 해에 살릴 일`);
+        if (/섞인/.test(첫) && g.득.length && g.실.length && !(할.some(x => g.득.includes(x.일)) && 할.some(x => g.실.includes(x.일)))) 문제.들기쉬운일.push(`${s.간지} 섞인 해에 한쪽만`);
+        const 줄 = SG.브리프줄([s], m, { 성별: 성 }); for (const x of 할) if (!줄.includes(x.일)) 문제.들기쉬운일.push(`${s.간지} 브리프줄에 화면 일 없음`); }
       if (g.득.length && !(H.값(GAN[s.천간].ohaeng) > 0 || H.값(GAN[require('../jijanggan').jeonggi(s.지지)].ohaeng) > 0)) 문제.들기쉬운일.push(`득인데 반기는 글자 없음 ${s.간지}`); } } }
 let 실패 = 0;
 for (const [k, v] of Object.entries(문제)) { console.log(`  ${v.length ? '실패' : '통과'}  ${k} ${v.length}건${v.length ? ' — ' + v.slice(0,3).join(' / ') : ''}`); if (v.length) 실패++; }
